@@ -1,0 +1,6 @@
+[package]
+name = "ur20"
+version = "0.0.0"
+authors = ["Markus Kohlhase <markus.kohlhase@slowtec.de>"]
+
+[dependencies]
