@@ -1,6 +1,7 @@
 // Copyright (c) 2017 slowtec GmbH <markus.kohlhase@slowtec.de>
 
 use std::fmt;
+use std::str::FromStr;
 
 #[derive(Debug, PartialEq)]
 pub enum Error {
@@ -191,6 +192,90 @@ impl ModuleType {
     }
 }
 
+impl ::std::str::FromStr for ModuleType {
+    type Err = Error;
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        use ModuleType::*;
+        let t = match &*s.to_uppercase().replace("-","_") {
+            "UR20_4DI_P"               => UR20_4DI_P,
+            "UR20_4DI_P_3W"            => UR20_4DI_P_3W,
+            "UR20_8DI_P_2W"            => UR20_8DI_P_2W,
+            "UR20_8DI_P_3W"            => UR20_8DI_P_3W,
+            "UR20_8DI_P_3W_HD"         => UR20_8DI_P_3W_HD,
+            "UR20_16DI_P"              => UR20_16DI_P,
+            "UR20_16DI_P_PLC_INT"      => UR20_16DI_P_PLC_INT,
+            "UR20_2DI_P_TS"            => UR20_2DI_P_TS,
+            "UR20_4DI_P_TS"            => UR20_4DI_P_TS,
+            "UR20_4DI_N"               => UR20_4DI_N,
+            "UR20_8DI_N_3W"            => UR20_8DI_N_3W,
+            "UR20_16DI_N"              => UR20_16DI_N,
+            "UR20_16DI_N_PLC_INT"      => UR20_16DI_N_PLC_INT,
+            "UR20_4DI_2W_230V_AC"      => UR20_4DI_2W_230V_AC,
+
+            "UR20_4DO_P"               => UR20_4DO_P,
+            "UR20_4DO_P_2A"            => UR20_4DO_P_2A,
+            "UR20_4DO_PN_2A"           => UR20_4DO_PN_2A,
+            "UR20_8DO_P"               => UR20_8DO_P,
+            "UR20_8DO_P_2W_HD"         => UR20_8DO_P_2W_HD,
+            "UR20_16DO_P"              => UR20_16DO_P,
+            "UR20_16DO_P_PLC_INT"      => UR20_16DO_P_PLC_INT,
+            "UR20_4DO_N"               => UR20_4DO_N,
+            "UR20_4DO_N_2A"            => UR20_4DO_N_2A,
+            "UR20_8DO_N"               => UR20_8DO_N,
+            "UR20_16DO_N"              => UR20_16DO_N,
+            "UR20_16DO_N_PLC_INT"      => UR20_16DO_N_PLC_INT,
+            "UR20_4RO_SSR_255"         => UR20_4RO_SSR_255,
+            "UR20_4RO_CO_255"          => UR20_4RO_CO_255,
+
+            "UR20_2PWM_PN_0_5A"        => UR20_2PWM_PN_0_5A,
+            "UR20_2PWM_PN_2A"          => UR20_2PWM_PN_2A,
+
+            "UR20_4AI_UI_16"           => UR20_4AI_UI_16,
+            "UR20_4AI_UI_16_DIAG"      => UR20_4AI_UI_16_DIAG,
+            "UR20_4AI_UI_DIF_16_DIAG"  => UR20_4AI_UI_DIF_16_DIAG,
+            "UR20_4AI_UI_16_HD"        => UR20_4AI_UI_16_HD,
+            "UR20_4AI_UI_16_DIAG_HD"   => UR20_4AI_UI_16_DIAG_HD,
+            "UR20_4AI_UI_12"           => UR20_4AI_UI_12,
+            "UR20_8AI_I_16_HD"         => UR20_8AI_I_16_HD,
+            "UR20_8AI_I_16_DIAG_HD"    => UR20_8AI_I_16_DIAG_HD,
+            "UR20_8AI_I_PLC_INT"       => UR20_8AI_I_PLC_INT,
+            "UR20_4AI_R_HS_16_DIAG"    => UR20_4AI_R_HS_16_DIAG,
+            "UR20_2AI_SG_24_DIAG"      => UR20_2AI_SG_24_DIAG,
+            "UR20_3EM_230V_AC"         => UR20_3EM_230V_AC,
+
+            "UR20_4AO_UI_16"           => UR20_4AO_UI_16,
+            "UR20_4AO_UI_16_M"         => UR20_4AO_UI_16_M,
+            "UR20_4AO_UI_16_DIAG"      => UR20_4AO_UI_16_DIAG,
+            "UR20_4AO_UI_16_M_DIAG"    => UR20_4AO_UI_16_M_DIAG,
+            "UR20_4AO_UI_16_HD"        => UR20_4AO_UI_16_HD,
+            "UR20_4AO_UI_16_DIAG_HD"   => UR20_4AO_UI_16_DIAG_HD,
+
+            "UR20_1CNT_100_1DO"        => UR20_1CNT_100_1DO,
+            "UR20_2CNT_100"            => UR20_2CNT_100,
+            "UR20_1CNT_500"            => UR20_1CNT_500,
+            "UR20_2FCNT_100"           => UR20_2FCNT_100,
+
+            "UR20_1SSI"                => UR20_1SSI,
+            "UR20_1COM_232_485_422"    => UR20_1COM_232_485_422,
+            "UR20_1COM_SAI_PRO"        => UR20_1COM_SAI_PRO,
+            "UR20_4COM_IO_LINK"        => UR20_4COM_IO_LINK,
+
+            "UR20_4AI_RTD_DIAG"        => UR20_4AI_RTD_DIAG,
+            "UR20_4AI_TC_DIAG"         => UR20_4AI_TC_DIAG,
+
+            "UR20_PF_O_1DI_SIL"        => UR20_PF_O_1DI_SIL,
+            "UR20_PF_O_2DI_SIL"        => UR20_PF_O_2DI_SIL,
+            "UR20_PF_O_2DI_DELAY_SIL"  => UR20_PF_O_2DI_DELAY_SIL,
+
+            _ => {
+                return Err(Error::UnknownModule);
+            }
+        };
+        Ok(t)
+
+    }
+}
+
 #[cfg(test)]
 mod tests {
 
@@ -206,5 +291,26 @@ mod tests {
             ModuleType::try_from_u32(0x01234567).err().unwrap(),
             Error::UnknownModule
         );
+    }
+
+    #[test]
+    fn module_by_str_id() {
+        assert_eq!(
+            ModuleType::from_str("UR20_1COM_232_485_422").unwrap(),
+            ModuleType::UR20_1COM_232_485_422
+        );
+        assert_eq!(
+            "UR20-1COM-232-485-422".parse::<ModuleType>().unwrap(),
+            ModuleType::UR20_1COM_232_485_422
+        );
+        assert_eq!(
+            "ur20-1com-232-485-422".parse::<ModuleType>().unwrap(),
+            ModuleType::UR20_1COM_232_485_422
+        );
+        assert_eq!(
+            "not-valid".parse::<ModuleType>().err().unwrap(),
+            Error::UnknownModule
+        );
+
     }
 }
