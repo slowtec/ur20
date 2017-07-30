@@ -24,6 +24,20 @@ impl ::std::error::Error for Error {
     }
 }
 
+#[derive(Debug, Clone, PartialEq)]
+pub enum ModuleCategory {
+    DI,
+    DO,
+    AI,
+    AO,
+    CNT,
+    PWM,
+    RTD,
+    TC,
+    COM,
+    RO,
+}
+
 #[allow(non_camel_case_types)]
 #[derive(Debug, Clone, PartialEq)]
 pub enum ModuleType {
@@ -192,7 +206,7 @@ impl ModuleType {
     }
 }
 
-impl ::std::str::FromStr for ModuleType {
+impl FromStr for ModuleType {
     type Err = Error;
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         use ModuleType::*;
