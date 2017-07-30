@@ -25,7 +25,7 @@ impl ::std::error::Error for Error {
 }
 
 #[allow(non_camel_case_types)]
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum ModuleType {
     // Digital input modules
     UR20_4DI_P,
