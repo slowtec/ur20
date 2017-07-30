@@ -10,16 +10,16 @@ pub enum Error {
 
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self {
-            UnknownModule => write!(f, "unknown module type"),
+        match *self {
+            Error::UnknownModule => write!(f, "unknown module type"),
         }
     }
 }
 
 impl ::std::error::Error for Error {
     fn description(&self) -> &str {
-        match self {
-            UnknownModule => "unknown module type",
+        match *self {
+            Error::UnknownModule => "unknown module type",
         }
     }
 }
