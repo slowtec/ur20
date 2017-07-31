@@ -6,12 +6,14 @@ use std::str::FromStr;
 #[derive(Debug, PartialEq)]
 pub enum Error {
     UnknownModule,
+    UnknownCategory,
 }
 
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
-            Error::UnknownModule => write!(f, "unknown module type"),
+            Error::UnknownModule   => write!(f, "unknown module type"),
+            Error::UnknownCategory => write!(f, "unknown module category"),
         }
     }
 }
@@ -19,7 +21,8 @@ impl fmt::Display for Error {
 impl ::std::error::Error for Error {
     fn description(&self) -> &str {
         match *self {
-            Error::UnknownModule => "unknown module type",
+            Error::UnknownModule   => "unknown module type",
+            Error::UnknownCategory => "unknown module category",
         }
     }
 }
@@ -290,6 +293,29 @@ impl FromStr for ModuleType {
     }
 }
 
+impl FromStr for ModuleCategory {
+    type Err = Error;
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        use ModuleCategory::*;
+        let c = match &*s.to_uppercase() {
+            "DI"    => DI,
+            "DO"    => DO,
+            "AI"    => AI,
+            "AO"    => AO,
+            "CNT"   => CNT,
+            "PWM"   => PWM,
+            "RTD"   => RTD,
+            "TC"    => TC,
+            "COM"   => COM,
+            "RO"    => RO,
+            _ => {
+                return Err(Error::UnknownCategory);
+            }
+        };
+        Ok(c)
+    }
+}
+
 #[cfg(test)]
 mod tests {
 
@@ -326,5 +352,21 @@ mod tests {
             Error::UnknownModule
         );
 
+    }
+
+    #[test]
+    fn category_by_str_id() {
+        assert_eq!(
+            ModuleCategory::from_str("RTD").unwrap(),
+            ModuleCategory::RTD
+        );
+        assert_eq!(
+            ModuleCategory::from_str("rtd").unwrap(),
+            ModuleCategory::RTD
+        );
+        assert_eq!(
+            ModuleCategory::from_str("aO").unwrap(),
+            ModuleCategory::AO
+        );
     }
 }
