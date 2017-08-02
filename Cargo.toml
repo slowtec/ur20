@@ -1,6 +1,7 @@
 [package]
 name = "ur20"
-version = "0.0.0"
+version = "0.1.0"
 authors = ["Markus Kohlhase <markus.kohlhase@slowtec.de>"]
-
-[dependencies]
+license = "MIT/Apache-2.0"
+readme = "README.md"
+homepage = "https://github.com/slowtec/rust-ur20"
