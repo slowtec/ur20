@@ -149,6 +149,33 @@ impl ProcessOutputData {
         msg.append(&mut self.data);
         Ok(msg)
     }
+
+    pub fn try_from_byte_message(bytes: &[u8]) -> Result<Self, Error> {
+
+        if bytes.len() < 2 {
+            return Err(Error::BufferLength);
+        }
+
+        let status = bytes[0];
+        let data_len = bytes[1] as usize;
+
+        if bytes.len() < data_len + 2 {
+            return Err(Error::BufferLength);
+        }
+
+        let msg = ProcessOutputData {
+            rx_buf_flush: test_bit(status, 0),
+            tx_buf_flush: test_bit(status, 1),
+            disable_tx_hw_buffer: test_bit(status, 2),
+            tx_cnt: cnt_from_status_byte(status),
+            rx_cnt_ack: cnt_ack_from_status_byte(status),
+            active: test_bit(status, 7),
+            data: bytes[2..data_len + 2].into(),
+        };
+
+        Ok(msg)
+
+    }
 }
 
 const CNT_MASK     : u8 = 0b00011000;
@@ -290,5 +317,18 @@ mod tests {
         assert_eq!(rx_cnt_ack, vec![0b1100000, 0]);
         assert_eq!(active, vec![0b10000000, 0]);
         assert_eq!(data, vec![0, 4, 4, 3, 2, 1]);
+    }
+
+    #[test]
+    fn try_process_output_data_from_valid_byte_message() {
+        let byte_msg = vec![0b01011010, 3, 0x0, 0xe, 0x7];
+        let msg = ProcessOutputData::try_from_byte_message(&byte_msg).unwrap();
+        assert_eq!(msg.rx_buf_flush, false);
+        assert_eq!(msg.tx_buf_flush, true);
+        assert_eq!(msg.disable_tx_hw_buffer, false);
+        assert_eq!(msg.tx_cnt, 3);
+        assert_eq!(msg.rx_cnt_ack, 2);
+        assert_eq!(msg.active, false);
+        assert_eq!(msg.data, vec![0, 14, 7]);
     }
 }
