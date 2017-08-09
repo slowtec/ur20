@@ -3,17 +3,27 @@
 use std::fmt;
 use std::str::FromStr;
 
+pub(crate) mod util;
+
+pub mod ur20_1com_232_485_422;
+
 #[derive(Debug, PartialEq)]
 pub enum Error {
     UnknownModule,
     UnknownCategory,
+    BufferLength,
+    SequenceNumber,
+    DataLength,
 }
 
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
-            Error::UnknownModule   => write!(f, "unknown module type"),
-            Error::UnknownCategory => write!(f, "unknown module category"),
+            Error::UnknownModule    => write!(f, "unknown module type"),
+            Error::UnknownCategory  => write!(f, "unknown module category"),
+            Error::BufferLength     => write!(f, "invalid buffer length"),
+            Error::SequenceNumber   => write!(f, "invalid sequence number"),
+            Error::DataLength       => write!(f, "invalid data length"),
         }
     }
 }
@@ -21,8 +31,11 @@ impl fmt::Display for Error {
 impl ::std::error::Error for Error {
     fn description(&self) -> &str {
         match *self {
-            Error::UnknownModule   => "unknown module type",
-            Error::UnknownCategory => "unknown module category",
+            Error::UnknownModule    => "unknown module type",
+            Error::UnknownCategory  => "unknown module category",
+            Error::BufferLength     => "invalid buffer length",
+            Error::SequenceNumber   => "invalid sequence number",
+            Error::DataLength       => "invalid data length",
         }
     }
 }
@@ -364,9 +377,6 @@ mod tests {
             ModuleCategory::from_str("rtd").unwrap(),
             ModuleCategory::RTD
         );
-        assert_eq!(
-            ModuleCategory::from_str("aO").unwrap(),
-            ModuleCategory::AO
-        );
+        assert_eq!(ModuleCategory::from_str("aO").unwrap(), ModuleCategory::AO);
     }
 }
