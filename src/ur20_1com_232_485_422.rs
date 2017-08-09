@@ -127,25 +127,25 @@ impl ProcessOutputData {
         let mut status = 0;
 
         if self.rx_buf_flush {
-            status = set_bit(status,0);
+            status = set_bit(status, 0);
         }
 
         if self.tx_buf_flush {
-            status = set_bit(status,1);
+            status = set_bit(status, 1);
         }
 
         if self.disable_tx_hw_buffer {
-            status = set_bit(status,2);
+            status = set_bit(status, 2);
         }
 
         status = cnt_to_status_byte(self.tx_cnt, status);
         status = cnt_ack_to_status_byte(self.rx_cnt_ack, status);
 
         if self.active {
-            status = set_bit(status,7);
+            status = set_bit(status, 7);
         }
 
-        let mut msg = vec![status,self.data.len() as u8];
+        let mut msg = vec![status, self.data.len() as u8];
         msg.append(&mut self.data);
         Ok(msg)
     }
