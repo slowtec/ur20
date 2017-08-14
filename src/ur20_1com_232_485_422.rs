@@ -96,16 +96,16 @@ impl Default for ProcessOutputData {
 
 #[derive(Debug)]
 pub enum ProcessDataLength {
-    EightByte,
-    SixteenByte,
+    EightBytes,
+    SixteenBytes,
 }
 
 impl ProcessDataLength {
     pub fn user_data_len(&self) -> usize {
         use self::ProcessDataLength::*;
         match *self {
-            EightByte => 6,
-            SixteenByte => 14,
+            EightBytes => 6,
+            SixteenBytes => 14,
         }
     }
 }
@@ -250,13 +250,13 @@ mod tests {
         msg1.tx_cnt = 4;
         msg2.rx_cnt_ack = 4;
         msg3.data = vec![0, 0, 0, 0, 0, 0, 0];
-        let err1 = msg1.try_into_byte_message(&ProcessDataLength::EightByte)
+        let err1 = msg1.try_into_byte_message(&ProcessDataLength::EightBytes)
             .err()
             .unwrap();
-        let err2 = msg2.try_into_byte_message(&ProcessDataLength::EightByte)
+        let err2 = msg2.try_into_byte_message(&ProcessDataLength::EightBytes)
             .err()
             .unwrap();
-        let err3 = msg3.try_into_byte_message(&ProcessDataLength::EightByte)
+        let err3 = msg3.try_into_byte_message(&ProcessDataLength::EightBytes)
             .err()
             .unwrap();
         assert_eq!(err1, Error::SequenceNumber);
@@ -271,42 +271,42 @@ mod tests {
 
         let mut msg = default.clone();
         msg.active = false;
-        let empty = msg.try_into_byte_message(&ProcessDataLength::EightByte)
+        let empty = msg.try_into_byte_message(&ProcessDataLength::EightBytes)
             .unwrap();
 
         let mut msg = default.clone();
         msg.rx_buf_flush = true;
-        let flush_rx_buf = msg.try_into_byte_message(&ProcessDataLength::EightByte)
+        let flush_rx_buf = msg.try_into_byte_message(&ProcessDataLength::EightBytes)
             .unwrap();
 
         let mut msg = default.clone();
         msg.tx_buf_flush = true;
-        let flush_tx_buf = msg.try_into_byte_message(&ProcessDataLength::EightByte)
+        let flush_tx_buf = msg.try_into_byte_message(&ProcessDataLength::EightBytes)
             .unwrap();
 
         let mut msg = default.clone();
         msg.disable_tx_hw_buffer = true;
-        let disable_tx_hw_buffer = msg.try_into_byte_message(&ProcessDataLength::EightByte)
+        let disable_tx_hw_buffer = msg.try_into_byte_message(&ProcessDataLength::EightBytes)
             .unwrap();
 
         let mut msg = default.clone();
         msg.tx_cnt = 3;
-        let tx_cnt = msg.try_into_byte_message(&ProcessDataLength::EightByte)
+        let tx_cnt = msg.try_into_byte_message(&ProcessDataLength::EightBytes)
             .unwrap();
 
         let mut msg = default.clone();
         msg.rx_cnt_ack = 3;
-        let rx_cnt_ack = msg.try_into_byte_message(&ProcessDataLength::EightByte)
+        let rx_cnt_ack = msg.try_into_byte_message(&ProcessDataLength::EightBytes)
             .unwrap();
 
         let mut msg = default.clone();
         msg.active = true;
-        let active = msg.try_into_byte_message(&ProcessDataLength::EightByte)
+        let active = msg.try_into_byte_message(&ProcessDataLength::EightBytes)
             .unwrap();
 
         let mut msg = default.clone();
         msg.data = vec![4, 3, 2, 1];
-        let data = msg.try_into_byte_message(&ProcessDataLength::EightByte)
+        let data = msg.try_into_byte_message(&ProcessDataLength::EightBytes)
             .unwrap();
 
         assert_eq!(empty, vec![0, 0]);
