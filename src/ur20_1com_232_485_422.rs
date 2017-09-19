@@ -1,7 +1,6 @@
 use super::*;
 use util::*;
 
-#[allow(non_camel_case_types)]
 #[derive(Debug, Clone)]
 pub struct ProcessInputData {
     /// Indicates if there is a telegramm in the receive buffer or not.
@@ -23,7 +22,6 @@ pub struct ProcessInputData {
     pub data: Vec<u8>,
 }
 
-#[allow(non_camel_case_types)]
 #[derive(Debug, Clone)]
 pub struct ProcessOutputData {
     /// This flag controls whether the receive buffer will be cleared
@@ -51,6 +49,80 @@ pub struct ProcessOutputData {
     pub active: bool,
     /// User data of the transfered telegramm segment
     pub data: Vec<u8>,
+}
+
+#[allow(non_snake_case)]
+#[derive(Debug, Clone)]
+pub struct Parameters {
+    operating_mode: OperatingMode,
+    data_bits: DataBits,
+    baud_rate: BaudRate,
+    stop_bit: StopBit,
+    parity: Parity,
+    flow_control: FlowControl,
+    XON_char: char,
+    XOFF_char: char,
+    terminating_resistor: bool,
+    process_data_len: ProcessDataLength
+}
+
+#[allow(non_camel_case_types)]
+#[derive(Debug, Clone)]
+pub enum OperatingMode {
+    Disabled = 0,
+    RS232 = 1,
+    RS485 = 2,
+    RS422 = 3,
+}
+
+#[derive(Debug, Clone)]
+pub enum DataBits {
+    SevenBits = 0,
+    EightBits = 1
+}
+
+#[allow(non_camel_case_types)]
+#[derive(Debug, Clone)]
+pub enum BaudRate {
+    Baud_300    = 0,
+    Baud_600    = 1,
+    Baud_1200   = 2,
+    Baud_2400   = 3,
+    Baud_4800   = 4,
+    Baud_9600   = 5,
+    Baud_14400  = 6,
+    Baud_19200  = 7,
+    Baud_28800  = 8,
+    Baud_38400  = 9,
+    Baud_57600  = 10,
+    Baud_115200 = 11,
+}
+
+#[derive(Debug,Clone)]
+pub enum StopBit {
+    OneBit  = 0,
+    TwoBits = 1,
+}
+
+#[derive(Debug, Clone)]
+pub enum Parity {
+    None = 0,
+    Even = 1,
+    Odd  = 2
+}
+
+#[allow(non_camel_case_types)]
+#[derive(Debug, Clone)]
+pub enum FlowControl {
+    None     = 0,
+    CTS_RTS  = 1,
+    XON_XOFF = 2
+}
+
+#[derive(Debug,Clone)]
+pub enum ProcessDataLength {
+    EightBytes,
+    SixteenBytes,
 }
 
 impl ProcessInputData {
@@ -92,12 +164,6 @@ impl Default for ProcessOutputData {
             data: vec![],
         }
     }
-}
-
-#[derive(Debug)]
-pub enum ProcessDataLength {
-    EightBytes,
-    SixteenBytes,
 }
 
 impl ProcessDataLength {
