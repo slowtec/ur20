@@ -42,16 +42,28 @@ impl ::std::error::Error for Error {
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum ModuleCategory {
+    /// Digital input modules
     DI,
+    /// Digital output modules
     DO,
+    /// Analog input modules
     AI,
+    /// Analog output modules
     AO,
+    /// Counter modules
     CNT,
+    /// Pulse-width modulation modules
     PWM,
+    /// Resistance temperature detector modules
     RTD,
+    /// Thermo couple modules
     TC,
+    /// Communication modules
     COM,
+    /// Relay output modules
     RO,
+    /// Power feed modules
+    PF,
 }
 
 #[allow(non_camel_case_types)]
@@ -131,7 +143,11 @@ pub enum ModuleType {
     UR20_4AI_RTD_DIAG,
     UR20_4AI_TC_DIAG,
 
-    // Safe feed_in modules
+    // Power feed modules
+    UR20_PF_I,
+    UR20_PF_O,
+
+    // Safe feed-in modules
     UR20_PF_O_1DI_SIL,
     UR20_PF_O_2DI_SIL,
     UR20_PF_O_2DI_DELAY_SIL,
@@ -292,6 +308,9 @@ impl FromStr for ModuleType {
 
             "UR20_4AI_RTD_DIAG"        => UR20_4AI_RTD_DIAG,
             "UR20_4AI_TC_DIAG"         => UR20_4AI_TC_DIAG,
+
+            "UR20_PF_I"                => UR20_PF_I,
+            "UR20_PF_O"                => UR20_PF_O,
 
             "UR20_PF_O_1DI_SIL"        => UR20_PF_O_1DI_SIL,
             "UR20_PF_O_2DI_SIL"        => UR20_PF_O_2DI_SIL,
