@@ -5,6 +5,6 @@ use super::*;
 #[derive(Debug, Clone)]
 pub struct Parameters {
     pub data_format: DataFormat,
-    pub output_range: AnalogRange,
-    pub substitute_value: AnalogRange
+    pub output_range: AnalogUIRange,
+    pub substitute_value: AnalogUIRange
 }

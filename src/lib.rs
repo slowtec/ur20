@@ -8,6 +8,7 @@ pub(crate) mod util;
 pub mod ur20_fbc_mod_tcp;
 pub mod ur20_1com_232_485_422;
 pub mod ur20_4ao_ui_16;
+pub mod ur20_8ai_i_16_diag_hd;
 
 #[derive(Debug, PartialEq)]
 pub enum Error {
@@ -163,7 +164,7 @@ pub enum DataFormat {
 
 #[allow(non_camel_case_types)]
 #[derive(Debug, Clone, PartialEq)]
-pub enum AnalogRange {
+pub enum AnalogUIRange {
     mA0To20       = 0,
     mA4To20       = 1,
     V0To10        = 2,
@@ -173,6 +174,14 @@ pub enum AnalogRange {
     V1To5         = 6,
     V2To10        = 7,
     Disabled      = 8,
+}
+
+#[allow(non_camel_case_types)]
+#[derive(Debug, Clone, PartialEq)]
+pub enum AnalogIRange {
+    mA0To20  = 0,
+    mA4To20  = 1,
+    Disabled = 3,
 }
 
 impl ModuleType {
