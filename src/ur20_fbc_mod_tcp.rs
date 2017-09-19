@@ -1,21 +1,22 @@
 //! Modbus TCP fieldbus coupler UR20-FBC-MOD-TCP
 
-pub type ModbusAddress = u16;
 pub type Word = u16;
-pub type BitOffset = u16;
+pub type RegisterAddress = u16;
+pub type BitAddress = u16;
+pub type BitNr = usize;
 
-pub const ADDR_PACKED_PROCESS_INPUT_DATA  : ModbusAddress = 0x0000;
-pub const ADDR_PACKED_PROCESS_OUTPUT_DATA : ModbusAddress = 0x0800;
-pub const ADDR_COUPLER_ID                 : ModbusAddress = 0x1000;
-pub const ADDR_COUPLER_STATUS             : ModbusAddress = 0x100C;
-pub const ADDR_CURRENT_MODULE_LIST        : ModbusAddress = 0x2A00;
-pub const ADDR_MODULE_OFFSETS             : ModbusAddress = 0x2B00;
+pub const ADDR_PACKED_PROCESS_INPUT_DATA  : RegisterAddress = 0x0000;
+pub const ADDR_PACKED_PROCESS_OUTPUT_DATA : RegisterAddress = 0x0800;
+pub const ADDR_COUPLER_ID                 : RegisterAddress = 0x1000;
+pub const ADDR_COUPLER_STATUS             : RegisterAddress = 0x100C;
+pub const ADDR_CURRENT_MODULE_LIST        : RegisterAddress = 0x2A00;
+pub const ADDR_MODULE_OFFSETS             : RegisterAddress = 0x2B00;
 
 /// The packed process data offset addresses of a module.
 #[derive(Debug, Clone, PartialEq)]
 pub struct ModuleOffset {
-    pub input: Option<BitOffset>,
-    pub output: Option<BitOffset>,
+    pub input: Option<BitAddress>,
+    pub output: Option<BitAddress>,
 }
 
 /// Converts the register data into a list of module offsets.
@@ -30,12 +31,24 @@ pub fn offsets_of_process_data(data: &[Word]) -> Vec<ModuleOffset> {
     offsets
 }
 
-fn word_to_offset(word: Word) -> Option<BitOffset> {
+fn word_to_offset(word: Word) -> Option<BitAddress> {
     if word == 0xFFFF {
         None
     } else {
         Some(word)
     }
+}
+
+/// Splits a bit address into a register address and a bit number.
+pub fn bit_to_register_address(addr: BitAddress) -> (RegisterAddress, BitNr) {
+    let register = (addr & 0xFFF0) >> 4;
+    let bit = (addr & 0x000F) as usize;
+    (register as u16, bit)
+}
+
+/// Merges a register address and a bit number into a bit address.
+pub fn to_bit_address(addr: RegisterAddress, bit: usize) -> BitAddress {
+    (addr << 4) | (bit as u16)
 }
 
 #[cfg(test)]
@@ -62,5 +75,15 @@ mod tests {
                 },
             ]
         );
+    }
+
+    #[test]
+    fn test_bit_to_regsiter_address() {
+        assert_eq!(bit_to_register_address(0x80AB), (0x080A, 11));
+    }
+
+    #[test]
+    fn test_to_bit_address() {
+        assert_eq!(to_bit_address(0x080A, 11), 0x080AB);
     }
 }
