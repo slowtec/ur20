@@ -56,16 +56,16 @@ pub struct ProcessOutputData {
 #[allow(non_snake_case)]
 #[derive(Debug, Clone)]
 pub struct Parameters {
-    operating_mode: OperatingMode,
-    data_bits: DataBits,
-    baud_rate: BaudRate,
-    stop_bit: StopBit,
-    parity: Parity,
-    flow_control: FlowControl,
-    XON_char: char,
-    XOFF_char: char,
-    terminating_resistor: bool,
-    process_data_len: ProcessDataLength
+    pub operating_mode: OperatingMode,
+    pub data_bits: DataBits,
+    pub baud_rate: BaudRate,
+    pub stop_bit: StopBit,
+    pub parity: Parity,
+    pub flow_control: FlowControl,
+    pub XON_char: char,
+    pub XOFF_char: char,
+    pub terminating_resistor: bool,
+    pub process_data_len: ProcessDataLength
 }
 
 #[allow(non_camel_case_types)]
