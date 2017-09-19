@@ -348,6 +348,87 @@ impl FromStr for ModuleCategory {
     }
 }
 
+impl Into<ModuleCategory> for ModuleType {
+
+    fn into(self) -> ModuleCategory {
+        use ModuleType::*;
+        use ModuleCategory::*;
+        match self {
+            UR20_4DI_P              |
+            UR20_4DI_P_3W           |
+            UR20_8DI_P_2W           |
+            UR20_8DI_P_3W           |
+            UR20_8DI_P_3W_HD        |
+            UR20_16DI_P             |
+            UR20_16DI_P_PLC_INT     |
+            UR20_2DI_P_TS           |
+            UR20_4DI_P_TS           |
+            UR20_4DI_N              |
+            UR20_8DI_N_3W           |
+            UR20_16DI_N             |
+            UR20_16DI_N_PLC_INT     |
+            UR20_4DI_2W_230V_AC     => DI,
+
+            UR20_4DO_P              |
+            UR20_4DO_P_2A           |
+            UR20_4DO_PN_2A          |
+            UR20_8DO_P              |
+            UR20_8DO_P_2W_HD        |
+            UR20_16DO_P             |
+            UR20_16DO_P_PLC_INT     |
+            UR20_4DO_N              |
+            UR20_4DO_N_2A           |
+            UR20_8DO_N              |
+            UR20_16DO_N             |
+            UR20_16DO_N_PLC_INT     |
+            UR20_4RO_SSR_255        |
+            UR20_4RO_CO_255         => DO,
+
+            UR20_2PWM_PN_0_5A       |
+            UR20_2PWM_PN_2A         => PWM,
+
+            UR20_4AI_UI_16          |
+            UR20_4AI_UI_16_DIAG     |
+            UR20_4AI_UI_DIF_16_DIAG |
+            UR20_4AI_UI_16_HD       |
+            UR20_4AI_UI_16_DIAG_HD  |
+            UR20_4AI_UI_12          |
+            UR20_8AI_I_16_HD        |
+            UR20_8AI_I_16_DIAG_HD   |
+            UR20_8AI_I_PLC_INT      |
+            UR20_4AI_R_HS_16_DIAG   |
+            UR20_2AI_SG_24_DIAG     |
+            UR20_3EM_230V_AC        => AI,
+
+            UR20_4AO_UI_16          |
+            UR20_4AO_UI_16_M        |
+            UR20_4AO_UI_16_DIAG     |
+            UR20_4AO_UI_16_M_DIAG   |
+            UR20_4AO_UI_16_HD       |
+            UR20_4AO_UI_16_DIAG_HD  => AO,
+
+            UR20_1CNT_100_1DO       |
+            UR20_2CNT_100           |
+            UR20_1CNT_500           |
+            UR20_2FCNT_100          => CNT,
+
+            UR20_1SSI               |
+            UR20_1COM_232_485_422   |
+            UR20_1COM_SAI_PRO       |
+            UR20_4COM_IO_LINK       => COM,
+
+            UR20_4AI_RTD_DIAG       => RTD,
+            UR20_4AI_TC_DIAG        => TC,
+
+            UR20_PF_I               |
+            UR20_PF_O               |
+            UR20_PF_O_1DI_SIL       |
+            UR20_PF_O_2DI_SIL       |
+            UR20_PF_O_2DI_DELAY_SIL => PF,
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
 
