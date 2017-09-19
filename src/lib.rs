@@ -5,6 +5,7 @@ use std::str::FromStr;
 
 pub(crate) mod util;
 
+pub mod ur20_fbc_mod_tcp;
 pub mod ur20_1com_232_485_422;
 
 #[derive(Debug, PartialEq)]
