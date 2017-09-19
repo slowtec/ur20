@@ -1,3 +1,5 @@
+//! Serial communication module UR20-1COM-232-485-422
+
 use super::*;
 use util::*;
 

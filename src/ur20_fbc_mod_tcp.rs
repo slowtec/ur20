@@ -40,7 +40,7 @@ fn word_to_offset(word: Word) -> Option<BitAddress> {
 }
 
 /// Splits a bit address into a register address and a bit number.
-pub fn bit_to_register_address(addr: BitAddress) -> (RegisterAddress, BitNr) {
+pub fn to_register_address(addr: BitAddress) -> (RegisterAddress, BitNr) {
     let register = (addr & 0xFFF0) >> 4;
     let bit = (addr & 0x000F) as usize;
     (register as u16, bit)
@@ -78,8 +78,8 @@ mod tests {
     }
 
     #[test]
-    fn test_bit_to_regsiter_address() {
-        assert_eq!(bit_to_register_address(0x80AB), (0x080A, 11));
+    fn test_to_regsiter_address() {
+        assert_eq!(to_register_address(0x80AB), (0x080A, 11));
     }
 
     #[test]
