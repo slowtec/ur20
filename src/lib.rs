@@ -10,6 +10,7 @@ pub mod ur20_1com_232_485_422;
 pub mod ur20_4ao_ui_16;
 pub mod ur20_4do_p;
 pub mod ur20_8ai_i_16_diag_hd;
+pub mod ur20_2fcnt_100;
 
 #[derive(Debug, PartialEq)]
 pub enum Error {
@@ -183,6 +184,28 @@ pub enum AnalogIRange {
     mA0To20  = 0,
     mA4To20  = 1,
     Disabled = 3,
+}
+
+#[allow(non_camel_case_types)]
+#[derive(Debug, Clone, PartialEq)]
+pub enum InputFilter {
+    us5     = 0,
+    us11    = 1,
+    us21    = 2,
+    us43    = 3,
+    us83    = 4,
+    us167   = 5,
+    us333   = 6,
+    us667   = 7,
+    ms1     = 8,
+    ms3     = 9,
+    ms5     = 10,
+    ms11    = 11,
+    ms22    = 12,
+    ms43    = 13,
+    ms91    = 14,
+    ms167   = 15,
+    ms333   = 16,
 }
 
 impl ModuleType {
