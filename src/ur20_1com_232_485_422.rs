@@ -4,7 +4,7 @@ use super::*;
 use util::*;
 
 #[derive(Debug, Clone)]
-pub struct ProcessInputData {
+pub struct ProcessInput {
     /// Indicates if there is a telegramm in the receive buffer or not.
     pub data_available: bool,
     /// If this flag is set there are only 10 characters left in the receive
@@ -25,7 +25,7 @@ pub struct ProcessInputData {
 }
 
 #[derive(Debug, Clone)]
-pub struct ProcessOutputData {
+pub struct ProcessOutput {
     /// This flag controls whether the receive buffer will be cleared
     /// or not.
     pub rx_buf_flush: bool,
@@ -65,7 +65,7 @@ pub struct Parameters {
     pub XON_char: char,
     pub XOFF_char: char,
     pub terminating_resistor: bool,
-    pub process_data_len: ProcessDataLength
+    pub process_data_len: ProcessDataLength,
 }
 
 #[allow(non_camel_case_types)]
@@ -80,7 +80,7 @@ pub enum OperatingMode {
 #[derive(Debug, Clone)]
 pub enum DataBits {
     SevenBits = 0,
-    EightBits = 1
+    EightBits = 1,
 }
 
 #[allow(non_camel_case_types)]
@@ -100,7 +100,7 @@ pub enum BaudRate {
     Baud_115200 = 11,
 }
 
-#[derive(Debug,Clone)]
+#[derive(Debug, Clone)]
 pub enum StopBit {
     OneBit  = 0,
     TwoBits = 1,
@@ -121,13 +121,13 @@ pub enum FlowControl {
     XON_XOFF = 2
 }
 
-#[derive(Debug,Clone)]
+#[derive(Debug, Clone)]
 pub enum ProcessDataLength {
     EightBytes,
     SixteenBytes,
 }
 
-impl ProcessInputData {
+impl ProcessInput {
     pub fn try_from_byte_message(bytes: &[u8]) -> Result<Self, Error> {
 
         if bytes.len() < 2 {
@@ -141,7 +141,7 @@ impl ProcessInputData {
             return Err(Error::BufferLength);
         }
 
-        let msg = ProcessInputData {
+        let msg = ProcessInput {
             data_available: test_bit(status, 0),
             buffer_nearly_full: test_bit(status, 1),
             rx_cnt: cnt_from_status_byte(status),
@@ -154,9 +154,9 @@ impl ProcessInputData {
     }
 }
 
-impl Default for ProcessOutputData {
+impl Default for ProcessOutput {
     fn default() -> Self {
-        ProcessOutputData {
+        ProcessOutput {
             rx_buf_flush: false,
             tx_buf_flush: false,
             disable_tx_hw_buffer: false,
@@ -178,7 +178,7 @@ impl ProcessDataLength {
     }
 }
 
-impl ProcessOutputData {
+impl ProcessOutput {
     pub fn try_into_byte_message(
         mut self,
         process_data_length: &ProcessDataLength,
@@ -231,7 +231,7 @@ impl ProcessOutputData {
             return Err(Error::BufferLength);
         }
 
-        let msg = ProcessOutputData {
+        let msg = ProcessOutput {
             rx_buf_flush: test_bit(status, 0),
             tx_buf_flush: test_bit(status, 1),
             disable_tx_hw_buffer: test_bit(status, 2),
@@ -275,7 +275,7 @@ mod tests {
     #[test]
     fn try_process_input_data_from_empty_byte_message() {
         let byte_msg = vec![0, 0];
-        let msg = ProcessInputData::try_from_byte_message(&byte_msg).unwrap();
+        let msg = ProcessInput::try_from_byte_message(&byte_msg).unwrap();
         assert_eq!(msg.data_available, false);
         assert_eq!(msg.buffer_nearly_full, false);
         assert_eq!(msg.rx_cnt, 0);
@@ -286,13 +286,13 @@ mod tests {
 
     #[test]
     fn try_process_input_data_from_invalid_byte_message() {
-        let too_small_err = ProcessInputData::try_from_byte_message(&vec![0])
+        let too_small_err = ProcessInput::try_from_byte_message(&vec![0])
             .err()
             .unwrap();
-        let missmatched_len_err = ProcessInputData::try_from_byte_message(&vec![0, 5, 0])
+        let missmatched_len_err = ProcessInput::try_from_byte_message(&vec![0, 5, 0])
             .err()
             .unwrap();
-        let ok_res = ProcessInputData::try_from_byte_message(&vec![0, 5, 0, 0, 0, 0, 0]);
+        let ok_res = ProcessInput::try_from_byte_message(&vec![0, 5, 0, 0, 0, 0, 0]);
         assert_eq!(too_small_err, Error::BufferLength);
         assert_eq!(missmatched_len_err, Error::BufferLength);
         assert!(ok_res.is_ok());
@@ -301,7 +301,7 @@ mod tests {
     #[test]
     fn try_process_input_data_from_valid_byte_message() {
         let byte_msg = vec![0b11110001, 3, 0x0, 0xf, 0x5];
-        let msg = ProcessInputData::try_from_byte_message(&byte_msg).unwrap();
+        let msg = ProcessInput::try_from_byte_message(&byte_msg).unwrap();
         assert_eq!(msg.data_available, true);
         assert_eq!(msg.buffer_nearly_full, false);
         assert_eq!(msg.rx_cnt, 2);
@@ -312,9 +312,9 @@ mod tests {
 
     #[test]
     fn try_invalid_process_output_data_into_byte_message() {
-        let mut msg1 = ProcessOutputData::default();
-        let mut msg2 = ProcessOutputData::default();
-        let mut msg3 = ProcessOutputData::default();
+        let mut msg1 = ProcessOutput::default();
+        let mut msg2 = ProcessOutput::default();
+        let mut msg3 = ProcessOutput::default();
         msg1.tx_cnt = 4;
         msg2.rx_cnt_ack = 4;
         msg3.data = vec![0, 0, 0, 0, 0, 0, 0];
@@ -335,7 +335,7 @@ mod tests {
     #[test]
     fn try_valid_process_output_data_into_byte_message() {
 
-        let default = ProcessOutputData::default();
+        let default = ProcessOutput::default();
 
         let mut msg = default.clone();
         msg.active = false;
@@ -390,7 +390,7 @@ mod tests {
     #[test]
     fn try_process_output_data_from_valid_byte_message() {
         let byte_msg = vec![0b01011010, 3, 0x0, 0xe, 0x7];
-        let msg = ProcessOutputData::try_from_byte_message(&byte_msg).unwrap();
+        let msg = ProcessOutput::try_from_byte_message(&byte_msg).unwrap();
         assert_eq!(msg.rx_buf_flush, false);
         assert_eq!(msg.tx_buf_flush, true);
         assert_eq!(msg.disable_tx_hw_buffer, false);
