@@ -9,6 +9,7 @@ pub mod ur20_fbc_mod_tcp;
 pub mod ur20_1com_232_485_422;
 pub mod ur20_4ao_ui_16;
 pub mod ur20_4do_p;
+pub mod ur20_4di_p;
 pub mod ur20_8ai_i_16_diag_hd;
 pub mod ur20_2fcnt_100;
 
@@ -206,6 +207,17 @@ pub enum InputFilter {
     ms91    = 14,
     ms167   = 15,
     ms333   = 16,
+}
+
+#[allow(non_camel_case_types)]
+#[derive(Debug, Clone, PartialEq)]
+pub enum InputDelay {
+    no    = 0,
+    us300 = 1, // not at PROFIBUS-DP
+    ms3   = 2, // default
+    ms10  = 3,
+    ms20  = 4,
+    ms40  = 5, // not at PROFIBUS-DP
 }
 
 impl ModuleType {
