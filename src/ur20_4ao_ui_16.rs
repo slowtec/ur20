@@ -3,7 +3,7 @@
 use super::*;
 
 #[derive(Debug, Clone)]
-pub struct Parameters {
+pub struct ChannelParameters {
     pub data_format: DataFormat,
     pub output_range: AnalogUIRange,
     pub substitute_value: AnalogUIRange

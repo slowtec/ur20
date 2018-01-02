@@ -3,7 +3,12 @@
 use super::*;
 
 #[derive(Debug, Clone)]
-pub struct Parameters {
+pub struct ModuleParameters {
+    pub frequency_suppression: FrequencySuppression
+}
+
+#[derive(Debug, Clone)]
+pub struct ChannelParameters {
     pub channel_diagnostics: bool,
     pub diag_short_circuit: bool,
     pub data_format: DataFormat,

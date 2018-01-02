@@ -3,6 +3,6 @@
 use super::*;
 
 #[derive(Debug, Clone)]
-pub struct Parameters {
+pub struct ChannelParameters {
     pub input_filter: InputFilter,
 }

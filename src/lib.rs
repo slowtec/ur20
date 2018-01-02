@@ -220,6 +220,15 @@ pub enum InputDelay {
     ms40  = 5, // not at PROFIBUS-DP
 }
 
+#[allow(non_camel_case_types)]
+#[derive(Debug, Clone, PartialEq)]
+pub enum FrequencySuppression {
+    Disabled  = 0,
+    Hz50      = 1,
+    Hz60      = 2,
+    Average16 = 3, // Average over 16 values
+}
+
 impl ModuleType {
     pub fn try_from_u32(id: u32) -> Result<Self, Error> {
 

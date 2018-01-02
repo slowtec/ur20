@@ -55,7 +55,7 @@ pub struct ProcessOutput {
 
 #[allow(non_snake_case)]
 #[derive(Debug, Clone)]
-pub struct Parameters {
+pub struct ModuleParameters {
     pub operating_mode: OperatingMode,
     pub data_bits: DataBits,
     pub baud_rate: BaudRate,
