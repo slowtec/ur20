@@ -5,7 +5,7 @@
 
 ## License
 
-Copyright (c) 2017, slowtec GmbH <post@slowtec.de>
+Copyright (c) 2017 - 2018, slowtec GmbH <post@slowtec.de>
 
 Licensed under either of
 
