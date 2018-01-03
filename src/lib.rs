@@ -20,6 +20,7 @@ pub enum Error {
     BufferLength,
     SequenceNumber,
     DataLength,
+    RegisterCount,
 }
 
 impl fmt::Display for Error {
@@ -30,6 +31,7 @@ impl fmt::Display for Error {
             Error::BufferLength     => write!(f, "invalid buffer length"),
             Error::SequenceNumber   => write!(f, "invalid sequence number"),
             Error::DataLength       => write!(f, "invalid data length"),
+            Error::RegisterCount    => write!(f, "invalid number of registers"),
         }
     }
 }
@@ -42,6 +44,7 @@ impl ::std::error::Error for Error {
             Error::BufferLength     => "invalid buffer length",
             Error::SequenceNumber   => "invalid sequence number",
             Error::DataLength       => "invalid data length",
+            Error::RegisterCount    => "invalid number of registers",
         }
     }
 }
@@ -509,7 +512,7 @@ pub fn channel_count_from_module_type(t: &ModuleType) -> usize {
 
     use ModuleType::*;
 
-    match *t { 
+    match *t {
 
         UR20_PF_I               |
         UR20_PF_O               |
@@ -583,6 +586,22 @@ pub fn channel_count_from_module_type(t: &ModuleType) -> usize {
     }
 }
 
+pub fn module_list_from_registers(registers: &[u16]) -> Result<Vec<ModuleType>, Error> {
+    if registers.len() == 0 || registers.len() % 2 != 0 {
+        return Err(Error::RegisterCount);
+    }
+    let mut list = vec![];
+    for i in 0..registers.len() / 2 {
+        let idx = i as usize;
+        let hi = registers[idx * 2] as u32;
+        let lo = registers[idx * 2 + 1] as u32;
+        let id = (hi << 16) + lo;
+        let m = ModuleType::try_from_u32(id)?;
+        list.push(m);
+    }
+    Ok(list)
+}
+
 #[cfg(test)]
 mod tests {
 
@@ -632,5 +651,21 @@ mod tests {
             ModuleCategory::RTD
         );
         assert_eq!(ModuleCategory::from_str("aO").unwrap(), ModuleCategory::AO);
+    }
+
+    #[test]
+    fn test_module_list_from_registers() {
+        assert_eq!(
+            module_list_from_registers(&vec![]).err().unwrap(),
+            Error::RegisterCount
+        );
+        assert_eq!(
+            module_list_from_registers(&vec![0xAB0C]).err().unwrap(),
+            Error::RegisterCount
+        );
+        assert_eq!(
+            module_list_from_registers(&vec![0x0101, 0x2FA0]).unwrap(),
+            vec![ModuleType::UR20_4DO_P]
+        );
     }
 }
