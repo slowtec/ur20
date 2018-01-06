@@ -70,7 +70,6 @@ impl Module for Mod {
         if self.ch_params.len() != 4 {
             return Err(Error::ChannelParameter);
         }
-        let unit = &self.mod_params.temperature_unit;
         let res = (0..4)
             .map(|i| (data[i], &self.ch_params[i].measurement_range))
             .map(|(val, range)| {

@@ -146,7 +146,9 @@ pub enum ModuleType {
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum DataFormat {
+    /// Siemens S5 format
     S5 = 0,
+    /// Siemens S7 format
     S7 = 1
 }
 
@@ -266,7 +268,7 @@ pub enum InputFilter {
 pub enum InputDelay {
     no    = 0,
     us300 = 1, // not at PROFIBUS-DP
-    ms3   = 2, // default
+    ms3   = 2,
     ms10  = 3,
     ms20  = 4,
     ms40  = 5, // not at PROFIBUS-DP
