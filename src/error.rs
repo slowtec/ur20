@@ -8,6 +8,7 @@ pub enum Error {
     SequenceNumber,
     DataLength,
     RegisterCount,
+    ChannelParameter,
 }
 
 impl fmt::Display for Error {
@@ -19,6 +20,7 @@ impl fmt::Display for Error {
             Error::SequenceNumber   => write!(f, "invalid sequence number"),
             Error::DataLength       => write!(f, "invalid data length"),
             Error::RegisterCount    => write!(f, "invalid number of registers"),
+            Error::ChannelParameter => write!(f, "invalid channel paramater(s)"),
         }
     }
 }
@@ -32,6 +34,7 @@ impl ::std::error::Error for Error {
             Error::SequenceNumber   => "invalid sequence number",
             Error::DataLength       => "invalid data length",
             Error::RegisterCount    => "invalid number of registers",
+            Error::ChannelParameter => "invalid channel paramater(s)",
         }
     }
 }

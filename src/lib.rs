@@ -12,6 +12,7 @@ pub mod ur20_4do_p;
 pub mod ur20_4di_p;
 pub mod ur20_8ai_i_16_diag_hd;
 pub mod ur20_2fcnt_100;
+pub mod ur20_4ai_rtd_diag;
 
 pub use error::*;
 
@@ -169,6 +170,73 @@ pub enum AnalogIRange {
     mA0To20  = 0,
     mA4To20  = 1,
     Disabled = 3,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum RtdRange {
+    /// -200 ... 850 Degree Celsius
+    PT100 = 0,
+    /// -200 ... 850 Degree Celsius
+    PT200 = 1,
+    /// -200 ... 850 Degree Celsius
+    PT500 = 2,
+    /// -200 ... 850 Degree Celsius
+    PT1000 = 3,
+    /// -60 ... 250 Degree Celsius
+    NI100 = 4,
+    /// -80 ... 260 Degree Celsius
+    NI120 = 5,
+    /// -60 ... 250 Degree Celsius
+    NI200 = 6,
+    /// -60 ... 250 Degree Celsius
+    NI500 = 7,
+    /// -60 ... 250 Degree Celsius
+    NI1000 = 8,
+    /// -100 ... 260 Degree Celsius
+    Cu10 = 9,
+    /// Resistance 40 Ω
+    R40 = 10,
+    /// Resistance 80 Ω
+    R80 = 11,
+    /// Resistance 150 Ω
+    R150 = 12,
+    /// Resistance 300 Ω
+    R300 = 13,
+    /// Resistance 500 Ω
+    R500 = 14,
+    /// Resistance 1000 Ω
+    R1000 = 15,
+    /// Resistance 2000 Ω
+    R2000 = 16,
+    /// Resistance 4000 Ω
+    R4000 = 17,
+    /// Disabled
+    Disabled = 18
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum TemperatureUnit {
+    Celsius    = 0,
+    Fahrenheit = 1,
+    Kelvin     = 2,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum ConnectionType {
+    TwoWire   = 0,
+    ThreeWire = 1,
+    FourWire  = 2,
+}
+
+#[allow(non_camel_case_types)]
+#[derive(Debug, Clone, PartialEq)]
+pub enum ConversionTime {
+    ms240 = 0,
+    ms130 = 1,
+    ms80  = 2,
+    ms55  = 3,
+    ms43  = 4,
+    ms36  = 5,
 }
 
 #[allow(non_camel_case_types)]
