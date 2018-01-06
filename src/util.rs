@@ -4,7 +4,11 @@ pub fn set_bit(mut val: u8, bit_nr: usize) -> u8 {
 }
 
 pub fn test_bit(val: u8, bit_nr: usize) -> bool {
-    (val & bit_mask(bit_nr) as u8) != 0
+    test_bit_16(val as u16, bit_nr)
+}
+
+pub fn test_bit_16(val: u16, bit_nr: usize) -> bool {
+    (val & bit_mask(bit_nr) as u16) != 0
 }
 
 fn bit_mask(bit: usize) -> usize {
