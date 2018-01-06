@@ -50,6 +50,21 @@ impl ::std::error::Error for Error {
 }
 
 #[derive(Debug, Clone, PartialEq)]
+pub enum ChannelValue {
+    Bit(bool),
+    Decimal32(f32),
+    Disabled,
+    None,
+}
+
+trait Module {
+    /// Number of 16-Bit words within the process input data buffer.
+    fn process_input_word_count(&self) -> usize;
+    /// Transform raw module input data into a list of channel values.
+    fn process_input(&mut self, &[u16]) -> Result<Vec<ChannelValue>, Error>;
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub enum ModuleCategory {
     /// Digital input modules
     DI,
