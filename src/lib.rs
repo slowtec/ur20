@@ -20,6 +20,7 @@ pub use error::*;
 pub enum ChannelValue {
     Bit(bool),
     Decimal32(f32),
+    Bytes(Vec<u8>),
     Disabled,
     None,
 }
