@@ -24,6 +24,13 @@ impl Default for ChannelParameters {
     }
 }
 
+impl Default for Mod {
+    fn default() -> Self {
+        let ch_params = (0..4).map(|_| ChannelParameters::default()).collect();
+        Mod { ch_params }
+    }
+}
+
 impl Module for Mod {
     fn process_input_byte_count(&self) -> usize {
         0
