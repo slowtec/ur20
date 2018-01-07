@@ -9,5 +9,8 @@ homepage = "https://github.com/slowtec/rust-ur20"
 repository = "https://github.com/slowtec/rust-ur20"
 keywords = ["fieldbus"]
 
+[dependencies]
+byteorder = "1"
+
 [badges]
 travis-ci = { repository = "slowtec/rust-ur20" }

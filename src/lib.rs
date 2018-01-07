@@ -1,5 +1,7 @@
 // Copyright (c) 2017 - 2018 slowtec GmbH <markus.kohlhase@slowtec.de>
 
+extern crate byteorder;
+
 use std::str::FromStr;
 
 mod error;

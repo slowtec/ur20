@@ -9,6 +9,7 @@ pub enum Error {
     DataLength,
     RegisterCount,
     ChannelParameter,
+    ModuleOffset,
 }
 
 impl fmt::Display for Error {
@@ -21,6 +22,7 @@ impl fmt::Display for Error {
             Error::DataLength       => write!(f, "invalid data length"),
             Error::RegisterCount    => write!(f, "invalid number of registers"),
             Error::ChannelParameter => write!(f, "invalid channel paramater(s)"),
+            Error::ModuleOffset     => write!(f, "invalid module offset"),
         }
     }
 }
@@ -35,6 +37,7 @@ impl ::std::error::Error for Error {
             Error::DataLength       => "invalid data length",
             Error::RegisterCount    => "invalid number of registers",
             Error::ChannelParameter => "invalid channel paramater(s)",
+            Error::ModuleOffset     => "invalid module offset",
         }
     }
 }
