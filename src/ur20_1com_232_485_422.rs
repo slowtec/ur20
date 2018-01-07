@@ -3,6 +3,10 @@
 use super::*;
 use util::*;
 
+pub struct Mod {
+    pub mod_params: ModuleParameters,
+}
+
 #[derive(Debug, Clone)]
 pub struct ProcessInput {
     /// Indicates if there is a telegramm in the receive buffer or not.
@@ -246,6 +250,48 @@ impl ProcessOutput {
     }
 }
 
+impl Default for ModuleParameters {
+    fn default() -> Self {
+        ModuleParameters {
+            operating_mode: OperatingMode::Disabled,
+            data_bits: DataBits::EightBits,
+            baud_rate: BaudRate::Baud_9600,
+            stop_bit: StopBit::OneBit,
+            parity: Parity::None,
+            flow_control: FlowControl::None,
+            XON_char: 17 as char,
+            XOFF_char: 19 as char,
+            terminating_resistor: false,
+            process_data_len: ProcessDataLength::SixteenBytes,
+        }
+    }
+}
+
+impl Default for Mod {
+    fn default() -> Self {
+        Mod { mod_params: ModuleParameters::default() }
+    }
+}
+
+impl Module for Mod {
+    fn process_input_word_count(&self) -> usize {
+        match self.mod_params.process_data_len {
+            ProcessDataLength::EightBytes => 4,
+            ProcessDataLength::SixteenBytes => 8,
+        }
+    }
+
+    fn process_input(&mut self, data: &[u16]) -> Result<Vec<ChannelValue>, Error> {
+        let buf: Vec<u8> = data.iter().fold(vec![], |mut x, elem| {
+            x.push((elem & 0xff) as u8);
+            x.push((elem >> 8) as u8);
+            x
+        });
+        let input = ProcessInput::try_from_byte_message(&buf)?;
+        Ok(vec![ChannelValue::Bytes(input.data)])
+    }
+}
+
 const CNT_MASK     : u8 = 0b00011000;
 const CNT_ACK_MASK : u8 = 0b01100000;
 
@@ -286,9 +332,7 @@ mod tests {
 
     #[test]
     fn try_process_input_data_from_invalid_byte_message() {
-        let too_small_err = ProcessInput::try_from_byte_message(&vec![0])
-            .err()
-            .unwrap();
+        let too_small_err = ProcessInput::try_from_byte_message(&vec![0]).err().unwrap();
         let missmatched_len_err = ProcessInput::try_from_byte_message(&vec![0, 5, 0])
             .err()
             .unwrap();
@@ -398,5 +442,11 @@ mod tests {
         assert_eq!(msg.rx_cnt_ack, 2);
         assert_eq!(msg.active, false);
         assert_eq!(msg.data, vec![0, 14, 7]);
+    }
+
+    #[test]
+    fn test_process_input_with_empty_buffer() {
+        let mut m = Mod::default();
+        assert!(m.process_input(&vec![]).is_err());
     }
 }
