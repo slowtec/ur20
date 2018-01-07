@@ -24,9 +24,9 @@ pub enum ChannelValue {
     None,
 }
 
-pub trait Module {
-    /// Number of 16-Bit words within the process input data buffer.
-    fn process_input_word_count(&self) -> usize;
+pub trait Module : std::fmt::Debug {
+    /// Number of bytes within the process input data buffer.
+    fn process_input_byte_count(&self) -> usize;
     /// Transform raw module input data into a list of channel values.
     fn process_input(&mut self, &[u16]) -> Result<Vec<ChannelValue>, Error>;
 }

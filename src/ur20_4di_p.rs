@@ -3,6 +3,7 @@
 use super::*;
 use super::util::test_bit_16;
 
+#[derive(Debug)]
 pub struct Mod {
     pub ch_params: Vec<ChannelParameters>
 }
@@ -28,8 +29,8 @@ impl Default for Mod {
 }
 
 impl Module for Mod {
-    fn process_input_word_count(&self) -> usize {
-        4
+    fn process_input_byte_count(&self) -> usize {
+        1
     }
 
     fn process_input(&mut self, data: &[u16]) -> Result<Vec<ChannelValue>, Error> {

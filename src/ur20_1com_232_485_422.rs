@@ -3,6 +3,7 @@
 use super::*;
 use util::*;
 
+#[derive(Debug)]
 pub struct Mod {
     pub mod_params: ModuleParameters,
 }
@@ -274,10 +275,10 @@ impl Default for Mod {
 }
 
 impl Module for Mod {
-    fn process_input_word_count(&self) -> usize {
+    fn process_input_byte_count(&self) -> usize {
         match self.mod_params.process_data_len {
-            ProcessDataLength::EightBytes => 4,
-            ProcessDataLength::SixteenBytes => 8,
+            ProcessDataLength::EightBytes => 8,
+            ProcessDataLength::SixteenBytes => 16,
         }
     }
 

@@ -5,6 +5,7 @@ use super::*;
 const S5_FACTOR: u16 = 16384;
 const S7_FACTOR: u16 = 27648;
 
+#[derive(Debug)]
 pub struct Mod {
     pub mod_params: ModuleParameters,
     pub ch_params: Vec<ChannelParameters>,
@@ -55,8 +56,8 @@ impl Default for Mod {
 }
 
 impl Module for Mod {
-    fn process_input_word_count(&self) -> usize {
-        8
+    fn process_input_byte_count(&self) -> usize {
+        16
     }
 
     fn process_input(&mut self, data: &[u16]) -> Result<Vec<ChannelValue>, Error> {

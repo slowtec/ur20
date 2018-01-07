@@ -2,6 +2,7 @@
 
 use super::*;
 
+#[derive(Debug)]
 pub struct Mod {
     pub ch_params: Vec<ChannelParameters>,
 }
@@ -25,7 +26,7 @@ impl Default for Mod {
 }
 
 impl Module for Mod {
-    fn process_input_word_count(&self) -> usize {
+    fn process_input_byte_count(&self) -> usize {
         0
     }
 
