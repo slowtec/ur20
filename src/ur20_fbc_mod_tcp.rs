@@ -7,6 +7,8 @@ pub type BitNr = usize;
 
 pub const ADDR_PACKED_PROCESS_INPUT_DATA  : RegisterAddress = 0x0000;
 pub const ADDR_PACKED_PROCESS_OUTPUT_DATA : RegisterAddress = 0x0800;
+pub const ADDR_PROCESS_OUTPUT_LEN         : RegisterAddress = 0x1010;
+pub const ADDR_PROCESS_INPUT_LEN          : RegisterAddress = 0x1011;
 pub const ADDR_COUPLER_ID                 : RegisterAddress = 0x1000;
 pub const ADDR_COUPLER_STATUS             : RegisterAddress = 0x100C;
 pub const ADDR_CURRENT_MODULE_COUNT       : RegisterAddress = 0x27FE;
