@@ -9,6 +9,7 @@ pub const ADDR_PACKED_PROCESS_INPUT_DATA  : RegisterAddress = 0x0000;
 pub const ADDR_PACKED_PROCESS_OUTPUT_DATA : RegisterAddress = 0x0800;
 pub const ADDR_COUPLER_ID                 : RegisterAddress = 0x1000;
 pub const ADDR_COUPLER_STATUS             : RegisterAddress = 0x100C;
+pub const ADDR_CURRENT_MODULE_COUNT       : RegisterAddress = 0x27FE;
 pub const ADDR_CURRENT_MODULE_LIST        : RegisterAddress = 0x2A00;
 pub const ADDR_MODULE_OFFSETS             : RegisterAddress = 0x2B00;
 
