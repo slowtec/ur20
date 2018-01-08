@@ -5,6 +5,11 @@ pub fn set_bit(mut val: u8, bit_nr: usize) -> u8 {
     val
 }
 
+pub fn set_bit_16(mut val: u16, bit_nr: usize) -> u16 {
+    val |= bit_mask(bit_nr) as u16;
+    val
+}
+
 pub fn test_bit(val: u8, bit_nr: usize) -> bool {
     test_bit_16(val as u16, bit_nr)
 }

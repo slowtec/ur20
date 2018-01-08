@@ -2,9 +2,6 @@
 
 use super::*;
 
-const S5_FACTOR: u16 = 16384;
-const S7_FACTOR: u16 = 27648;
-
 #[derive(Debug)]
 pub struct Mod {
     pub mod_params: ModuleParameters,
@@ -71,7 +68,7 @@ impl Module for Mod {
         }
 
         if self.ch_params.len() != 8 {
-            return Err(Error::BufferLength);
+            return Err(Error::ChannelParameter);
         }
 
         let res = (0..8)
@@ -95,6 +92,12 @@ impl Module for Mod {
             })
             .collect();
         Ok(res)
+    }
+    fn values_into_output_data(&mut self, values: &[ChannelValue]) -> Result<Vec<u16>> {
+        if values.len() != 0 {
+            return Err(Error::ChannelValue);
+        }
+        Ok(vec![])
     }
 }
 
@@ -158,5 +161,15 @@ mod tests {
                 Disabled,
             ]
         );
+    }
+
+    #[test]
+    fn test_values_into_output_data() {
+        let mut m = Mod::default();
+        assert!(
+            m.values_into_output_data(&[ChannelValue::Decimal32(0.0)])
+                .is_err()
+        );
+        assert_eq!(m.values_into_output_data(&[]).unwrap(), &[]);
     }
 }

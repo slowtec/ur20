@@ -19,6 +19,9 @@ pub mod ur20_4ai_rtd_diag;
 
 pub use error::*;
 
+const S5_FACTOR: u16 = 16384;
+const S7_FACTOR: u16 = 27648;
+
 #[derive(Debug, Clone, PartialEq)]
 pub enum ChannelValue {
     Bit(bool),
@@ -28,15 +31,17 @@ pub enum ChannelValue {
     None,
 }
 
-pub type Result<T> = result::Result<T,Error>;
+pub type Result<T> = result::Result<T, Error>;
 
-pub trait Module : std::fmt::Debug {
+pub trait Module: std::fmt::Debug {
     /// Get concrete i/o module type.
     fn module_type(&self) -> ModuleType;
     /// Number of bytes within the process input data buffer.
     fn process_input_byte_count(&self) -> usize;
     /// Transform raw module input data into a list of channel values.
     fn process_input(&mut self, &[u16]) -> Result<Vec<ChannelValue>>;
+    /// Transform channel values into raw module output data.
+    fn values_into_output_data(&mut self, &[ChannelValue]) -> Result<Vec<u16>>;
 }
 
 #[derive(Debug, Clone, PartialEq)]

@@ -124,6 +124,12 @@ impl Module for Mod {
             .collect();
         Ok(res)
     }
+    fn values_into_output_data(&mut self, values: &[ChannelValue]) -> Result<Vec<u16>> {
+        if values.len() != 0 {
+            return Err(Error::ChannelValue);
+        }
+        Ok(vec![])
+    }
 }
 
 #[cfg(test)]
@@ -184,5 +190,15 @@ mod tests {
             m.process_input(&vec![0xF830, 0xFF38, 0, 0]).unwrap(),
             vec![Decimal32(-200.0), Decimal32(-20.0), Disabled, Disabled]
         );
+    }
+
+    #[test]
+    fn test_values_into_output_data() {
+        let mut m = Mod::default();
+        assert!(
+            m.values_into_output_data(&[ChannelValue::Decimal32(0.0)])
+                .is_err()
+        );
+        assert_eq!(m.values_into_output_data(&[]).unwrap(), &[]);
     }
 }

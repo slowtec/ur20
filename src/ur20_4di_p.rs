@@ -5,7 +5,7 @@ use super::util::test_bit_16;
 
 #[derive(Debug)]
 pub struct Mod {
-    pub ch_params: Vec<ChannelParameters>
+    pub ch_params: Vec<ChannelParameters>,
 }
 
 #[derive(Debug, Clone)]
@@ -15,9 +15,7 @@ pub struct ChannelParameters {
 
 impl Default for ChannelParameters {
     fn default() -> Self {
-        ChannelParameters {
-            input_delay: InputDelay::ms3,
-        }
+        ChannelParameters { input_delay: InputDelay::ms3 }
     }
 }
 
@@ -41,9 +39,15 @@ impl Module for Mod {
         }
         let bits = data[0];
         let res = (0..4)
-            .map(|i| ChannelValue::Bit(test_bit_16(bits,i)))
+            .map(|i| ChannelValue::Bit(test_bit_16(bits, i)))
             .collect();
         Ok(res)
+    }
+    fn values_into_output_data(&mut self, values: &[ChannelValue]) -> Result<Vec<u16>> {
+        if values.len() != 0 {
+            return Err(Error::ChannelValue);
+        }
+        Ok(vec![])
     }
 }
 
@@ -60,12 +64,17 @@ mod tests {
         let data = vec![0b0100];
         assert_eq!(
             m.process_input(&data).unwrap(),
-        vec![
-            Bit(false),
-            Bit(false),
-            Bit(true),
-            Bit(false)
-        ]
+            vec![Bit(false), Bit(false), Bit(true), Bit(false)]
         );
+    }
+
+    #[test]
+    fn test_values_into_output_data() {
+        let mut m = Mod::default();
+        assert!(
+            m.values_into_output_data(&[ChannelValue::Bit(true)])
+                .is_err()
+        );
+        assert_eq!(m.values_into_output_data(&[]).unwrap(), &[]);
     }
 }
