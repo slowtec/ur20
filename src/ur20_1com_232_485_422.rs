@@ -300,6 +300,12 @@ impl Module for Mod {
             ProcessDataLength::SixteenBytes => 16,
         }
     }
+    fn process_output_byte_count(&self) -> usize {
+        match self.mod_params.process_data_len {
+            ProcessDataLength::EightBytes => 8,
+            ProcessDataLength::SixteenBytes => 16,
+        }
+    }
     fn module_type(&self) -> ModuleType {
         ModuleType::UR20_1COM_232_485_422
     }

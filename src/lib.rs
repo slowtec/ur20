@@ -38,6 +38,8 @@ pub trait Module: std::fmt::Debug {
     fn module_type(&self) -> ModuleType;
     /// Number of bytes within the process input data buffer.
     fn process_input_byte_count(&self) -> usize;
+    /// Number of bytes within the process output data buffer.
+    fn process_output_byte_count(&self) -> usize;
     /// Transform raw module input data into a list of channel values.
     fn process_input(&mut self, &[u16]) -> Result<Vec<ChannelValue>>;
     /// Transform channel values into raw module output data.

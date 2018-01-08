@@ -56,6 +56,9 @@ impl Module for Mod {
     fn process_input_byte_count(&self) -> usize {
         16
     }
+    fn process_output_byte_count(&self) -> usize {
+        0
+    }
     fn module_type(&self) -> ModuleType {
         ModuleType::UR20_8AI_I_16_DIAG_HD
     }

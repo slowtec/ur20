@@ -64,6 +64,9 @@ impl Module for Mod {
     fn process_input_byte_count(&self) -> usize {
         8
     }
+    fn process_output_byte_count(&self) -> usize {
+        0
+    }
     fn module_type(&self) -> ModuleType {
         ModuleType::UR20_4AI_RTD_DIAG
     }

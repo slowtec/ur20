@@ -30,6 +30,9 @@ impl Module for Mod {
     fn process_input_byte_count(&self) -> usize {
         0
     }
+    fn process_output_byte_count(&self) -> usize {
+        1
+    }
     fn module_type(&self) -> ModuleType {
         ModuleType::UR20_4DI_P
     }

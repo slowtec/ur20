@@ -35,6 +35,9 @@ impl Module for Mod {
     fn process_input_byte_count(&self) -> usize {
         0
     }
+    fn process_output_byte_count(&self) -> usize {
+        8
+    }
     fn module_type(&self) -> ModuleType {
         ModuleType::UR20_4AO_UI_16
     }
@@ -79,7 +82,6 @@ impl Module for Mod {
                     } as u16)
                 }
                 _ => Err(Error::ChannelValue),
-
             })
             .collect()
     }
