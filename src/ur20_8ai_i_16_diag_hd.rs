@@ -59,7 +59,9 @@ impl Module for Mod {
     fn process_input_byte_count(&self) -> usize {
         16
     }
-
+    fn module_type(&self) -> ModuleType {
+        ModuleType::UR20_8AI_I_16_DIAG_HD
+    }
     fn process_input(&mut self, data: &[u16]) -> Result<Vec<ChannelValue>, Error> {
 
         use AnalogIRange::*;

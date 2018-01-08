@@ -281,7 +281,9 @@ impl Module for Mod {
             ProcessDataLength::SixteenBytes => 16,
         }
     }
-
+    fn module_type(&self) -> ModuleType {
+        ModuleType::UR20_1COM_232_485_422
+    }
     fn process_input(&mut self, data: &[u16]) -> Result<Vec<ChannelValue>, Error> {
         let buf: Vec<u8> = data.iter().fold(vec![], |mut x, elem| {
             x.push((elem & 0xff) as u8);

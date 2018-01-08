@@ -1,3 +1,5 @@
+//! Analog input module UR20-4AI-RTD-DIAG
+
 use super::*;
 
 #[derive(Debug)]
@@ -62,7 +64,9 @@ impl Module for Mod {
     fn process_input_byte_count(&self) -> usize {
         8
     }
-
+    fn module_type(&self) -> ModuleType {
+        ModuleType::UR20_4AI_RTD_DIAG
+    }
     fn process_input(&mut self, data: &[u16]) -> Result<Vec<ChannelValue>, Error> {
         if data.len() != 4 {
             return Err(Error::BufferLength);

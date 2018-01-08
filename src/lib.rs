@@ -28,6 +28,8 @@ pub enum ChannelValue {
 }
 
 pub trait Module : std::fmt::Debug {
+    /// Get concrete i/o module type.
+    fn module_type(&self) -> ModuleType;
     /// Number of bytes within the process input data buffer.
     fn process_input_byte_count(&self) -> usize;
     /// Transform raw module input data into a list of channel values.

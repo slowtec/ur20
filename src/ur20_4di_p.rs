@@ -32,7 +32,9 @@ impl Module for Mod {
     fn process_input_byte_count(&self) -> usize {
         1
     }
-
+    fn module_type(&self) -> ModuleType {
+        ModuleType::UR20_4DI_P
+    }
     fn process_input(&mut self, data: &[u16]) -> Result<Vec<ChannelValue>, Error> {
         if data.len() != 1 {
             return Err(Error::BufferLength);
