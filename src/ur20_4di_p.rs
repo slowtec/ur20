@@ -35,7 +35,7 @@ impl Module for Mod {
     fn module_type(&self) -> ModuleType {
         ModuleType::UR20_4DI_P
     }
-    fn process_input(&mut self, data: &[u16]) -> Result<Vec<ChannelValue>, Error> {
+    fn process_input(&mut self, data: &[u16]) -> Result<Vec<ChannelValue>> {
         if data.len() != 1 {
             return Err(Error::BufferLength);
         }

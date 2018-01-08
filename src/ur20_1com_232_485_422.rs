@@ -133,7 +133,7 @@ pub enum ProcessDataLength {
 }
 
 impl ProcessInput {
-    pub fn try_from_byte_message(bytes: &[u8]) -> Result<Self, Error> {
+    pub fn try_from_byte_message(bytes: &[u8]) -> Result<Self> {
 
         if bytes.len() < 2 {
             return Err(Error::BufferLength);
@@ -187,7 +187,7 @@ impl ProcessOutput {
     pub fn try_into_byte_message(
         mut self,
         process_data_length: &ProcessDataLength,
-    ) -> Result<Vec<u8>, Error> {
+    ) -> Result<Vec<u8>> {
 
         if self.tx_cnt > 3 || self.rx_cnt_ack > 3 {
             return Err(Error::SequenceNumber);
@@ -223,7 +223,7 @@ impl ProcessOutput {
         Ok(msg)
     }
 
-    pub fn try_from_byte_message(bytes: &[u8]) -> Result<Self, Error> {
+    pub fn try_from_byte_message(bytes: &[u8]) -> Result<Self> {
 
         if bytes.len() < 2 {
             return Err(Error::BufferLength);
@@ -284,7 +284,7 @@ impl Module for Mod {
     fn module_type(&self) -> ModuleType {
         ModuleType::UR20_1COM_232_485_422
     }
-    fn process_input(&mut self, data: &[u16]) -> Result<Vec<ChannelValue>, Error> {
+    fn process_input(&mut self, data: &[u16]) -> Result<Vec<ChannelValue>> {
         let buf: Vec<u8> = data.iter().fold(vec![], |mut x, elem| {
             x.push((elem & 0xff) as u8);
             x.push((elem >> 8) as u8);

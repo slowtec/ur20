@@ -42,7 +42,7 @@ pub fn offsets_of_process_data(data: &[Word]) -> Vec<ModuleOffset> {
 pub fn process_input_data(
     modules: &mut [(Box<Module>, ModuleOffset)],
     data: &[u16],
-) -> Result<Vec<Vec<ChannelValue>>, Error> {
+) -> Result<Vec<Vec<ChannelValue>>> {
 
     modules
         .into_iter()

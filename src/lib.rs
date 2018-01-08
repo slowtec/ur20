@@ -3,6 +3,7 @@
 extern crate byteorder;
 
 use std::str::FromStr;
+use std::result;
 
 mod error;
 
@@ -27,13 +28,15 @@ pub enum ChannelValue {
     None,
 }
 
+pub type Result<T> = result::Result<T,Error>;
+
 pub trait Module : std::fmt::Debug {
     /// Get concrete i/o module type.
     fn module_type(&self) -> ModuleType;
     /// Number of bytes within the process input data buffer.
     fn process_input_byte_count(&self) -> usize;
     /// Transform raw module input data into a list of channel values.
-    fn process_input(&mut self, &[u16]) -> Result<Vec<ChannelValue>, Error>;
+    fn process_input(&mut self, &[u16]) -> Result<Vec<ChannelValue>>;
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -289,7 +292,7 @@ pub enum FrequencySuppression {
 }
 
 impl ModuleType {
-    pub fn try_from_u32(id: u32) -> Result<Self, Error> {
+    pub fn try_from_u32(id: u32) -> Result<Self> {
 
         use ModuleType::*;
 
@@ -375,7 +378,7 @@ impl ModuleType {
 
 impl FromStr for ModuleType {
     type Err = Error;
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
+    fn from_str(s: &str) -> result::Result<Self, Self::Err> {
         use ModuleType::*;
         let t = match &*s.to_uppercase().replace("-","_") {
             "UR20_4DI_P"               => UR20_4DI_P,
@@ -462,7 +465,7 @@ impl FromStr for ModuleType {
 
 impl FromStr for ModuleCategory {
     type Err = Error;
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
+    fn from_str(s: &str) -> result::Result<Self, Self::Err> {
         use ModuleCategory::*;
         let c = match &*s.to_uppercase() {
             "DI"    => DI,
@@ -642,7 +645,7 @@ pub fn channel_count_from_module_type(t: &ModuleType) -> usize {
     }
 }
 
-pub fn module_list_from_registers(registers: &[u16]) -> Result<Vec<ModuleType>, Error> {
+pub fn module_list_from_registers(registers: &[u16]) -> Result<Vec<ModuleType>> {
     if registers.len() == 0 || registers.len() % 2 != 0 {
         return Err(Error::RegisterCount);
     }

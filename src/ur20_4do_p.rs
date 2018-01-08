@@ -32,7 +32,7 @@ impl Module for Mod {
     fn module_type(&self) -> ModuleType {
         ModuleType::UR20_4DI_P
     }
-    fn process_input(&mut self, _: &[u16]) -> Result<Vec<ChannelValue>, Error> {
+    fn process_input(&mut self, _: &[u16]) -> Result<Vec<ChannelValue>> {
         Ok((0..4).map(|_| ChannelValue::None).collect())
 
     }
