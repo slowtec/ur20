@@ -41,10 +41,10 @@ impl Module for Mod {
     fn module_type(&self) -> ModuleType {
         ModuleType::UR20_4AO_UI_16
     }
-    fn process_input(&mut self, _: &[u16]) -> Result<Vec<ChannelValue>> {
+    fn process_input_data(&mut self, _: &[u16]) -> Result<Vec<ChannelValue>> {
         Ok((0..4).map(|_| ChannelValue::None).collect())
     }
-    fn values_into_output_data(&mut self, values: &[ChannelValue]) -> Result<Vec<u16>> {
+    fn process_output_values(&mut self, values: &[ChannelValue]) -> Result<Vec<u16>> {
         if values.len() != 4 {
             return Err(Error::ChannelValue);
         }
@@ -94,15 +94,15 @@ mod tests {
     use ChannelValue::*;
 
     #[test]
-    fn test_values_into_output_data_with_invalid_channel_len() {
+    fn test_process_output_values_with_invalid_channel_len() {
         let mut m = Mod::default();
-        assert!(m.values_into_output_data(&[]).is_err());
+        assert!(m.process_output_values(&[]).is_err());
         assert!(
-            m.values_into_output_data(&[Decimal32(0.0), Decimal32(0.0), Decimal32(0.0)])
+            m.process_output_values(&[Decimal32(0.0), Decimal32(0.0), Decimal32(0.0)])
                 .is_err()
         );
         assert!(
-            m.values_into_output_data(
+            m.process_output_values(
                 &[
                     Decimal32(0.0),
                     Decimal32(0.0),
@@ -114,21 +114,21 @@ mod tests {
     }
 
     #[test]
-    fn test_values_into_output_data_with_invalid_channel_values() {
+    fn test_process_output_values_with_invalid_channel_values() {
         let mut m = Mod::default();
         assert!(
-            m.values_into_output_data(
+            m.process_output_values(
                 &[Bit(false), Decimal32(0.0), Decimal32(0.0), Decimal32(0.0)],
             ).is_err()
         );
     }
 
     #[test]
-    fn test_values_into_output_data_with_missing_channel_parameters() {
+    fn test_process_output_values_with_missing_channel_parameters() {
         let mut m = Mod::default();
         m.ch_params = vec![];
         assert!(
-            m.values_into_output_data(
+            m.process_output_values(
                 &[
                     Decimal32(0.0),
                     Decimal32(0.0),
@@ -140,10 +140,10 @@ mod tests {
     }
 
     #[test]
-    fn test_values_into_output_data() {
+    fn test_process_output_values() {
         let mut m = Mod::default();
         assert_eq!(
-            m.values_into_output_data(
+            m.process_output_values(
                 &[
                     Decimal32(0.0),
                     Decimal32(99.9),
@@ -158,7 +158,7 @@ mod tests {
         m.ch_params[2].output_range = AnalogUIRange::mA0To20;
         m.ch_params[3].output_range = AnalogUIRange::mA0To20;
         assert_eq!(
-            m.values_into_output_data(
+            m.process_output_values(
                 &[
                     Decimal32(23.518),
                     Decimal32(20.0),
@@ -174,7 +174,7 @@ mod tests {
         m.ch_params[2].output_range = AnalogUIRange::V0To10;
         m.ch_params[3].output_range = AnalogUIRange::VMinus10To10;
         assert_eq!(
-            m.values_into_output_data(
+            m.process_output_values(
                 &[
                     Decimal32(10.0),
                     Decimal32(12.0),
@@ -190,7 +190,7 @@ mod tests {
         m.ch_params[2].output_range = AnalogUIRange::V1To5;
         m.ch_params[3].output_range = AnalogUIRange::V2To10;
         assert_eq!(
-            m.values_into_output_data(
+            m.process_output_values(
                 &[
                     Decimal32(5.0),
                     Decimal32(-5.0),

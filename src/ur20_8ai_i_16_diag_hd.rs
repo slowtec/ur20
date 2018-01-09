@@ -62,7 +62,7 @@ impl Module for Mod {
     fn module_type(&self) -> ModuleType {
         ModuleType::UR20_8AI_I_16_DIAG_HD
     }
-    fn process_input(&mut self, data: &[u16]) -> Result<Vec<ChannelValue>> {
+    fn process_input_data(&mut self, data: &[u16]) -> Result<Vec<ChannelValue>> {
 
         use AnalogIRange::*;
 
@@ -96,7 +96,7 @@ impl Module for Mod {
             .collect();
         Ok(res)
     }
-    fn values_into_output_data(&mut self, values: &[ChannelValue]) -> Result<Vec<u16>> {
+    fn process_output_values(&mut self, values: &[ChannelValue]) -> Result<Vec<u16>> {
         if values.len() != 0 {
             return Err(Error::ChannelValue);
         }
@@ -111,23 +111,23 @@ mod tests {
     use ChannelValue::*;
 
     #[test]
-    fn test_process_input_with_empty_buffer() {
+    fn test_process_input_data_with_empty_buffer() {
         let mut m = Mod::default();
-        assert!(m.process_input(&vec![]).is_err());
+        assert!(m.process_input_data(&vec![]).is_err());
     }
 
     #[test]
-    fn test_process_input_with_missing_channel_parameters() {
+    fn test_process_input_data_with_missing_channel_parameters() {
         let mut m = Mod::default();
         m.ch_params = vec![];
-        assert!(m.process_input(&vec![0, 0, 0, 0, 0, 0, 0, 0]).is_err());
+        assert!(m.process_input_data(&vec![0, 0, 0, 0, 0, 0, 0, 0]).is_err());
     }
 
     #[test]
-    fn test_process_input() {
+    fn test_process_input_data() {
         let mut m = Mod::default();
         assert_eq!(
-            m.process_input(&vec![5, 0, 7, 8, 0, 0, 0, 0]).unwrap(),
+            m.process_input_data(&vec![5, 0, 7, 8, 0, 0, 0, 0]).unwrap(),
             vec![
                 Disabled,
                 Disabled,
@@ -151,7 +151,7 @@ mod tests {
         m.ch_params[5].data_format = DataFormat::S5;
 
         assert_eq!(
-            m.process_input(&vec![0x6C00, 0x3600, 0x4000, 0x6C00, 0x3600, 0x4000, 0, 0])
+            m.process_input_data(&vec![0x6C00, 0x3600, 0x4000, 0x6C00, 0x3600, 0x4000, 0, 0])
                 .unwrap(),
             vec![
                 Decimal32(20.0),
@@ -167,12 +167,12 @@ mod tests {
     }
 
     #[test]
-    fn test_values_into_output_data() {
+    fn test_process_output_values() {
         let mut m = Mod::default();
         assert!(
-            m.values_into_output_data(&[ChannelValue::Decimal32(0.0)])
+            m.process_output_values(&[ChannelValue::Decimal32(0.0)])
                 .is_err()
         );
-        assert_eq!(m.values_into_output_data(&[]).unwrap(), &[]);
+        assert_eq!(m.process_output_values(&[]).unwrap(), &[]);
     }
 }

@@ -70,7 +70,7 @@ impl Module for Mod {
     fn module_type(&self) -> ModuleType {
         ModuleType::UR20_4AI_RTD_DIAG
     }
-    fn process_input(&mut self, data: &[u16]) -> Result<Vec<ChannelValue>> {
+    fn process_input_data(&mut self, data: &[u16]) -> Result<Vec<ChannelValue>> {
         if data.len() != 4 {
             return Err(Error::BufferLength);
         }
@@ -127,7 +127,7 @@ impl Module for Mod {
             .collect();
         Ok(res)
     }
-    fn values_into_output_data(&mut self, values: &[ChannelValue]) -> Result<Vec<u16>> {
+    fn process_output_values(&mut self, values: &[ChannelValue]) -> Result<Vec<u16>> {
         if values.len() != 0 {
             return Err(Error::ChannelValue);
         }
@@ -142,29 +142,29 @@ mod tests {
     use ChannelValue::*;
 
     #[test]
-    fn test_process_input_with_empty_buffer() {
+    fn test_process_input_data_with_empty_buffer() {
         let mut m = Mod::default();
-        assert!(m.process_input(&vec![]).is_err());
+        assert!(m.process_input_data(&vec![]).is_err());
     }
 
     #[test]
-    fn test_process_input_with_missing_channel_parameters() {
+    fn test_process_input_data_with_missing_channel_parameters() {
         let mut m = Mod::default();
         m.ch_params = vec![];
-        assert!(m.process_input(&vec![0, 0, 0, 0]).is_err());
+        assert!(m.process_input_data(&vec![0, 0, 0, 0]).is_err());
     }
 
     #[test]
-    fn test_process_input_with_disabled_channels() {
+    fn test_process_input_data_with_disabled_channels() {
         let mut m = Mod::default();
         assert_eq!(
-            m.process_input(&vec![5, 0, 7, 8]).unwrap(),
+            m.process_input_data(&vec![5, 0, 7, 8]).unwrap(),
             vec![Disabled, Disabled, Disabled, Disabled]
         );
     }
 
     #[test]
-    fn test_process_input() {
+    fn test_process_input_data() {
         let mut m = Mod::default();
 
         m.ch_params[0].measurement_range = RtdRange::R40;
@@ -173,7 +173,7 @@ mod tests {
         m.ch_params[3].measurement_range = RtdRange::PT1000;
 
         assert_eq!(
-            m.process_input(&vec![0x6C00, 0x7EFF, 55, 99]).unwrap(),
+            m.process_input_data(&vec![0x6C00, 0x7EFF, 55, 99]).unwrap(),
             vec![
                 Decimal32(40.0),
                 Decimal32(47.03559),
@@ -184,24 +184,24 @@ mod tests {
     }
 
     #[test]
-    fn test_process_input_with_negative_temperatures() {
+    fn test_process_input_data_with_negative_temperatures() {
         let mut m = Mod::default();
         m.ch_params[0].measurement_range = RtdRange::PT100;
         m.ch_params[1].measurement_range = RtdRange::Cu10;
 
         assert_eq!(
-            m.process_input(&vec![0xF830, 0xFF38, 0, 0]).unwrap(),
+            m.process_input_data(&vec![0xF830, 0xFF38, 0, 0]).unwrap(),
             vec![Decimal32(-200.0), Decimal32(-20.0), Disabled, Disabled]
         );
     }
 
     #[test]
-    fn test_values_into_output_data() {
+    fn test_process_output_values() {
         let mut m = Mod::default();
         assert!(
-            m.values_into_output_data(&[ChannelValue::Decimal32(0.0)])
+            m.process_output_values(&[ChannelValue::Decimal32(0.0)])
                 .is_err()
         );
-        assert_eq!(m.values_into_output_data(&[]).unwrap(), &[]);
+        assert_eq!(m.process_output_values(&[]).unwrap(), &[]);
     }
 }

@@ -63,14 +63,14 @@ pub fn process_input_data(
                 let input = &data[start..end];
 
                 match bit {
-                    0 => m.process_input(input),
+                    0 => m.process_input_data(input),
                     8 => {
                         let buf = u16_to_u8(input);
                         let buf = &buf[1..]; // drop first byte
                         let mut shifted = vec![];
                         shifted.extend_from_slice(buf);
                         shifted.push(0);
-                        m.process_input(&u8_to_u16(&shifted))
+                        m.process_input_data(&u8_to_u16(&shifted))
                     }
                     _ => Err(Error::ModuleOffset),
                 }
@@ -98,7 +98,7 @@ pub fn process_output_values(
 
          if let Some(out_offset) = offset.output {
 
-             let data = m.values_into_output_data(&values[i])?;
+             let data = m.process_output_values(&values[i])?;
              let (start, bit) = to_register_address(out_offset);
              if start < ADDR_PACKED_PROCESS_OUTPUT_DATA {
                 return Err(Error::ModuleOffset);

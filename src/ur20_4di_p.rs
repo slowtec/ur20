@@ -36,7 +36,7 @@ impl Module for Mod {
     fn module_type(&self) -> ModuleType {
         ModuleType::UR20_4DI_P
     }
-    fn process_input(&mut self, data: &[u16]) -> Result<Vec<ChannelValue>> {
+    fn process_input_data(&mut self, data: &[u16]) -> Result<Vec<ChannelValue>> {
         if data.len() != 1 {
             return Err(Error::BufferLength);
         }
@@ -46,7 +46,7 @@ impl Module for Mod {
             .collect();
         Ok(res)
     }
-    fn values_into_output_data(&mut self, values: &[ChannelValue]) -> Result<Vec<u16>> {
+    fn process_output_values(&mut self, values: &[ChannelValue]) -> Result<Vec<u16>> {
         if values.len() != 0 {
             return Err(Error::ChannelValue);
         }
@@ -61,23 +61,23 @@ mod tests {
     use ChannelValue::*;
 
     #[test]
-    fn test_process_input() {
+    fn test_process_input_data() {
         let mut m = Mod::default();
-        assert!(m.process_input(&vec![]).is_err());
+        assert!(m.process_input_data(&vec![]).is_err());
         let data = vec![0b0100];
         assert_eq!(
-            m.process_input(&data).unwrap(),
+            m.process_input_data(&data).unwrap(),
             vec![Bit(false), Bit(false), Bit(true), Bit(false)]
         );
     }
 
     #[test]
-    fn test_values_into_output_data() {
+    fn test_process_output_values() {
         let mut m = Mod::default();
         assert!(
-            m.values_into_output_data(&[ChannelValue::Bit(true)])
+            m.process_output_values(&[ChannelValue::Bit(true)])
                 .is_err()
         );
-        assert_eq!(m.values_into_output_data(&[]).unwrap(), &[]);
+        assert_eq!(m.process_output_values(&[]).unwrap(), &[]);
     }
 }

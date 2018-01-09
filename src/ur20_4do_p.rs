@@ -36,10 +36,10 @@ impl Module for Mod {
     fn module_type(&self) -> ModuleType {
         ModuleType::UR20_4DI_P
     }
-    fn process_input(&mut self, _: &[u16]) -> Result<Vec<ChannelValue>> {
+    fn process_input_data(&mut self, _: &[u16]) -> Result<Vec<ChannelValue>> {
         Ok((0..4).map(|_| ChannelValue::None).collect())
     }
-    fn values_into_output_data(&mut self, values: &[ChannelValue]) -> Result<Vec<u16>> {
+    fn process_output_values(&mut self, values: &[ChannelValue]) -> Result<Vec<u16>> {
         if values.len() != 4 {
             return Err(Error::ChannelValue);
         }
@@ -67,33 +67,33 @@ mod tests {
     use ChannelValue::*;
 
     #[test]
-    fn test_values_into_output_data_with_invalid_channel_len() {
+    fn test_process_output_values_with_invalid_channel_len() {
         let mut m = Mod::default();
-        assert!(m.values_into_output_data(&[]).is_err());
+        assert!(m.process_output_values(&[]).is_err());
         assert!(
-            m.values_into_output_data(&[Bit(true), Bit(false), Bit(true)])
+            m.process_output_values(&[Bit(true), Bit(false), Bit(true)])
                 .is_err()
         );
         assert!(
-            m.values_into_output_data(&[Bit(true), Bit(false), Bit(true), Bit(true)])
+            m.process_output_values(&[Bit(true), Bit(false), Bit(true), Bit(true)])
                 .is_ok()
         );
     }
 
     #[test]
-    fn test_values_into_output_data_with_invalid_channel_values() {
+    fn test_process_output_values_with_invalid_channel_values() {
         let mut m = Mod::default();
         assert!(
-            m.values_into_output_data(&[Bit(false), Bit(true), Bit(false), Decimal32(0.0)])
+            m.process_output_values(&[Bit(false), Bit(true), Bit(false), Decimal32(0.0)])
                 .is_err()
         );
     }
 
     #[test]
-    fn test_values_into_output_data() {
+    fn test_process_output_values() {
         let mut m = Mod::default();
         assert_eq!(
-            m.values_into_output_data(&[Bit(true), Bit(false), Bit(true), Bit(true)])
+            m.process_output_values(&[Bit(true), Bit(false), Bit(true), Bit(true)])
                 .unwrap(),
             vec![0b0000_0000_0000_0000_1101]
         );
