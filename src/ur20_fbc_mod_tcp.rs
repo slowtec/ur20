@@ -57,6 +57,9 @@ pub fn process_input_data(
                     if cnt == 0 { 1 } else { cnt }
                 };
                 let end = start + word_count;
+                if end > data.len() {
+                    return Err(Error::BufferLength);
+                }
                 let input = &data[start..end];
 
                 match bit {
@@ -79,6 +82,55 @@ pub fn process_input_data(
         .collect()
 }
 
+/// Map values into raw values.
+pub fn process_output_values(
+    modules: &mut [(Box<Module>, ModuleOffset)],
+    values: &[Vec<ChannelValue>]
+) -> Result<Vec<u16>> {
+
+    if modules.len() != values.len() {
+        return Err(Error::ChannelValue);
+    }
+
+    let mut out = vec![];
+
+    for (i, &mut (ref mut m, ref offset)) in modules.into_iter().enumerate() {
+
+         if let Some(out_offset) = offset.output {
+
+             let data = m.values_into_output_data(&values[i])?;
+             let (start, bit) = to_register_address(out_offset);
+             if start < ADDR_PACKED_PROCESS_OUTPUT_DATA {
+                return Err(Error::ModuleOffset);
+             }
+             let start = (start - ADDR_PACKED_PROCESS_OUTPUT_DATA) as usize;
+
+             match bit {
+                 0 => {
+                    if out.len() != start {
+                       return Err(Error::ModuleOffset);
+                    }
+                    out.extend_from_slice(&data);
+                 }
+                 8 => {
+                     if out.len() != start + 1 {
+                        return Err(Error::ModuleOffset);
+                     }
+                     let shared_low_byte = out[start as usize] & 0x00FF;
+                     let buf = u16_to_u8(&data);
+                     let shared_high_byte =  (buf[0] as u16) << 8;
+                     let word = shared_high_byte | shared_low_byte;
+                     out[start as usize] = word;
+                 }
+                 _ => {
+                     return Err(Error::ModuleOffset);
+                 }
+             }
+         }
+    }
+
+    Ok(out)
+}
 
 fn word_to_offset(word: Word) -> Option<BitAddress> {
     if word == 0xFFFF { None } else { Some(word) }
@@ -201,5 +253,236 @@ mod tests {
         };
         let mut modules = vec![(mod0, o0)];
         assert!(process_input_data(&mut modules, data).is_err());
+    }
+
+    #[test]
+    fn test_process_input_data_with_invalid_data() {
+        let m0 = super::ur20_4ai_rtd_diag::Mod::default();
+        let m1 = super::ur20_4ai_rtd_diag::Mod::default();
+        let data = &[0, 33, 0, 0];
+        let mod0: Box<Module> = Box::new(m0);
+        let mod1: Box<Module> = Box::new(m1);
+        let addr_in_0 = to_bit_address(ADDR_PACKED_PROCESS_INPUT_DATA, 0);
+        let addr_in_1 = to_bit_address(ADDR_PACKED_PROCESS_INPUT_DATA + 4, 0);
+        let o0 = ModuleOffset {
+            input: Some(addr_in_0),
+            output: None,
+        };
+        let o1 = ModuleOffset {
+            input: Some(addr_in_1),
+            output: None,
+        };
+        let mut modules = vec![(mod0, o0), (mod1, o1)];
+        assert!(process_input_data(&mut modules, data).is_err());
+    }
+
+    #[test]
+    fn test_process_output_values_with_invalid_len() {
+
+        let m0 = super::ur20_4ao_ui_16::Mod::default();
+        let m1 = super::ur20_4ai_rtd_diag::Mod::default();
+
+        let values = vec![
+            vec![
+                ChannelValue::Decimal32(15.0),
+                ChannelValue::Decimal32(20.0),
+                ChannelValue::Decimal32(20.0),
+                ChannelValue::Decimal32(10.0),
+            ],
+        ];
+
+        let mod0: Box<Module> = Box::new(m0);
+        let mod1: Box<Module> = Box::new(m1);
+
+        let addr_out_0 = to_bit_address(ADDR_PACKED_PROCESS_OUTPUT_DATA, 0);
+        let addr_in_1  = to_bit_address(ADDR_PACKED_PROCESS_INPUT_DATA, 0);
+
+        let o0 = ModuleOffset {
+            input: None,
+            output: Some(addr_out_0),
+        };
+        let o1 = ModuleOffset {
+            input: Some(addr_in_1),
+            output: None,
+        };
+
+        let mut modules = vec![(mod0, o0), (mod1, o1)];
+
+        assert!(process_output_values(&mut modules, &values).is_err());
+    }
+
+    #[test]
+    fn test_process_output_values_with_invalid_offset_a() {
+
+        let m0 = super::ur20_4ao_ui_16::Mod::default();
+        let m1 = super::ur20_4ai_rtd_diag::Mod::default();
+
+        let values = vec![
+            vec![
+                ChannelValue::Decimal32(15.0),
+                ChannelValue::Decimal32(20.0),
+                ChannelValue::Decimal32(20.0),
+                ChannelValue::Decimal32(10.0),
+            ],
+            vec![]
+        ];
+
+        let mod0: Box<Module> = Box::new(m0);
+        let mod1: Box<Module> = Box::new(m1);
+
+        let addr_out_0 = to_bit_address(ADDR_PACKED_PROCESS_OUTPUT_DATA + 10, 0);
+        let addr_in_1  = to_bit_address(ADDR_PACKED_PROCESS_INPUT_DATA, 0);
+
+        let o0 = ModuleOffset {
+            input: None,
+            output: Some(addr_out_0),
+        };
+        let o1 = ModuleOffset {
+            input: Some(addr_in_1),
+            output: None,
+        };
+
+        let mut modules = vec![(mod0, o0), (mod1, o1)];
+        assert!(process_output_values(&mut modules, &values).is_err());
+    }
+
+    #[test]
+    fn test_process_output_values_with_invalid_offset_b() {
+
+        let m0 = super::ur20_4ao_ui_16::Mod::default();
+        let m1 = super::ur20_4ai_rtd_diag::Mod::default();
+        let m2 = super::ur20_4do_p::Mod::default();
+
+        let values = vec![
+            vec![
+                ChannelValue::Decimal32(15.0),
+                ChannelValue::Decimal32(20.0),
+                ChannelValue::Decimal32(20.0),
+                ChannelValue::Decimal32(10.0),
+            ],
+            vec![],
+            vec![
+                ChannelValue::Bit(false),
+                ChannelValue::Bit(false),
+                ChannelValue::Bit(false),
+                ChannelValue::Bit(false),
+            ],
+        ];
+
+        let mod0: Box<Module> = Box::new(m0);
+        let mod1: Box<Module> = Box::new(m1);
+        let mod2: Box<Module> = Box::new(m2);
+
+        let addr_out_0 = to_bit_address(ADDR_PACKED_PROCESS_OUTPUT_DATA + 0, 0);
+        let addr_in_1  = to_bit_address(ADDR_PACKED_PROCESS_INPUT_DATA, 0);
+        let addr_out_2 = to_bit_address(ADDR_PACKED_PROCESS_OUTPUT_DATA + 1, 8);
+
+        let o0 = ModuleOffset {
+            input: None,
+            output: Some(addr_out_0),
+        };
+        let o1 = ModuleOffset {
+            input: Some(addr_in_1),
+            output: None,
+        };
+        let o2 = ModuleOffset {
+            input: None,
+            output: Some(addr_out_2),
+        };
+
+        let mut modules = vec![(mod0, o0), (mod1, o1), (mod2, o2)];
+        assert!(process_output_values(&mut modules, &values).is_err());
+    }
+
+    #[test]
+    fn test_process_output_values_with_invalid_offset_c() {
+        let m0 = super::ur20_4ao_ui_16::Mod::default();
+        let values = vec![
+            vec![
+                ChannelValue::Decimal32(15.0),
+                ChannelValue::Decimal32(20.0),
+                ChannelValue::Decimal32(20.0),
+                ChannelValue::Decimal32(10.0),
+            ],
+        ];
+        let mod0: Box<Module> = Box::new(m0);
+        let addr_out_0 = to_bit_address(0, 0);
+        let o0 = ModuleOffset {
+            input: None,
+            output: Some(addr_out_0),
+        };
+        let mut modules = vec![(mod0, o0)];
+        assert!(process_output_values(&mut modules, &values).is_err());
+    }
+
+    #[test]
+    fn test_process_output_values() {
+
+        let mut m0 = super::ur20_4ao_ui_16::Mod::default();
+        let m1     = super::ur20_4ai_rtd_diag::Mod::default();
+        let m2     = super::ur20_4do_p::Mod::default();
+        let m3     = super::ur20_4do_p::Mod::default();
+
+        let values = vec![
+            vec![
+                ChannelValue::Decimal32(15.0),
+                ChannelValue::Decimal32(20.0),
+                ChannelValue::Decimal32(20.0),
+                ChannelValue::Decimal32(10.0),
+            ],
+            vec![],
+            vec![
+                ChannelValue::Bit(false),
+                ChannelValue::Bit(true),
+                ChannelValue::Bit(false),
+                ChannelValue::Bit(false),
+            ],
+            vec![
+                ChannelValue::Bit(false),
+                ChannelValue::Bit(false),
+                ChannelValue::Bit(true),
+                ChannelValue::Bit(true),
+            ],
+        ];
+
+        m0.ch_params[1].output_range = AnalogUIRange::mA0To20;
+        m0.ch_params[3].output_range = AnalogUIRange::mA0To20;
+
+        let mod0: Box<Module> = Box::new(m0);
+        let mod1: Box<Module> = Box::new(m1);
+        let mod2: Box<Module> = Box::new(m2);
+        let mod3: Box<Module> = Box::new(m3);
+
+        let addr_out_0 = to_bit_address(ADDR_PACKED_PROCESS_OUTPUT_DATA, 0);
+        let addr_in_1  = to_bit_address(ADDR_PACKED_PROCESS_INPUT_DATA, 0);
+        let addr_out_2 = to_bit_address(ADDR_PACKED_PROCESS_OUTPUT_DATA + 4, 0);
+        let addr_out_3 = to_bit_address(ADDR_PACKED_PROCESS_OUTPUT_DATA + 4, 8);
+
+        let o0 = ModuleOffset {
+            input: None,
+            output: Some(addr_out_0),
+        };
+        let o1 = ModuleOffset {
+            input: Some(addr_in_1),
+            output: None,
+        };
+        let o2 = ModuleOffset {
+            input: None,
+            output: Some(addr_out_2),
+        };
+        let o3 = ModuleOffset {
+            input: None,
+            output: Some(addr_out_3),
+        };
+
+        let mut modules = vec![(mod0, o0), (mod1, o1), (mod2, o2), (mod3, o3)];
+
+        let res = process_output_values(&mut modules, &values).unwrap();
+        assert_eq!(res.len(), 5);
+        assert_eq!(res[0], 0x0); // channel is disabled
+        assert_eq!(res[1], 0x6C00);
+        assert_eq!(res[2], 0x0); // channel is disabled
+        assert_eq!(res[3], 0x3600);
+        assert_eq!(res[4], 0b_0000_1100_0000_0010);
     }
 }
