@@ -46,7 +46,7 @@ pub trait Module: std::fmt::Debug {
     fn process_output_values(&mut self, &[ChannelValue]) -> Result<Vec<u16>>;
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ModuleCategory {
     /// Digital input modules
     DI,
@@ -73,7 +73,7 @@ pub enum ModuleCategory {
 }
 
 #[allow(non_camel_case_types)]
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ModuleType {
     // Digital input modules
     UR20_4DI_P,
@@ -159,7 +159,7 @@ pub enum ModuleType {
     UR20_PF_O_2DI_DELAY_SIL,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum DataFormat {
     /// Siemens S5 format
     S5 = 0,
@@ -168,7 +168,7 @@ pub enum DataFormat {
 }
 
 #[allow(non_camel_case_types)]
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum AnalogUIRange {
     mA0To20       = 0,
     mA4To20       = 1,
@@ -182,14 +182,14 @@ pub enum AnalogUIRange {
 }
 
 #[allow(non_camel_case_types)]
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum AnalogIRange {
     mA0To20  = 0,
     mA4To20  = 1,
     Disabled = 3,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum RtdRange {
     /// -200 ... 850 Degree Celsius
     PT100 = 0,
@@ -231,14 +231,14 @@ pub enum RtdRange {
     Disabled = 18
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum TemperatureUnit {
     Celsius    = 0,
     Fahrenheit = 1,
     Kelvin     = 2,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ConnectionType {
     TwoWire   = 0,
     ThreeWire = 1,
@@ -246,7 +246,7 @@ pub enum ConnectionType {
 }
 
 #[allow(non_camel_case_types)]
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ConversionTime {
     ms240 = 0,
     ms130 = 1,
@@ -257,7 +257,7 @@ pub enum ConversionTime {
 }
 
 #[allow(non_camel_case_types)]
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum InputFilter {
     us5     = 0,
     us11    = 1,
@@ -279,7 +279,7 @@ pub enum InputFilter {
 }
 
 #[allow(non_camel_case_types)]
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum InputDelay {
     no    = 0,
     us300 = 1, // not at PROFIBUS-DP
@@ -290,7 +290,7 @@ pub enum InputDelay {
 }
 
 #[allow(non_camel_case_types)]
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum FrequencySuppression {
     Disabled  = 0,
     Hz50      = 1,
