@@ -46,7 +46,7 @@ pub trait Module: std::fmt::Debug {
     fn process_output_values(&mut self, &[ChannelValue]) -> Result<Vec<u16>>;
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum ModuleCategory {
     /// Digital input modules
     DI,
@@ -73,7 +73,7 @@ pub enum ModuleCategory {
 }
 
 #[allow(non_camel_case_types)]
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum ModuleType {
     // Digital input modules
     UR20_4DI_P,
