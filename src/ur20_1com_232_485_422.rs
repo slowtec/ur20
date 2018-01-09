@@ -199,10 +199,7 @@ impl ProcessDataLength {
 }
 
 impl ProcessOutput {
-    pub fn try_into_byte_message(
-        mut self,
-        process_data_length: &ProcessDataLength,
-    ) -> Result<Vec<u8>> {
+    pub fn try_into_byte_message(self, process_data_length: &ProcessDataLength) -> Result<Vec<u8>> {
 
         if self.tx_cnt > 3 || self.rx_cnt_ack > 3 {
             return Err(Error::SequenceNumber);
@@ -233,8 +230,17 @@ impl ProcessOutput {
             status = set_bit(status, 7);
         }
 
-        let mut msg = vec![status, self.data.len() as u8];
-        msg.append(&mut self.data);
+        let byte_count = match *process_data_length {
+            ProcessDataLength::EightBytes => 8,
+            ProcessDataLength::SixteenBytes => 16,
+        };
+
+        let mut msg = vec![0; byte_count];
+        msg[0] = status;
+        msg[1] = self.data.len() as u8;
+        for (i, d) in self.data.into_iter().enumerate() {
+            msg[2 + i] = d;
+        }
         Ok(msg)
     }
 
@@ -470,14 +476,14 @@ mod tests {
         let data = msg.try_into_byte_message(&ProcessDataLength::EightBytes)
             .unwrap();
 
-        assert_eq!(empty, vec![0, 0]);
-        assert_eq!(flush_rx_buf, vec![0b1, 0]);
-        assert_eq!(flush_tx_buf, vec![0b10, 0]);
-        assert_eq!(disable_tx_hw_buffer, vec![0b100, 0]);
-        assert_eq!(tx_cnt, vec![0b11000, 0]);
-        assert_eq!(rx_cnt_ack, vec![0b1100000, 0]);
-        assert_eq!(active, vec![0b10000000, 0]);
-        assert_eq!(data, vec![0, 4, 4, 3, 2, 1]);
+        assert_eq!(empty, vec![0, 0, 0, 0, 0, 0, 0, 0]);
+        assert_eq!(flush_rx_buf[0], 0b1);
+        assert_eq!(flush_tx_buf[0], 0b10);
+        assert_eq!(disable_tx_hw_buffer[0], 0b100);
+        assert_eq!(tx_cnt[0], 0b11000);
+        assert_eq!(rx_cnt_ack[0], 0b1100000);
+        assert_eq!(active[0], 0b10000000);
+        assert_eq!(data, vec![0, 4, 4, 3, 2, 1, 0, 0]);
     }
 
     #[test]
@@ -573,12 +579,12 @@ mod tests {
     #[test]
     fn test_process_output_values() {
         let mut m = Mod::default();
-        m.mod_params.process_data_len = ProcessDataLength::EightBytes;
+        m.mod_params.process_data_len = ProcessDataLength::SixteenBytes;
         assert!(m.current_output.data.is_empty());
-        let res = m.process_output_values(
-            &vec![ChannelValue::Bytes(vec![0xA, 0xB, 0xC, 0, 0, 0xD])],
-        ).unwrap();
-        assert_eq!(res, vec![0x0600, 0x0B0A, 0x000C, 0x0D00]);
-        assert_eq!(m.current_output.data, vec![0xA, 0xB, 0xC, 0, 0, 0xD]);
+        let res = m.process_output_values(&vec![ChannelValue::Bytes(vec![0x0A, 0x0B, 0, 0x0C])])
+            .unwrap();
+        assert_eq!(res.len(), 8);
+        assert_eq!(res, vec![0x0400, 0x0B0A, 0x0C00, 0, 0, 0, 0, 0]);
+        assert_eq!(m.current_output.data, vec![0xA, 0xB, 0, 0xC]);
     }
 }
