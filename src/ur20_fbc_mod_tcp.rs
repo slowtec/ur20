@@ -3,10 +3,10 @@
 use super::*;
 use util::*;
 
-pub type Word = u16;
-pub type RegisterAddress = u16;
-pub type BitAddress = u16;
-pub type BitNr = usize;
+type Word = u16;
+type RegisterAddress = u16;
+type BitAddress = u16;
+type BitNr = usize;
 
 pub const ADDR_PACKED_PROCESS_INPUT_DATA  : RegisterAddress = 0x0000;
 pub const ADDR_PACKED_PROCESS_OUTPUT_DATA : RegisterAddress = 0x0800;

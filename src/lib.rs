@@ -31,7 +31,7 @@ pub enum ChannelValue {
     None,
 }
 
-pub type Result<T> = result::Result<T, Error>;
+type Result<T> = result::Result<T, Error>;
 
 pub trait Module: std::fmt::Debug {
     /// Get concrete i/o module type.
