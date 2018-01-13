@@ -34,7 +34,7 @@ impl Module for Mod {
         1
     }
     fn module_type(&self) -> ModuleType {
-        ModuleType::UR20_4DI_P
+        ModuleType::UR20_4DO_P
     }
     fn process_input_data(&mut self, _: &[u16]) -> Result<Vec<ChannelValue>> {
         Ok((0..4).map(|_| ChannelValue::None).collect())
@@ -97,5 +97,10 @@ mod tests {
                 .unwrap(),
             vec![0b0000_0000_0000_0000_1101]
         );
+    }
+    #[test]
+    fn module_type() {
+        let m = Mod::default();
+        assert_eq!(m.module_type(), ModuleType::UR20_4DO_P);
     }
 }
