@@ -199,7 +199,7 @@ impl ProcessDataLength {
 }
 
 impl ProcessOutput {
-    pub fn try_into_byte_message(self, process_data_length: &ProcessDataLength) -> Result<Vec<u8>> {
+    pub fn try_into_byte_message(&self, process_data_length: &ProcessDataLength) -> Result<Vec<u8>> {
 
         if self.tx_cnt > 3 || self.rx_cnt_ack > 3 {
             return Err(Error::SequenceNumber);
@@ -238,8 +238,8 @@ impl ProcessOutput {
         let mut msg = vec![0; byte_count];
         msg[0] = status;
         msg[1] = self.data.len() as u8;
-        for (i, d) in self.data.into_iter().enumerate() {
-            msg[2 + i] = d;
+        for (i, d) in self.data.iter().enumerate() {
+            msg[2 + i] = *d;
         }
         Ok(msg)
     }
