@@ -41,10 +41,10 @@ impl Module for Mod {
     fn module_type(&self) -> ModuleType {
         ModuleType::UR20_4AO_UI_16
     }
-    fn process_input_data(&mut self, _: &[u16]) -> Result<Vec<ChannelValue>> {
+    fn process_input_data(&self, _: &[u16]) -> Result<Vec<ChannelValue>> {
         Ok((0..4).map(|_| ChannelValue::None).collect())
     }
-    fn process_output_values(&mut self, values: &[ChannelValue]) -> Result<Vec<u16>> {
+    fn process_output_values(&self, values: &[ChannelValue]) -> Result<Vec<u16>> {
         if values.len() != 4 {
             return Err(Error::ChannelValue);
         }
@@ -95,7 +95,7 @@ mod tests {
 
     #[test]
     fn test_process_output_values_with_invalid_channel_len() {
-        let mut m = Mod::default();
+        let m = Mod::default();
         assert!(m.process_output_values(&[]).is_err());
         assert!(
             m.process_output_values(&[Decimal32(0.0), Decimal32(0.0), Decimal32(0.0)])
@@ -115,7 +115,7 @@ mod tests {
 
     #[test]
     fn test_process_output_values_with_invalid_channel_values() {
-        let mut m = Mod::default();
+        let m = Mod::default();
         assert!(
             m.process_output_values(
                 &[Bit(false), Decimal32(0.0), Decimal32(0.0), Decimal32(0.0)],

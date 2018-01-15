@@ -6,11 +6,9 @@ use util::*;
 #[derive(Debug)]
 pub struct Mod {
     pub mod_params: ModuleParameters,
-    pub current_output: ProcessOutput,
-    pub current_input: ProcessInput,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct ProcessInput {
     /// Indicates if there is a telegramm in the receive buffer or not.
     pub data_available: bool,
@@ -31,7 +29,7 @@ pub struct ProcessInput {
     pub data: Vec<u8>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct ProcessOutput {
     /// This flag controls whether the receive buffer will be cleared
     /// or not.
@@ -293,8 +291,6 @@ impl Default for Mod {
     fn default() -> Self {
         Mod {
             mod_params: ModuleParameters::default(),
-            current_input: ProcessInput::default(),
-            current_output: ProcessOutput::default(),
         }
     }
 }
@@ -315,27 +311,26 @@ impl Module for Mod {
     fn module_type(&self) -> ModuleType {
         ModuleType::UR20_1COM_232_485_422
     }
-    fn process_input_data(&mut self, data: &[u16]) -> Result<Vec<ChannelValue>> {
+    fn process_input_data(&self, data: &[u16]) -> Result<Vec<ChannelValue>> {
         let buf: Vec<u8> = data.iter().fold(vec![], |mut x, elem| {
             x.push((elem & 0xff) as u8);
             x.push((elem >> 8) as u8);
             x
         });
-        self.current_input = ProcessInput::try_from_byte_message(&buf)?;
-        Ok(vec![ChannelValue::Bytes(self.current_input.data.clone())])
+        let current_input = ProcessInput::try_from_byte_message(&buf)?;
+        Ok(vec![ChannelValue::ComRsIn(current_input)])
     }
-    fn process_output_values(&mut self, values: &[ChannelValue]) -> Result<Vec<u16>> {
+    fn process_output_values(&self, values: &[ChannelValue]) -> Result<Vec<u16>> {
         if values.len() != 1 {
             return Err(Error::ChannelValue);
         }
         match values[0] {
-            ChannelValue::Bytes(ref bytes) => {
+            ChannelValue::ComRsOut(ref current_output) => {
                 let count = self.mod_params.process_data_len.user_data_len();
-                if bytes.len() > count {
+                if current_output.data.len() > count {
                     return Err(Error::BufferLength);
                 }
-                self.current_output.data = bytes.clone();
-                let msg = self.current_output.clone().try_into_byte_message(
+                let msg = current_output.try_into_byte_message(
                     &self.mod_params.process_data_len,
                 )?;
                 Ok(u8_to_u16(&msg))
@@ -501,33 +496,36 @@ mod tests {
 
     #[test]
     fn test_process_input_data_with_empty_buffer() {
-        let mut m = Mod::default();
+        let m = Mod::default();
         assert!(m.process_input_data(&vec![]).is_err());
     }
 
     #[test]
     fn test_process_input_data_with_valid_input_data() {
-        let mut m = Mod::default();
-        assert!(m.current_input.data.is_empty());
-        assert!(m.process_input_data(&vec![0x0600, 0, 0xABCD, 0]).is_ok());
-        assert_eq!(m.current_input.data, vec![0, 0, 0xCD, 0xAB, 0, 0]);
+        let m = Mod::default();
+        let result = m.process_input_data(&vec![0x0600, 0, 0xABCD, 0]).unwrap();
+        if let ChannelValue::ComRsIn(ref msg) = result[0] {
+            assert_eq!(msg.data, vec![0, 0, 0xCD, 0xAB, 0, 0]);
+        } else {
+            panic!("unexpected result: {:?}", result);
+        }
     }
 
     #[test]
     fn test_process_output_values_with_invalid_input_len() {
-        let mut m = Mod::default();
+        let m = Mod::default();
         assert!(m.process_output_values(&vec![]).is_err());
         assert!(
             m.process_output_values(&vec![
-                ChannelValue::Bytes(vec![0, 0, 0, 0, 0, 0, 0, 0]),
-                ChannelValue::Bytes(vec![0, 0, 0, 0, 0, 0, 0, 0]),
+                ChannelValue::ComRsIn(ProcessInput::default()),
+                ChannelValue::ComRsIn(ProcessInput::default()),
             ]).is_err()
         );
     }
 
     #[test]
     fn test_process_output_values_with_invalid_channel_data() {
-        let mut m = Mod::default();
+        let m = Mod::default();
         assert!(
             m.process_output_values(&vec![ChannelValue::Decimal32(0.0)])
                 .is_err()
@@ -538,40 +536,49 @@ mod tests {
     fn test_process_output_values_with_invalid_byte_len() {
 
         let mut m = Mod::default();
-        let fourteen = vec![0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
-        let fifteen = vec![0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
-        let six = vec![0, 0, 0, 0, 0, 0];
-        let seven = vec![0, 0, 0, 0, 0, 0, 0];
-        let five = vec![0, 0, 0, 0, 0];
+        let mut fourteen = ProcessOutput::default();
+        fourteen.data = vec![0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+
+        let mut fifteen = ProcessOutput::default();
+        fifteen.data =  vec![0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+
+        let mut six = ProcessOutput::default();
+        six.data = vec![0, 0, 0, 0, 0, 0];
+
+        let mut seven = ProcessOutput::default();
+        seven.data = vec![0, 0, 0, 0, 0, 0, 0];
+
+        let mut five = ProcessOutput::default();
+        five.data = vec![0, 0, 0, 0, 0];
 
         assert!(
-            m.process_output_values(&vec![ChannelValue::Bytes(five)])
+            m.process_output_values(&vec![ChannelValue::ComRsOut(five)])
                 .is_ok()
         );
 
         assert!(
-            m.process_output_values(&vec![ChannelValue::Bytes(fourteen.clone())])
+            m.process_output_values(&vec![ChannelValue::ComRsOut(fourteen.clone())])
                 .is_ok()
         );
 
         assert!(
-            m.process_output_values(&vec![ChannelValue::Bytes(fifteen.clone())])
+            m.process_output_values(&vec![ChannelValue::ComRsOut(fifteen.clone())])
                 .is_err()
         );
 
         m.mod_params.process_data_len = ProcessDataLength::EightBytes;
         assert!(
-            m.process_output_values(&vec![ChannelValue::Bytes(fourteen)])
+            m.process_output_values(&vec![ChannelValue::ComRsOut(fourteen)])
                 .is_err()
         );
 
         assert!(
-            m.process_output_values(&vec![ChannelValue::Bytes(seven.clone())])
+            m.process_output_values(&vec![ChannelValue::ComRsOut(seven.clone())])
                 .is_err()
         );
 
         assert!(
-            m.process_output_values(&vec![ChannelValue::Bytes(six.clone())])
+            m.process_output_values(&vec![ChannelValue::ComRsOut(six.clone())])
                 .is_ok()
         );
     }
@@ -580,11 +587,11 @@ mod tests {
     fn test_process_output_values() {
         let mut m = Mod::default();
         m.mod_params.process_data_len = ProcessDataLength::SixteenBytes;
-        assert!(m.current_output.data.is_empty());
-        let res = m.process_output_values(&vec![ChannelValue::Bytes(vec![0x0A, 0x0B, 0, 0x0C])])
+        let mut out = ProcessOutput::default();
+        out.data = vec![0x0A, 0x0B, 0, 0x0C];
+        let res = m.process_output_values(&vec![ChannelValue::ComRsOut(out)])
             .unwrap();
         assert_eq!(res.len(), 8);
         assert_eq!(res, vec![0x0400, 0x0B0A, 0x0C00, 0, 0, 0, 0, 0]);
-        assert_eq!(m.current_output.data, vec![0xA, 0xB, 0, 0xC]);
     }
 }
