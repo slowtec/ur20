@@ -66,9 +66,9 @@ impl Module for Mod {
             })
             .map(|(v, range, factor)| match *v {
                 ChannelValue::Decimal32(v) => {
-
                     use AnalogUIRange::*;
 
+                    #[cfg_attr(rustfmt, rustfmt_skip)]
                     Ok(match *range {
                         mA0To20       => (factor * v / 20.0),
                         mA4To20       => (factor * (v - 4.0) / 16.0),
@@ -101,56 +101,47 @@ mod tests {
             m.process_output_values(&[Decimal32(0.0), Decimal32(0.0), Decimal32(0.0)])
                 .is_err()
         );
-        assert!(
-            m.process_output_values(
-                &[
-                    Decimal32(0.0),
-                    Decimal32(0.0),
-                    Decimal32(0.0),
-                    Decimal32(0.0),
-                ],
-            ).is_ok()
-        );
+        assert!(m.process_output_values(&[
+            Decimal32(0.0),
+            Decimal32(0.0),
+            Decimal32(0.0),
+            Decimal32(0.0),
+        ]).is_ok());
     }
 
     #[test]
     fn test_process_output_values_with_invalid_channel_values() {
         let m = Mod::default();
-        assert!(
-            m.process_output_values(
-                &[Bit(false), Decimal32(0.0), Decimal32(0.0), Decimal32(0.0)],
-            ).is_err()
-        );
+        assert!(m.process_output_values(&[
+            Bit(false),
+            Decimal32(0.0),
+            Decimal32(0.0),
+            Decimal32(0.0)
+        ]).is_err());
     }
 
     #[test]
     fn test_process_output_values_with_missing_channel_parameters() {
         let mut m = Mod::default();
         m.ch_params = vec![];
-        assert!(
-            m.process_output_values(
-                &[
-                    Decimal32(0.0),
-                    Decimal32(0.0),
-                    Decimal32(0.0),
-                    Decimal32(0.0),
-                ],
-            ).is_err()
-        );
+        assert!(m.process_output_values(&[
+            Decimal32(0.0),
+            Decimal32(0.0),
+            Decimal32(0.0),
+            Decimal32(0.0),
+        ]).is_err());
     }
 
     #[test]
     fn test_process_output_values() {
         let mut m = Mod::default();
         assert_eq!(
-            m.process_output_values(
-                &[
-                    Decimal32(0.0),
-                    Decimal32(99.9),
-                    Decimal32(0.0),
-                    Decimal32(3.3),
-                ],
-            ).unwrap(),
+            m.process_output_values(&[
+                Decimal32(0.0),
+                Decimal32(99.9),
+                Decimal32(0.0),
+                Decimal32(3.3),
+            ]).unwrap(),
             vec![0, 0, 0, 0]
         );
         m.ch_params[0].output_range = AnalogUIRange::mA0To20;
@@ -158,14 +149,12 @@ mod tests {
         m.ch_params[2].output_range = AnalogUIRange::mA0To20;
         m.ch_params[3].output_range = AnalogUIRange::mA0To20;
         assert_eq!(
-            m.process_output_values(
-                &[
-                    Decimal32(23.518),
-                    Decimal32(20.0),
-                    Decimal32(10.0),
-                    Decimal32(0.0),
-                ],
-            ).unwrap(),
+            m.process_output_values(&[
+                Decimal32(23.518),
+                Decimal32(20.0),
+                Decimal32(10.0),
+                Decimal32(0.0),
+            ]).unwrap(),
             vec![0x7EFF, 0x6C00, 0x3600, 0x0]
         );
 
@@ -174,14 +163,12 @@ mod tests {
         m.ch_params[2].output_range = AnalogUIRange::V0To10;
         m.ch_params[3].output_range = AnalogUIRange::VMinus10To10;
         assert_eq!(
-            m.process_output_values(
-                &[
-                    Decimal32(10.0),
-                    Decimal32(12.0),
-                    Decimal32(10.0),
-                    Decimal32(-10.0),
-                ],
-            ).unwrap(),
+            m.process_output_values(&[
+                Decimal32(10.0),
+                Decimal32(12.0),
+                Decimal32(10.0),
+                Decimal32(-10.0),
+            ]).unwrap(),
             vec![0x3600, 0x3600, 0x6C00, 0x9400]
         );
 
@@ -190,14 +177,12 @@ mod tests {
         m.ch_params[2].output_range = AnalogUIRange::V1To5;
         m.ch_params[3].output_range = AnalogUIRange::V2To10;
         assert_eq!(
-            m.process_output_values(
-                &[
-                    Decimal32(5.0),
-                    Decimal32(-5.0),
-                    Decimal32(1.0),
-                    Decimal32(2.0),
-                ],
-            ).unwrap(),
+            m.process_output_values(&[
+                Decimal32(5.0),
+                Decimal32(-5.0),
+                Decimal32(1.0),
+                Decimal32(2.0),
+            ]).unwrap(),
             vec![0x6C00, 0x9400, 0x0, 0x0]
         );
     }

@@ -88,6 +88,7 @@ pub enum DataBits {
     EightBits = 1,
 }
 
+#[cfg_attr(rustfmt, rustfmt_skip)]
 #[allow(non_camel_case_types)]
 #[derive(Debug, Clone)]
 pub enum BaudRate {
@@ -105,12 +106,14 @@ pub enum BaudRate {
     Baud_115200 = 11,
 }
 
+#[cfg_attr(rustfmt, rustfmt_skip)]
 #[derive(Debug, Clone)]
 pub enum StopBit {
     OneBit  = 0,
     TwoBits = 1,
 }
 
+#[cfg_attr(rustfmt, rustfmt_skip)]
 #[derive(Debug, Clone)]
 pub enum Parity {
     None = 0,
@@ -118,6 +121,7 @@ pub enum Parity {
     Odd  = 2
 }
 
+#[cfg_attr(rustfmt, rustfmt_skip)]
 #[allow(non_camel_case_types)]
 #[derive(Debug, Clone)]
 pub enum FlowControl {
@@ -134,7 +138,6 @@ pub enum ProcessDataLength {
 
 impl ProcessInput {
     pub fn try_from_byte_message(bytes: &[u8]) -> Result<Self> {
-
         if bytes.len() < 2 {
             return Err(Error::BufferLength);
         }
@@ -197,8 +200,10 @@ impl ProcessDataLength {
 }
 
 impl ProcessOutput {
-    pub fn try_into_byte_message(&self, process_data_length: &ProcessDataLength) -> Result<Vec<u8>> {
-
+    pub fn try_into_byte_message(
+        &self,
+        process_data_length: &ProcessDataLength,
+    ) -> Result<Vec<u8>> {
         if self.tx_cnt > 3 || self.rx_cnt_ack > 3 {
             return Err(Error::SequenceNumber);
         }
@@ -243,7 +248,6 @@ impl ProcessOutput {
     }
 
     pub fn try_from_byte_message(bytes: &[u8]) -> Result<Self> {
-
         if bytes.len() < 2 {
             return Err(Error::BufferLength);
         }
@@ -266,7 +270,6 @@ impl ProcessOutput {
         };
 
         Ok(msg)
-
     }
 }
 
@@ -330,20 +333,16 @@ impl Module for Mod {
                 if current_output.data.len() > count {
                     return Err(Error::BufferLength);
                 }
-                let msg = current_output.try_into_byte_message(
-                    &self.mod_params.process_data_len,
-                )?;
+                let msg = current_output.try_into_byte_message(&self.mod_params.process_data_len)?;
                 Ok(u8_to_u16(&msg))
             }
-            _ => {
-                Err(Error::ChannelValue)
-            }
+            _ => Err(Error::ChannelValue),
         }
     }
 }
 
-const CNT_MASK     : u8 = 0b_0001_1000;
-const CNT_ACK_MASK : u8 = 0b_0110_0000;
+const CNT_MASK: u8 = 0b_0001_1000;
+const CNT_ACK_MASK: u8 = 0b_0110_0000;
 
 fn cnt_from_status_byte(byte: u8) -> usize {
     ((CNT_MASK & byte) >> 3) as usize
@@ -428,7 +427,6 @@ mod tests {
 
     #[test]
     fn try_valid_process_output_data_into_byte_message() {
-
         let default = ProcessOutput::default();
 
         let mut msg = default.clone();
@@ -515,12 +513,10 @@ mod tests {
     fn test_process_output_values_with_invalid_input_len() {
         let m = Mod::default();
         assert!(m.process_output_values(&vec![]).is_err());
-        assert!(
-            m.process_output_values(&vec![
-                ChannelValue::ComRsIn(ProcessInput::default()),
-                ChannelValue::ComRsIn(ProcessInput::default()),
-            ]).is_err()
-        );
+        assert!(m.process_output_values(&vec![
+            ChannelValue::ComRsIn(ProcessInput::default()),
+            ChannelValue::ComRsIn(ProcessInput::default()),
+        ]).is_err());
     }
 
     #[test]
@@ -534,13 +530,12 @@ mod tests {
 
     #[test]
     fn test_process_output_values_with_invalid_byte_len() {
-
         let mut m = Mod::default();
         let mut fourteen = ProcessOutput::default();
         fourteen.data = vec![0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
 
         let mut fifteen = ProcessOutput::default();
-        fifteen.data =  vec![0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+        fifteen.data = vec![0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
 
         let mut six = ProcessOutput::default();
         six.data = vec![0, 0, 0, 0, 0, 0];

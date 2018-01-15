@@ -15,7 +15,9 @@ pub struct ChannelParameters {
 
 impl Default for ChannelParameters {
     fn default() -> Self {
-        ChannelParameters { input_delay: InputDelay::ms3 }
+        ChannelParameters {
+            input_delay: InputDelay::ms3,
+        }
     }
 }
 
@@ -74,10 +76,7 @@ mod tests {
     #[test]
     fn test_process_output_values() {
         let m = Mod::default();
-        assert!(
-            m.process_output_values(&[ChannelValue::Bit(true)])
-                .is_err()
-        );
+        assert!(m.process_output_values(&[ChannelValue::Bit(true)]).is_err());
         assert_eq!(m.process_output_values(&[]).unwrap(), &[]);
     }
 }

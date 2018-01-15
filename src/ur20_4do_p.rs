@@ -15,7 +15,9 @@ pub struct ChannelParameters {
 
 impl Default for ChannelParameters {
     fn default() -> Self {
-        ChannelParameters { substitute_value: false }
+        ChannelParameters {
+            substitute_value: false,
+        }
     }
 }
 

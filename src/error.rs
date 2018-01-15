@@ -13,6 +13,7 @@ pub enum Error {
     ModuleOffset,
 }
 
+#[cfg_attr(rustfmt, rustfmt_skip)]
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
@@ -29,6 +30,7 @@ impl fmt::Display for Error {
     }
 }
 
+#[cfg_attr(rustfmt, rustfmt_skip)]
 impl ::std::error::Error for Error {
     fn description(&self) -> &str {
         match *self {

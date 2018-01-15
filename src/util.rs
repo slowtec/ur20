@@ -42,7 +42,6 @@ pub fn u8_to_u16(bytes: &[u8]) -> Vec<u16> {
     words
 }
 
-
 #[cfg(test)]
 mod tests {
 

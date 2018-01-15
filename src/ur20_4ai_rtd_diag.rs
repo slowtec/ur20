@@ -28,7 +28,9 @@ pub struct ChannelParameters {
 
 impl Default for ModuleParameters {
     fn default() -> Self {
-        ModuleParameters { temperature_unit: TemperatureUnit::Celsius }
+        ModuleParameters {
+            temperature_unit: TemperatureUnit::Celsius,
+        }
     }
 }
 
@@ -48,7 +50,6 @@ impl Default for ChannelParameters {
 
 impl Default for Mod {
     fn default() -> Self {
-
         let ch_params = (0..4).map(|_| ChannelParameters::default()).collect();
 
         let mod_params = ModuleParameters::default();
@@ -81,9 +82,9 @@ impl Module for Mod {
         let res = (0..4)
             .map(|i| (data[i], &self.ch_params[i].measurement_range))
             .map(|(val, range)| {
-
                 use RtdRange::*;
 
+                #[cfg_attr(rustfmt, rustfmt_skip)]
                 match *range {
                     PT100  |
                     PT200  |

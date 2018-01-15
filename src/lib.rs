@@ -167,23 +167,25 @@ pub enum DataFormat {
     /// Siemens S5 format
     S5 = 0,
     /// Siemens S7 format
-    S7 = 1
+    S7 = 1,
 }
 
+#[cfg_attr(rustfmt, rustfmt_skip)]
 #[allow(non_camel_case_types)]
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum AnalogUIRange {
-    mA0To20       = 0,
-    mA4To20       = 1,
-    V0To10        = 2,
-    VMinus10To10  = 3,
-    V0To5         = 4,
-    VMinus5To5    = 5,
-    V1To5         = 6,
-    V2To10        = 7,
-    Disabled      = 8,
+    mA0To20      = 0,
+    mA4To20      = 1,
+    V0To10       = 2,
+    VMinus10To10 = 3,
+    V0To5        = 4,
+    VMinus5To5   = 5,
+    V1To5        = 6,
+    V2To10       = 7,
+    Disabled     = 8,
 }
 
+#[cfg_attr(rustfmt, rustfmt_skip)]
 #[allow(non_camel_case_types)]
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum AnalogIRange {
@@ -231,9 +233,10 @@ pub enum RtdRange {
     /// Resistance 4000 Ω
     R4000 = 17,
     /// Disabled
-    Disabled = 18
+    Disabled = 18,
 }
 
+#[cfg_attr(rustfmt, rustfmt_skip)]
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum TemperatureUnit {
     Celsius    = 0,
@@ -241,6 +244,7 @@ pub enum TemperatureUnit {
     Kelvin     = 2,
 }
 
+#[cfg_attr(rustfmt, rustfmt_skip)]
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ConnectionType {
     TwoWire   = 0,
@@ -248,6 +252,7 @@ pub enum ConnectionType {
     FourWire  = 2,
 }
 
+#[cfg_attr(rustfmt, rustfmt_skip)]
 #[allow(non_camel_case_types)]
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ConversionTime {
@@ -259,28 +264,30 @@ pub enum ConversionTime {
     ms36  = 5,
 }
 
+#[cfg_attr(rustfmt, rustfmt_skip)]
 #[allow(non_camel_case_types)]
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum InputFilter {
-    us5     = 0,
-    us11    = 1,
-    us21    = 2,
-    us43    = 3,
-    us83    = 4,
-    us167   = 5,
-    us333   = 6,
-    us667   = 7,
-    ms1     = 8,
-    ms3     = 9,
-    ms5     = 10,
-    ms11    = 11,
-    ms22    = 12,
-    ms43    = 13,
-    ms91    = 14,
-    ms167   = 15,
-    ms333   = 16,
+    us5    = 0,
+    us11   = 1,
+    us21   = 2,
+    us43   = 3,
+    us83   = 4,
+    us167  = 5,
+    us333  = 6,
+    us667  = 7,
+    ms1    = 8,
+    ms3    = 9,
+    ms5    = 10,
+    ms11   = 11,
+    ms22   = 12,
+    ms43   = 13,
+    ms91   = 14,
+    ms167  = 15,
+    ms333  = 16,
 }
 
+#[cfg_attr(rustfmt, rustfmt_skip)]
 #[allow(non_camel_case_types)]
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum InputDelay {
@@ -292,6 +299,7 @@ pub enum InputDelay {
     ms40  = 5, // not at PROFIBUS-DP
 }
 
+#[cfg_attr(rustfmt, rustfmt_skip)]
 #[allow(non_camel_case_types)]
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum FrequencySuppression {
@@ -303,11 +311,9 @@ pub enum FrequencySuppression {
 
 impl ModuleType {
     pub fn try_from_u32(id: u32) -> Result<Self> {
-
         use ModuleType::*;
 
         let t = match id {
-
             0x0009_1F84 => UR20_4DI_P,
             0x001B_1F84 => UR20_4DI_P_3W,
             0x0013_1FC1 => UR20_8DI_P_2W,
@@ -386,6 +392,7 @@ impl ModuleType {
     }
 }
 
+#[cfg_attr(rustfmt, rustfmt_skip)]
 impl FromStr for ModuleType {
     type Err = Error;
     fn from_str(s: &str) -> result::Result<Self, Self::Err> {
@@ -469,25 +476,25 @@ impl FromStr for ModuleType {
             }
         };
         Ok(t)
-
     }
 }
 
+#[cfg_attr(rustfmt, rustfmt_skip)]
 impl FromStr for ModuleCategory {
     type Err = Error;
     fn from_str(s: &str) -> result::Result<Self, Self::Err> {
         use ModuleCategory::*;
         let c = match &*s.to_uppercase() {
-            "DI"    => DI,
-            "DO"    => DO,
-            "AI"    => AI,
-            "AO"    => AO,
-            "CNT"   => CNT,
-            "PWM"   => PWM,
-            "RTD"   => RTD,
-            "TC"    => TC,
-            "COM"   => COM,
-            "RO"    => RO,
+            "DI"  => DI,
+            "DO"  => DO,
+            "AI"  => AI,
+            "AO"  => AO,
+            "CNT" => CNT,
+            "PWM" => PWM,
+            "RTD" => RTD,
+            "TC"  => TC,
+            "COM" => COM,
+            "RO"  => RO,
             _ => {
                 return Err(Error::UnknownCategory);
             }
@@ -496,8 +503,8 @@ impl FromStr for ModuleCategory {
     }
 }
 
+#[cfg_attr(rustfmt, rustfmt_skip)]
 impl Into<ModuleCategory> for ModuleType {
-
     fn into(self) -> ModuleCategory {
         use ModuleType::*;
         use ModuleCategory::*;
@@ -577,8 +584,8 @@ impl Into<ModuleCategory> for ModuleType {
     }
 }
 
+#[cfg_attr(rustfmt, rustfmt_skip)]
 pub fn channel_count_from_module_type(t: &ModuleType) -> usize {
-
     use ModuleType::*;
 
     match *t {
@@ -706,7 +713,6 @@ mod tests {
             "not-valid".parse::<ModuleType>().err().unwrap(),
             Error::UnknownModule
         );
-
     }
 
     #[test]

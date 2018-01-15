@@ -23,7 +23,9 @@ pub struct ChannelParameters {
 
 impl Default for ModuleParameters {
     fn default() -> Self {
-        ModuleParameters { frequency_suppression: FrequencySuppression::Disabled }
+        ModuleParameters {
+            frequency_suppression: FrequencySuppression::Disabled,
+        }
     }
 }
 
@@ -40,7 +42,6 @@ impl Default for ChannelParameters {
 
 impl Default for Mod {
     fn default() -> Self {
-
         let ch_params = (0..8).map(|_| ChannelParameters::default()).collect();
 
         let mod_params = ModuleParameters::default();
@@ -63,7 +64,6 @@ impl Module for Mod {
         ModuleType::UR20_8AI_I_16_DIAG_HD
     }
     fn process_input_data(&self, data: &[u16]) -> Result<Vec<ChannelValue>> {
-
         use AnalogIRange::*;
 
         if data.len() != 8 {
@@ -129,14 +129,7 @@ mod tests {
         assert_eq!(
             m.process_input_data(&vec![5, 0, 7, 8, 0, 0, 0, 0]).unwrap(),
             vec![
-                Disabled,
-                Disabled,
-                Disabled,
-                Disabled,
-                Disabled,
-                Disabled,
-                Disabled,
-                Disabled,
+                Disabled, Disabled, Disabled, Disabled, Disabled, Disabled, Disabled, Disabled
             ]
         );
 
