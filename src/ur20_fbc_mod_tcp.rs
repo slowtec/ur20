@@ -118,7 +118,7 @@ pub fn process_output_values(
                      }
                      let shared_low_byte = out[start as usize] & 0x00FF;
                      let buf = u16_to_u8(&data);
-                     let shared_high_byte =  (buf[0] as u16) << 8;
+                     let shared_high_byte =  u16::from(buf[0]) << 8;
                      let word = shared_high_byte | shared_low_byte;
                      out[start as usize] = word;
                  }

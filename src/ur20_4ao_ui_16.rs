@@ -58,10 +58,10 @@ impl Module for Mod {
                 (
                     v,
                     &self.ch_params[i].output_range,
-                    match self.ch_params[i].data_format {
+                    f32::from(match self.ch_params[i].data_format {
                         DataFormat::S5 => S5_FACTOR,
                         DataFormat::S7 => S7_FACTOR,
-                    } as f32,
+                    }),
                 )
             })
             .map(|(v, range, factor)| match *v {

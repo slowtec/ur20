@@ -19,8 +19,8 @@ pub mod ur20_4ai_rtd_diag;
 
 pub use error::*;
 
-const S5_FACTOR: u16 = 16384;
-const S7_FACTOR: u16 = 27648;
+const S5_FACTOR: u16 = 16_384;
+const S7_FACTOR: u16 = 27_648;
 
 use ur20_1com_232_485_422::{ProcessInput as RsIn, ProcessOutput as RsOut};
 
@@ -308,75 +308,75 @@ impl ModuleType {
 
         let t = match id {
 
-            0x00091F84 => UR20_4DI_P,
-            0x001B1F84 => UR20_4DI_P_3W,
-            0x00131FC1 => UR20_8DI_P_2W,
-            0x000A1FC1 => UR20_8DI_P_3W,
-            0x00031FC1 => UR20_8DI_P_3W_HD,
-            0x00049FC2 => UR20_16DI_P,
-            0x00059FC2 => UR20_16DI_P_PLC_INT,
-            0x0F014700 => UR20_2DI_P_TS,
-            0x0F024700 => UR20_4DI_P_TS,
-            0x00011F84 => UR20_4DI_N,
-            0x00021FC1 => UR20_8DI_N_3W,
-            0x000C9FC2 => UR20_16DI_N,
-            0x000D9FC2 => UR20_16DI_N_PLC_INT,
-            0x00169F84 => UR20_4DI_2W_230V_AC,
+            0x0009_1F84 => UR20_4DI_P,
+            0x001B_1F84 => UR20_4DI_P_3W,
+            0x0013_1FC1 => UR20_8DI_P_2W,
+            0x000A_1FC1 => UR20_8DI_P_3W,
+            0x0003_1FC1 => UR20_8DI_P_3W_HD,
+            0x0004_9FC2 => UR20_16DI_P,
+            0x0005_9FC2 => UR20_16DI_P_PLC_INT,
+            0x0F01_4700 => UR20_2DI_P_TS,
+            0x0F02_4700 => UR20_4DI_P_TS,
+            0x0001_1F84 => UR20_4DI_N,
+            0x0002_1FC1 => UR20_8DI_N_3W,
+            0x000C_9FC2 => UR20_16DI_N,
+            0x000D_9FC2 => UR20_16DI_N_PLC_INT,
+            0x0016_9F84 => UR20_4DI_2W_230V_AC,
 
-            0x01012FA0 => UR20_4DO_P,
-            0x01052FA0 => UR20_4DO_P_2A,
-            0x01152FC8 => UR20_4DO_PN_2A,
-            0x01022FC8 => UR20_8DO_P,
-            0x01192FC8 => UR20_8DO_P_2W_HD,
-            0x0103AFD0 => UR20_16DO_P,
-            0x0104AFD0 => UR20_16DO_P_PLC_INT,
-            0x010A2FA0 => UR20_4DO_N,
-            0x010B2FA0 => UR20_4DO_N_2A,
-            0x010C2FC8 => UR20_8DO_N,
-            0x010DAFD0 => UR20_16DO_N,
-            0x010EAFD0 => UR20_16DO_N_PLC_INT,
-            0x01072FA0 => UR20_4RO_SSR_255,
-            0x01062FA0 => UR20_4RO_CO_255,
+            0x0101_2FA0 => UR20_4DO_P,
+            0x0105_2FA0 => UR20_4DO_P_2A,
+            0x0115_2FC8 => UR20_4DO_PN_2A,
+            0x0102_2FC8 => UR20_8DO_P,
+            0x0119_2FC8 => UR20_8DO_P_2W_HD,
+            0x0103_AFD0 => UR20_16DO_P,
+            0x0104_AFD0 => UR20_16DO_P_PLC_INT,
+            0x010A_2FA0 => UR20_4DO_N,
+            0x010B_2FA0 => UR20_4DO_N_2A,
+            0x010C_2FC8 => UR20_8DO_N,
+            0x010D_AFD0 => UR20_16DO_N,
+            0x010E_AFD0 => UR20_16DO_N_PLC_INT,
+            0x0107_2FA0 => UR20_4RO_SSR_255,
+            0x0106_2FA0 => UR20_4RO_CO_255,
 
-            0x09084880 => UR20_2PWM_PN_0_5A,
-            0x09094880 => UR20_2PWM_PN_2A,
+            0x0908_4880 => UR20_2PWM_PN_0_5A,
+            0x0909_4880 => UR20_2PWM_PN_2A,
 
-            0x040115C4 => UR20_4AI_UI_16,
-            0x04021544 => UR20_4AI_UI_16_DIAG,
-            0x041E1544 => UR20_4AI_UI_DIF_16_DIAG,
-            0x041315C4 => UR20_4AI_UI_16_HD,
-            0x04141544 => UR20_4AI_UI_16_DIAG_HD,
-            0x041115C4 => UR20_4AI_UI_12,
-            0x040415C5 => UR20_8AI_I_16_HD,
-            0x04051545 => UR20_8AI_I_16_DIAG_HD,
-            0x040915C5 => UR20_8AI_I_PLC_INT,
-            0x041C1544 => UR20_4AI_R_HS_16_DIAG,
-            0x041B356D => UR20_2AI_SG_24_DIAG,
-            0x0418356D => UR20_3EM_230V_AC,
+            0x0401_15C4 => UR20_4AI_UI_16,
+            0x0402_1544 => UR20_4AI_UI_16_DIAG,
+            0x041E_1544 => UR20_4AI_UI_DIF_16_DIAG,
+            0x0413_15C4 => UR20_4AI_UI_16_HD,
+            0x0414_1544 => UR20_4AI_UI_16_DIAG_HD,
+            0x0411_15C4 => UR20_4AI_UI_12,
+            0x0404_15C5 => UR20_8AI_I_16_HD,
+            0x0405_1545 => UR20_8AI_I_16_DIAG_HD,
+            0x0409_15C5 => UR20_8AI_I_PLC_INT,
+            0x041C_1544 => UR20_4AI_R_HS_16_DIAG,
+            0x041B_356D => UR20_2AI_SG_24_DIAG,
+            0x0418_356D => UR20_3EM_230V_AC,
 
-            0x050225E0 => UR20_4AO_UI_16,
-            0x050625E0 => UR20_4AO_UI_16_M,
-            0x05012560 => UR20_4AO_UI_16_DIAG,
-            0x05052560 => UR20_4AO_UI_16_M_DIAG,
-            0x050425E0 => UR20_4AO_UI_16_HD,
-            0x05032560 => UR20_4AO_UI_16_DIAG_HD,
+            0x0502_25E0 => UR20_4AO_UI_16,
+            0x0506_25E0 => UR20_4AO_UI_16_M,
+            0x0501_2560 => UR20_4AO_UI_16_DIAG,
+            0x0505_2560 => UR20_4AO_UI_16_M_DIAG,
+            0x0504_25E0 => UR20_4AO_UI_16_HD,
+            0x0503_2560 => UR20_4AO_UI_16_DIAG_HD,
 
-            0x08C13800 => UR20_1CNT_100_1DO,
-            0x08C33800 => UR20_2CNT_100,
-            0x08C43801 => UR20_1CNT_500,
-            0x088128EE => UR20_2FCNT_100,
+            0x08C1_3800 => UR20_1CNT_100_1DO,
+            0x08C3_3800 => UR20_2CNT_100,
+            0x08C4_3801 => UR20_1CNT_500,
+            0x0881_28EE => UR20_2FCNT_100,
 
-            0x09C17880 => UR20_1SSI,
-            0x0E413FED => UR20_1COM_232_485_422,
-            0x0BC1E800 => UR20_1COM_SAI_PRO,
-            0x0E81276D => UR20_4COM_IO_LINK,
+            0x09C1_7880 => UR20_1SSI,
+            0x0E41_3FED => UR20_1COM_232_485_422,
+            0x0BC1_E800 => UR20_1COM_SAI_PRO,
+            0x0E81_276D => UR20_4COM_IO_LINK,
 
-            0x04061544 => UR20_4AI_RTD_DIAG,
-            0x04071544 => UR20_4AI_TC_DIAG,
+            0x0406_1544 => UR20_4AI_RTD_DIAG,
+            0x0407_1544 => UR20_4AI_TC_DIAG,
 
-            0x18019F43 => UR20_PF_O_1DI_SIL,
-            0x18039F43 => UR20_PF_O_2DI_SIL,
-            0x18029F43 => UR20_PF_O_2DI_DELAY_SIL,
+            0x1801_9F43 => UR20_PF_O_1DI_SIL,
+            0x1803_9F43 => UR20_PF_O_2DI_SIL,
+            0x1802_9F43 => UR20_PF_O_2DI_DELAY_SIL,
 
             _ => {
                 return Err(Error::UnknownModule);
@@ -656,14 +656,14 @@ pub fn channel_count_from_module_type(t: &ModuleType) -> usize {
 }
 
 pub fn module_list_from_registers(registers: &[u16]) -> Result<Vec<ModuleType>> {
-    if registers.len() == 0 || registers.len() % 2 != 0 {
+    if registers.is_empty() || registers.len() % 2 != 0 {
         return Err(Error::RegisterCount);
     }
     let mut list = vec![];
     for i in 0..registers.len() / 2 {
         let idx = i as usize;
-        let hi = registers[idx * 2] as u32;
-        let lo = registers[idx * 2 + 1] as u32;
+        let hi = u32::from(registers[idx * 2]);
+        let lo = u32::from(registers[idx * 2 + 1]);
         let id = (hi << 16) + lo;
         let m = ModuleType::try_from_u32(id)?;
         list.push(m);

@@ -336,14 +336,14 @@ impl Module for Mod {
                 Ok(u8_to_u16(&msg))
             }
             _ => {
-                return Err(Error::ChannelValue);
+                Err(Error::ChannelValue)
             }
         }
     }
 }
 
-const CNT_MASK     : u8 = 0b00011000;
-const CNT_ACK_MASK : u8 = 0b01100000;
+const CNT_MASK     : u8 = 0b_0001_1000;
+const CNT_ACK_MASK : u8 = 0b_0110_0000;
 
 fn cnt_from_status_byte(byte: u8) -> usize {
     ((CNT_MASK & byte) >> 3) as usize

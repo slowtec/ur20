@@ -11,7 +11,7 @@ pub fn set_bit_16(mut val: u16, bit_nr: usize) -> u16 {
 }
 
 pub fn test_bit(val: u8, bit_nr: usize) -> bool {
-    test_bit_16(val as u16, bit_nr)
+    test_bit_16(u16::from(val), bit_nr)
 }
 
 pub fn test_bit_16(val: u16, bit_nr: usize) -> bool {

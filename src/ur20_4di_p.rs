@@ -47,7 +47,7 @@ impl Module for Mod {
         Ok(res)
     }
     fn process_output_values(&self, values: &[ChannelValue]) -> Result<Vec<u16>> {
-        if values.len() != 0 {
+        if !values.is_empty() {
             return Err(Error::ChannelValue);
         }
         Ok(vec![])

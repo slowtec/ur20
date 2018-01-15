@@ -77,16 +77,16 @@ impl Module for Mod {
         let res = (0..8)
             .map(|i| {
                 (
-                    data[i] as u32,
+                    u32::from(data[i]),
                     &self.ch_params[i].measurement_range,
                     &self.ch_params[i].data_format,
                 )
             })
             .map(|(val, range, format)| {
-                let factor = match *format {
+                let factor = f32::from(match *format {
                     DataFormat::S5 => S5_FACTOR,
                     DataFormat::S7 => S7_FACTOR,
-                } as f32;
+                });
                 match *range {
                     mA0To20 => ChannelValue::Decimal32((val * 20) as f32 / factor),
                     mA4To20 => ChannelValue::Decimal32((val * 16) as f32 / factor + 4.0),
@@ -97,7 +97,7 @@ impl Module for Mod {
         Ok(res)
     }
     fn process_output_values(&self, values: &[ChannelValue]) -> Result<Vec<u16>> {
-        if values.len() != 0 {
+        if !values.is_empty() {
             return Err(Error::ChannelValue);
         }
         Ok(vec![])

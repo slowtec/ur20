@@ -95,7 +95,7 @@ impl Module for Mod {
                     NI500  |
                     NI1000 |
                     Cu10   => {
-                        ChannelValue::Decimal32((val as i16) as f32 / 10.0)
+                        ChannelValue::Decimal32(f32::from(val as i16) / 10.0)
                     }
                     R40   |
                     R80   |
@@ -115,10 +115,10 @@ impl Module for Mod {
                             R2000 => 2000.0,
                             R4000 => 4000.0,
                             _ => {
-                                unreachable!();
+                                unreachable!()
                             }
                         };
-                        let d = n * (val as u32) as f32 / 0x6C00 as f32;
+                        let d = n * u32::from(val) as f32 / 0x6C00 as f32;
                         ChannelValue::Decimal32(d)
                     }
                     Disabled => ChannelValue::Disabled,
@@ -128,7 +128,7 @@ impl Module for Mod {
         Ok(res)
     }
     fn process_output_values(&self, values: &[ChannelValue]) -> Result<Vec<u16>> {
-        if values.len() != 0 {
+        if !values.is_empty() {
             return Err(Error::ChannelValue);
         }
         Ok(vec![])
