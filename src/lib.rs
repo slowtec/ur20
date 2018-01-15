@@ -24,18 +24,26 @@ const S7_FACTOR: u16 = 27_648;
 
 use ur20_1com_232_485_422::{ProcessInput as RsIn, ProcessOutput as RsOut};
 
+/// Data type used by the module channels.
 #[derive(Debug, Clone, PartialEq)]
 pub enum ChannelValue {
+    /// A single bit (0 == false)
     Bit(bool),
+    /// A 32-Bit float value.
     Decimal32(f32),
+    /// Special input data used by 1COM-232-485-422
     ComRsIn(RsIn),
+    /// Special output data used by 1COM-232-485-422
     ComRsOut(RsOut),
+    /// The channel is currently disabled.
     Disabled,
+    /// The channel has no data at all.
     None,
 }
 
 type Result<T> = result::Result<T, Error>;
 
+/// A generic description of modules.
 pub trait Module: std::fmt::Debug {
     /// Get concrete i/o module type.
     fn module_type(&self) -> ModuleType;
@@ -49,6 +57,7 @@ pub trait Module: std::fmt::Debug {
     fn process_output_values(&self, &[ChannelValue]) -> Result<Vec<u16>>;
 }
 
+/// Describes the general class of a module.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum ModuleCategory {
     /// Digital input modules
@@ -75,6 +84,7 @@ pub enum ModuleCategory {
     PF,
 }
 
+/// Describes the concrete module type.
 #[allow(non_camel_case_types)]
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum ModuleType {
@@ -162,6 +172,7 @@ pub enum ModuleType {
     UR20_PF_O_2DI_DELAY_SIL,
 }
 
+/// Describes how the data should be interpreted.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum DataFormat {
     /// Siemens S5 format
@@ -170,30 +181,43 @@ pub enum DataFormat {
     S7 = 1,
 }
 
-#[cfg_attr(rustfmt, rustfmt_skip)]
+/// Analog input or output range (current and voltage).
 #[allow(non_camel_case_types)]
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum AnalogUIRange {
-    mA0To20      = 0,
-    mA4To20      = 1,
-    V0To10       = 2,
+    /// 0mA ... 20mA
+    mA0To20 = 0,
+    /// 4mA ... 20mA
+    mA4To20 = 1,
+    /// 0V ... 10V
+    V0To10 = 2,
+    /// -10V ... 10V
     VMinus10To10 = 3,
-    V0To5        = 4,
-    VMinus5To5   = 5,
-    V1To5        = 6,
-    V2To10       = 7,
-    Disabled     = 8,
+    /// 0V ... 5V
+    V0To5 = 4,
+    /// -5V ... 5V
+    VMinus5To5 = 5,
+    /// 1V ... 5V
+    V1To5 = 6,
+    /// 2V ... 10V
+    V2To10 = 7,
+    /// Disabled channel.
+    Disabled = 8,
 }
 
-#[cfg_attr(rustfmt, rustfmt_skip)]
+/// Analog input or output range (current only).
 #[allow(non_camel_case_types)]
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum AnalogIRange {
-    mA0To20  = 0,
-    mA4To20  = 1,
+    /// 0mA ... 20mA
+    mA0To20 = 0,
+    /// 4mA ... 20mA
+    mA4To20 = 1,
+    /// Disabled channel.
     Disabled = 3,
 }
 
+/// Resistor value range.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum RtdRange {
     /// -200 ... 850 Degree Celsius
@@ -236,6 +260,7 @@ pub enum RtdRange {
     Disabled = 18,
 }
 
+/// The unit a temperature value is represented in.
 #[cfg_attr(rustfmt, rustfmt_skip)]
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum TemperatureUnit {
@@ -244,6 +269,7 @@ pub enum TemperatureUnit {
     Kelvin     = 2,
 }
 
+/// Describes how the resistor is physically conneted.
 #[cfg_attr(rustfmt, rustfmt_skip)]
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ConnectionType {
@@ -584,6 +610,7 @@ impl Into<ModuleCategory> for ModuleType {
     }
 }
 
+/// Returns the number of channels for a specific module type.
 #[cfg_attr(rustfmt, rustfmt_skip)]
 pub fn channel_count_from_module_type(t: &ModuleType) -> usize {
     use ModuleType::*;
@@ -662,6 +689,7 @@ pub fn channel_count_from_module_type(t: &ModuleType) -> usize {
     }
 }
 
+/// Converts the raw coupler register data into a list of module types.
 pub fn module_list_from_registers(registers: &[u16]) -> Result<Vec<ModuleType>> {
     if registers.is_empty() || registers.len() % 2 != 0 {
         return Err(Error::RegisterCount);

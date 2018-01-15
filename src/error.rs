@@ -1,5 +1,6 @@
 use std::fmt;
 
+/// UR20 specific errors.
 #[derive(Debug, PartialEq)]
 pub enum Error {
     UnknownModule,
