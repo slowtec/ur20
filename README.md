@@ -3,6 +3,10 @@
 `ur20` is a [Rust](https://rust-lang.org) library for the
 [Weidmüller](http://www.weidmueller.de) u-remote IP20 system.
 
+[![Crates.io version](https://img.shields.io/crates/v/ur20.svg)](https://crates.io/crates/ur20)
+[![Docs](https://docs.rs/mio/badge.svg)](https://docs.rs/ur20/)
+[![Build Status](https://travis-ci.org/slowtec/rust-ur20.svg?branch=master)](https://travis-ci.org/slowtec/rust-ur20)
+
 ## License
 
 Copyright (c) 2017 - 2018, slowtec GmbH <post@slowtec.de>
