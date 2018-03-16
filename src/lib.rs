@@ -214,7 +214,7 @@ pub enum AnalogIRange {
     /// 4mA ... 20mA
     mA4To20 = 1,
     /// Disabled channel.
-    Disabled = 3,
+    Disabled = 2,
 }
 
 /// Resistor value range.
