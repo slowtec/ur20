@@ -1,6 +1,7 @@
 //! Analog input module UR20-8AI-I-16-DIAG-HD
 
 use super::*;
+use num_traits::cast::FromPrimitive;
 
 #[derive(Debug)]
 pub struct Mod {
@@ -149,18 +150,15 @@ fn parameters_from_raw_data(data: &[u16]) -> Result<(ModuleParameters, Vec<Chann
                 }
             };
 
-            p.data_format = match data[idx + 3] {
-                0 => DataFormat::S7,
-                1 => DataFormat::S5,
+            p.data_format = match FromPrimitive::from_u16(data[idx + 3]) {
+                Some(f) => f,
                 _ => {
                     return Err(Error::ChannelParameter);
                 }
             };
 
-            p.measurement_range = match data[i * 4 + 4] {
-                0 => AnalogIRange::mA0To20,
-                1 => AnalogIRange::mA4To20,
-                2 => AnalogIRange::Disabled,
+            p.measurement_range = match FromPrimitive::from_u16(data[idx + 4]) {
+                Some(r) => r,
                 _ => {
                     return Err(Error::ChannelParameter);
                 }
@@ -287,7 +285,7 @@ mod tests {
     fn test_channel_parameters_from_raw_data() {
         let data = vec![
             0,          // Module
-            0, 0, 0, 2, // CH 0
+            0, 0, 1, 2, // CH 0
             1, 0, 0, 2, // CH 1
             0, 1, 0, 2, // CH 2
             0, 0, 1, 2, // CH 3
@@ -313,7 +311,7 @@ mod tests {
         );
         assert_eq!(
             parameters_from_raw_data(&data).unwrap().1[1].data_format,
-            DataFormat::S7
+            DataFormat::S5
         );
         assert_eq!(
             parameters_from_raw_data(&data).unwrap().1[1].measurement_range,
@@ -326,7 +324,7 @@ mod tests {
         );
         assert_eq!(
             parameters_from_raw_data(&data).unwrap().1[3].data_format,
-            DataFormat::S5
+            DataFormat::S7
         );
         assert_eq!(
             parameters_from_raw_data(&data).unwrap().1[4].measurement_range,

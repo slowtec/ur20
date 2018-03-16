@@ -1,6 +1,9 @@
 // Copyright (c) 2017 - 2018 slowtec GmbH <markus.kohlhase@slowtec.de>
 
 extern crate byteorder;
+#[macro_use]
+extern crate num_derive;
+extern crate num_traits;
 
 use std::str::FromStr;
 use std::result;
@@ -173,7 +176,7 @@ pub enum ModuleType {
 }
 
 /// Describes how the data should be interpreted.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, FromPrimitive, ToPrimitive)]
 pub enum DataFormat {
     /// Siemens S5 format
     S5 = 0,
@@ -183,7 +186,7 @@ pub enum DataFormat {
 
 /// Analog input or output range (current and voltage).
 #[allow(non_camel_case_types)]
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, FromPrimitive, ToPrimitive)]
 pub enum AnalogUIRange {
     /// 0mA ... 20mA
     mA0To20 = 0,
@@ -207,7 +210,7 @@ pub enum AnalogUIRange {
 
 /// Analog input or output range (current only).
 #[allow(non_camel_case_types)]
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, FromPrimitive, ToPrimitive)]
 pub enum AnalogIRange {
     /// 0mA ... 20mA
     mA0To20 = 0,
@@ -218,7 +221,7 @@ pub enum AnalogIRange {
 }
 
 /// Resistor value range.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, FromPrimitive, ToPrimitive)]
 pub enum RtdRange {
     /// -200 ... 850 Degree Celsius
     PT100 = 0,
@@ -262,7 +265,7 @@ pub enum RtdRange {
 
 /// The unit a temperature value is represented in.
 #[cfg_attr(rustfmt, rustfmt_skip)]
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, FromPrimitive, ToPrimitive)]
 pub enum TemperatureUnit {
     Celsius    = 0,
     Fahrenheit = 1,
@@ -271,7 +274,7 @@ pub enum TemperatureUnit {
 
 /// Describes how the resistor is physically conneted.
 #[cfg_attr(rustfmt, rustfmt_skip)]
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, FromPrimitive, ToPrimitive)]
 pub enum ConnectionType {
     TwoWire   = 0,
     ThreeWire = 1,
@@ -280,7 +283,7 @@ pub enum ConnectionType {
 
 #[cfg_attr(rustfmt, rustfmt_skip)]
 #[allow(non_camel_case_types)]
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, FromPrimitive, ToPrimitive)]
 pub enum ConversionTime {
     ms240 = 0,
     ms130 = 1,
@@ -292,7 +295,7 @@ pub enum ConversionTime {
 
 #[cfg_attr(rustfmt, rustfmt_skip)]
 #[allow(non_camel_case_types)]
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, FromPrimitive, ToPrimitive)]
 pub enum InputFilter {
     us5    = 0,
     us11   = 1,
@@ -315,7 +318,7 @@ pub enum InputFilter {
 
 #[cfg_attr(rustfmt, rustfmt_skip)]
 #[allow(non_camel_case_types)]
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, FromPrimitive, ToPrimitive)]
 pub enum InputDelay {
     no    = 0,
     us300 = 1, // not at PROFIBUS-DP
@@ -327,7 +330,7 @@ pub enum InputDelay {
 
 #[cfg_attr(rustfmt, rustfmt_skip)]
 #[allow(non_camel_case_types)]
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, FromPrimitive, ToPrimitive)]
 pub enum FrequencySuppression {
     Disabled  = 0,
     Hz50      = 1,
