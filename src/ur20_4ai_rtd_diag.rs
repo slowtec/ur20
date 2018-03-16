@@ -1,6 +1,7 @@
 //! Analog input module UR20-4AI-RTD-DIAG
 
 use super::*;
+use num_traits::cast::FromPrimitive;
 
 #[derive(Debug)]
 pub struct Mod {
@@ -8,12 +9,12 @@ pub struct Mod {
     pub ch_params: Vec<ChannelParameters>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ModuleParameters {
     pub temperature_unit: TemperatureUnit,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ChannelParameters {
     pub measurement_range: RtdRange,
     pub connection_type: ConnectionType,
@@ -21,9 +22,19 @@ pub struct ChannelParameters {
     pub channel_diagnostics: bool,
     pub limit_value_monitoring: bool,
     //-32768 ... 32767
-    pub high_limit_value: u16,
+    pub high_limit_value: i16,
     //-32768 ... 32767
-    pub low_limit_value: u16,
+    pub low_limit_value: i16,
+}
+
+impl Mod {
+    pub fn from_parameter_data(data: &[u16]) -> Result<Mod> {
+        let (mod_params, ch_params) = parameters_from_raw_data(data)?;
+        Ok(Mod {
+            mod_params,
+            ch_params,
+        })
+    }
 }
 
 impl Default for ModuleParameters {
@@ -136,6 +147,70 @@ impl Module for Mod {
     }
 }
 
+fn parameters_from_raw_data(data: &[u16]) -> Result<(ModuleParameters, Vec<ChannelParameters>)> {
+    if data.len() < 29 {
+        return Err(Error::BufferLength);
+    }
+    let mut module_parameters = ModuleParameters::default();
+
+    module_parameters.temperature_unit = match data[0] {
+        0 => TemperatureUnit::Celsius,
+        1 => TemperatureUnit::Fahrenheit,
+        2 => TemperatureUnit::Kelvin,
+        _ => return Err(Error::ChannelParameter),
+    };
+
+    let channel_parameters: Result<Vec<_>> = (0..4)
+        .map(|i| {
+            let mut p = ChannelParameters::default();
+            let idx = i * 7;
+
+            p.measurement_range = match FromPrimitive::from_u16(data[idx + 1]) {
+                Some(x) => x,
+                _ => {
+                    return Err(Error::ChannelParameter);
+                }
+            };
+
+            p.connection_type = match FromPrimitive::from_u16(data[idx + 2]) {
+                Some(x) => x,
+                _ => {
+                    return Err(Error::ChannelParameter);
+                }
+            };
+
+            p.conversion_time = match FromPrimitive::from_u16(data[idx + 3]) {
+                Some(x) => x,
+                _ => {
+                    return Err(Error::ChannelParameter);
+                }
+            };
+
+            p.channel_diagnostics = match data[idx + 4] {
+                0 => false,
+                1 => true,
+                _ => {
+                    return Err(Error::ChannelParameter);
+                }
+            };
+
+            p.limit_value_monitoring = match data[idx + 5] {
+                0 => false,
+                1 => true,
+                _ => {
+                    return Err(Error::ChannelParameter);
+                }
+            };
+
+            p.high_limit_value = data[idx + 6] as i16;
+            p.low_limit_value = data[idx + 7] as i16;
+
+            Ok(p)
+        })
+        .collect();
+    Ok((module_parameters, channel_parameters?))
+}
+
 #[cfg(test)]
 mod tests {
 
@@ -204,5 +279,127 @@ mod tests {
                 .is_err()
         );
         assert_eq!(m.process_output_values(&[]).unwrap(), &[]);
+    }
+
+    #[test]
+    fn test_module_parameters_from_raw_data() {
+        let mut data = vec![
+            0,                   // Module
+            0, 0, 0, 0, 0, 0, 0, // CH 0
+            0, 0, 0, 0, 0, 0, 0, // CH 1
+            0, 0, 0, 0, 0, 0, 0, // CH 2
+            0, 0, 0, 0, 0, 0, 0, // CH 3
+        ];
+
+        assert_eq!(
+            parameters_from_raw_data(&data).unwrap().0.temperature_unit,
+            TemperatureUnit::Celsius
+        );
+        data[0] = 1;
+        assert_eq!(
+            parameters_from_raw_data(&data).unwrap().0.temperature_unit,
+            TemperatureUnit::Fahrenheit
+        );
+        data[0] = 2;
+        assert_eq!(
+            parameters_from_raw_data(&data).unwrap().0.temperature_unit,
+            TemperatureUnit::Kelvin
+        );
+    }
+
+    #[test]
+    fn test_channel_parameters_from_raw_data() {
+        let data = vec![
+            0,                               // Module
+            18, 0, 2, 0, 0, 0, 0,            // CH 0
+            5,  1, 0, 0, 0, 0, 0,            // CH 1
+            0,  0, 1, 0, 0, 0, 0,            // CH 2
+            0,  0, 0, 1, 1, 0x7FFF, 0x8000,  // CH 3
+        ];
+
+        assert_eq!(parameters_from_raw_data(&data).unwrap().1.len(), 4);
+
+        assert_eq!(
+            parameters_from_raw_data(&data).unwrap().1[0],
+            ChannelParameters::default()
+        );
+
+        assert_eq!(
+            parameters_from_raw_data(&data).unwrap().1[1].measurement_range,
+            RtdRange::NI120
+        );
+
+        assert_eq!(
+            parameters_from_raw_data(&data).unwrap().1[1].connection_type,
+            ConnectionType::ThreeWire
+        );
+        assert_eq!(
+            parameters_from_raw_data(&data).unwrap().1[2].conversion_time,
+            ConversionTime::ms130
+        );
+
+        assert_eq!(
+            parameters_from_raw_data(&data).unwrap().1[3].channel_diagnostics,
+            true
+        );
+
+        assert_eq!(
+            parameters_from_raw_data(&data).unwrap().1[3].limit_value_monitoring,
+            true
+        );
+        assert_eq!(
+            parameters_from_raw_data(&data).unwrap().1[3].high_limit_value,
+            ::std::i16::MAX
+        );
+
+        assert_eq!(
+            parameters_from_raw_data(&data).unwrap().1[3].low_limit_value,
+            ::std::i16::MIN
+        );
+    }
+
+    #[test]
+    fn test_parameters_from_invalid_raw_data() {
+        let mut data = vec![
+            0,                   // Module
+            0, 0, 0, 0, 0, 0, 0, // CH 0
+            0, 0, 0, 0, 0, 0, 0, // CH 1
+            0, 0, 0, 0, 0, 0, 0, // CH 2
+            0, 0, 0, 0, 0, 0, 0, // CH 3
+        ];
+        data[1] = 19; // should be max '18'
+        assert!(parameters_from_raw_data(&data).is_err());
+
+        data[1] = 0;
+        data[2] = 3; // should be max '2'
+        assert!(parameters_from_raw_data(&data).is_err());
+
+        data[2] = 0;
+        data[3] = 6; // should be max '5'
+        assert!(parameters_from_raw_data(&data).is_err());
+    }
+
+    #[test]
+    fn test_parameters_from_invalid_data_buffer_size() {
+        let data = [0; 0];
+        assert!(parameters_from_raw_data(&data).is_err());
+        let data = [0; 28];
+        assert!(parameters_from_raw_data(&data).is_err());
+        let data = [0; 29];
+        assert!(parameters_from_raw_data(&data).is_ok());
+    }
+
+    #[test]
+    fn create_module_from_parameter_data() {
+        let data = vec![
+            0,                    // Module
+            1,  0, 0, 0, 0, 0, 0, // CH 0
+            18, 0, 0, 0, 0, 0, 0, // CH 1
+            0,  0, 0, 0, 0, 0, 0, // CH 2
+            0,  0, 0, 0, 0, 0, 0, // CH 3
+        ];
+        let module = Mod::from_parameter_data(&data).unwrap();
+        assert_eq!(module.ch_params[0].measurement_range, RtdRange::PT200);
+        assert_eq!(module.ch_params[1].measurement_range, RtdRange::Disabled);
     }
 }
