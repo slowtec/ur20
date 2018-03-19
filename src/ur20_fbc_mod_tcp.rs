@@ -149,6 +149,42 @@ pub fn to_bit_address(addr: RegisterAddress, bit: usize) -> BitAddress {
     (addr << 4) | (bit as u16)
 }
 
+pub trait ModbusParameterRegisterCount {
+    /// Total number of Modbus registers of module parameters.
+    fn param_register_count(&self) -> u16;
+}
+
+impl ModbusParameterRegisterCount for ModuleType {
+    fn param_register_count(&self) -> u16 {
+        use super::ModuleType::*;
+        match *self {
+            // Digital input modules
+            UR20_4DI_P | UR20_4DI_P_3W => 0 + 4 * 1,
+            UR20_8DI_P_2W | UR20_8DI_P_3W => 0 + 8 * 1,
+
+            // Digital output modules
+            UR20_4DO_P => 0 + 4 * 1,
+
+            // Analogue input modules
+            UR20_8AI_I_16_DIAG_HD => 1 + 8 * 4,
+
+            // Analogue output modul
+            UR20_4AO_UI_16 => 0 + 4 * 3,
+
+            // Analogue input modules DIAG
+            UR20_4AI_RTD_DIAG => 1 + 4 * 7,
+
+            // Communication modules
+            UR20_1COM_232_485_422 => 10,
+
+            // Not yet supported
+            _ => {
+                panic!("not supported");
+            }
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
