@@ -48,6 +48,15 @@ impl Module for Mod {
     fn process_input_data(&self, _: &[u16]) -> Result<Vec<ChannelValue>> {
         Ok((0..4).map(|_| ChannelValue::None).collect())
     }
+    fn process_output_data(&self, data: &[u16]) -> Result<Vec<ChannelValue>> {
+        if data.len() != 1 {
+            return Err(Error::BufferLength);
+        }
+        Ok((0..4)
+            .map(|i| test_bit_16(data[0], i))
+            .map(|x| ChannelValue::Bit(x))
+            .collect())
+    }
     fn process_output_values(&self, values: &[ChannelValue]) -> Result<Vec<u16>> {
         if values.len() != 4 {
             return Err(Error::ChannelValue);
@@ -108,6 +117,35 @@ mod tests {
             m.process_output_values(&[Bit(true), Bit(false), Bit(true), Bit(true)])
                 .is_ok()
         );
+    }
+
+    #[test]
+    fn test_process_output_data() {
+        let m = Mod::default();
+        assert_eq!(
+            m.process_output_data(&vec![0x0F]).unwrap(),
+            &[
+                ChannelValue::Bit(true),
+                ChannelValue::Bit(true),
+                ChannelValue::Bit(true),
+                ChannelValue::Bit(true),
+            ]
+        );
+        assert_eq!(
+            m.process_output_data(&vec![0b000_0101]).unwrap(),
+            &[
+                ChannelValue::Bit(true),
+                ChannelValue::Bit(false),
+                ChannelValue::Bit(true),
+                ChannelValue::Bit(false),
+            ]
+        );
+    }
+
+    #[test]
+    fn test_process_output_data_with_invalid_buffer_size() {
+        let m = Mod::default();
+        assert!(m.process_output_data(&vec![0; 2]).is_err());
     }
 
     #[test]

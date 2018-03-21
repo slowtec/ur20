@@ -49,8 +49,33 @@ impl Module for Mod {
     fn module_type(&self) -> ModuleType {
         ModuleType::UR20_4AO_UI_16
     }
-    fn process_input_data(&self, _: &[u16]) -> Result<Vec<ChannelValue>> {
+    fn process_input_data(&self, data: &[u16]) -> Result<Vec<ChannelValue>> {
+        if !data.is_empty() {
+            return Err(Error::BufferLength);
+        }
         Ok((0..4).map(|_| ChannelValue::None).collect())
+    }
+    fn process_output_data(&self, data: &[u16]) -> Result<Vec<ChannelValue>> {
+        if data.len() != 4 {
+            return Err(Error::BufferLength);
+        }
+        Ok(data.into_iter()
+            .enumerate()
+            .map(|(i, v)| {
+                (
+                    v,
+                    &self.ch_params[i].output_range,
+                    &self.ch_params[i].data_format,
+                )
+            })
+            .map(|(v, range, factor)| {
+                if *range != AnalogUIRange::Disabled {
+                    ChannelValue::Decimal32(u16_to_value(*v, range, factor))
+                } else {
+                    ChannelValue::Disabled
+                }
+            })
+            .collect())
     }
     fn process_output_values(&self, values: &[ChannelValue]) -> Result<Vec<u16>> {
         if values.len() != 4 {
@@ -158,6 +183,58 @@ mod tests {
 
     use super::*;
     use ChannelValue::*;
+
+    #[test]
+    fn test_process_input_data() {
+        let m = Mod::default();
+        assert!(m.process_input_data(&[0, 0, 0, 0]).is_err());
+        assert_eq!(
+            m.process_input_data(&[]).unwrap(),
+            &[
+                ChannelValue::None,
+                ChannelValue::None,
+                ChannelValue::None,
+                ChannelValue::None,
+            ]
+        );
+    }
+
+    #[test]
+    fn test_process_output_data() {
+        let mut m = Mod::default();
+        assert_eq!(
+            m.process_output_data(&vec![123, 456, 789, 0]).unwrap(),
+            &[
+                ChannelValue::Disabled,
+                ChannelValue::Disabled,
+                ChannelValue::Disabled,
+                ChannelValue::Disabled,
+            ]
+        );
+        m.ch_params[0].output_range = AnalogUIRange::mA0To20;
+        m.ch_params[1].output_range = AnalogUIRange::mA0To20;
+        m.ch_params[2].output_range = AnalogUIRange::mA0To20;
+        m.ch_params[3].output_range = AnalogUIRange::mA0To20;
+        assert_eq!(
+            m.process_output_data(&vec![0x0, 0x6C00, 0x3600, 0x0])
+                .unwrap(),
+            &[
+                Decimal32(0.0),
+                Decimal32(20.0),
+                Decimal32(10.0),
+                Decimal32(0.0),
+            ]
+        );
+    }
+
+    #[test]
+    fn test_process_output_data_with_invalid_buffer_size() {
+        let m = Mod::default();
+        assert!(m.process_output_data(&vec![]).is_err());
+        assert!(m.process_output_data(&vec![0; 3]).is_err());
+        assert!(m.process_output_data(&vec![0; 5]).is_err());
+        assert!(m.process_output_data(&vec![0; 4]).is_ok());
+    }
 
     #[test]
     fn test_process_output_values_with_invalid_channel_len() {

@@ -56,6 +56,12 @@ impl Module for Mod {
             .collect();
         Ok(res)
     }
+    fn process_output_data(&self, data: &[u16]) -> Result<Vec<ChannelValue>> {
+        if !data.is_empty() {
+            return Err(Error::BufferLength);
+        }
+        Ok((0..4).map(|_| ChannelValue::None).collect())
+    }
     fn process_output_values(&self, values: &[ChannelValue]) -> Result<Vec<u16>> {
         if !values.is_empty() {
             return Err(Error::ChannelValue);
@@ -98,6 +104,21 @@ mod tests {
         assert_eq!(
             m.process_input_data(&data).unwrap(),
             vec![Bit(false), Bit(false), Bit(true), Bit(false)]
+        );
+    }
+
+    #[test]
+    fn test_process_output_data() {
+        let m = Mod::default();
+        assert!(m.process_output_data(&[0, 0, 0, 0]).is_err());
+        assert_eq!(
+            m.process_output_data(&[]).unwrap(),
+            &[
+                ChannelValue::None,
+                ChannelValue::None,
+                ChannelValue::None,
+                ChannelValue::None,
+            ]
         );
     }
 
