@@ -42,6 +42,15 @@ pub fn u8_to_u16(bytes: &[u8]) -> Vec<u16> {
     words
 }
 
+pub fn shift_data(data: &[u16]) -> Vec<u16> {
+    let buf = u16_to_u8(data);
+    let buf = &buf[1..]; // drop first byte
+    let mut shifted = vec![];
+    shifted.extend_from_slice(buf);
+    shifted.push(0);
+    u8_to_u16(&shifted)
+}
+
 #[cfg(test)]
 mod tests {
 
@@ -73,5 +82,10 @@ mod tests {
         assert_eq!(super::u8_to_u16(&[0xAB]), vec![0xAB]);
         assert_eq!(super::u8_to_u16(&[0xA, 0xB]), vec![0x0B0A]);
         assert_eq!(super::u8_to_u16(&[0xA, 0xB, 0xC]), vec![0x0B0A, 0xC]);
+    }
+
+    #[test]
+    fn shift_data() {
+        assert_eq!(super::shift_data(&vec![0xABCD]), vec![0x00AB]);
     }
 }

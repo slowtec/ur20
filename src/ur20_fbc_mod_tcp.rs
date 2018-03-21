@@ -38,7 +38,7 @@ pub fn offsets_of_process_data(data: &[Word]) -> Vec<ModuleOffset> {
     offsets
 }
 
-/// Map the raw data into values.
+/// Map the raw input data into values.
 pub fn process_input_data(
     modules: &mut [(Box<Module>, ModuleOffset)],
     data: &[u16],
@@ -47,39 +47,70 @@ pub fn process_input_data(
         .into_iter()
         .map(|&mut (ref mut m, ref offset)| {
             if let Some(in_offset) = offset.input {
-                let (start, bit) = to_register_address(in_offset);
-                let mut start = (start - ADDR_PACKED_PROCESS_INPUT_DATA) as usize;
-                let word_count = {
-                    let cnt = m.process_input_byte_count() / 2;
-                    if cnt == 0 {
-                        1
-                    } else {
-                        cnt
-                    }
-                };
-                let end = start + word_count;
-                if end > data.len() {
-                    return Err(Error::BufferLength);
-                }
-                let input = &data[start..end];
-
-                match bit {
-                    0 => m.process_input_data(input),
-                    8 => {
-                        let buf = u16_to_u8(input);
-                        let buf = &buf[1..]; // drop first byte
-                        let mut shifted = vec![];
-                        shifted.extend_from_slice(buf);
-                        shifted.push(0);
-                        m.process_input_data(&u8_to_u16(&shifted))
-                    }
-                    _ => Err(Error::ModuleOffset),
-                }
+                let cnt = m.process_input_byte_count();
+                m.process_input_data(&prepare_raw_data_to_process(
+                    in_offset,
+                    ADDR_PACKED_PROCESS_INPUT_DATA,
+                    cnt,
+                    data,
+                )?)
             } else {
                 Ok(vec![])
             }
         })
         .collect()
+}
+
+/// Map the raw output data into values.
+pub fn process_output_data(
+    modules: &mut [(Box<Module>, ModuleOffset)],
+    data: &[u16],
+) -> Result<Vec<Vec<ChannelValue>>> {
+    modules
+        .into_iter()
+        .map(|&mut (ref mut m, ref offset)| {
+            if let Some(out_offset) = offset.output {
+                let cnt = m.process_output_byte_count();
+                m.process_output_data(&prepare_raw_data_to_process(
+                    out_offset,
+                    ADDR_PACKED_PROCESS_OUTPUT_DATA,
+                    cnt,
+                    data,
+                )?)
+            } else {
+                Ok(vec![])
+            }
+        })
+        .collect()
+}
+
+fn prepare_raw_data_to_process(
+    offset: u16,
+    addr: u16,
+    byte_count: usize,
+    data: &[u16],
+) -> Result<Vec<u16>> {
+    let (start, bit) = to_register_address(offset);
+    let start = (start - addr) as usize;
+    let word_count = {
+        let cnt = byte_count / 2;
+        if cnt == 0 {
+            1
+        } else {
+            cnt
+        }
+    };
+    let end = start + word_count;
+    if end > data.len() {
+        return Err(Error::BufferLength);
+    }
+    let output = &data[start..end];
+
+    match bit {
+        0 => Ok(output.to_vec()),
+        8 => Ok(shift_data(&output)),
+        _ => Err(Error::ModuleOffset),
+    }
 }
 
 /// Map values into raw values.
@@ -267,7 +298,7 @@ mod tests {
 
         let res = process_input_data(&mut modules, data).unwrap();
         assert_eq!(res.len(), 4);
-        assert_eq!(res[0].len(), 0);
+        assert_eq!(res[0].len(), 0); // TODO: shouldn't this be 4 * None?
         assert_eq!(res[1].len(), 4);
         assert_eq!(res[2].len(), 4);
         assert_eq!(res[3].len(), 4);
@@ -310,6 +341,97 @@ mod tests {
         };
         let mut modules = vec![(mod0, o0), (mod1, o1)];
         assert!(process_input_data(&mut modules, data).is_err());
+    }
+
+    #[test]
+    fn test_process_output_data() {
+        let mut m0 = super::ur20_4ao_ui_16::Mod::default();
+        let m1 = super::ur20_4ai_rtd_diag::Mod::default();
+        let m2 = super::ur20_4do_p::Mod::default();
+        let m3 = super::ur20_4do_p::Mod::default();
+
+        #[cfg_attr(rustfmt, rustfmt_skip)]
+        let data = &[
+            0,0x3600,0,0,         // UR20-4AO-P
+            0b0000_0001_0000_0010 // UR20-4DO-P + UR20-4DO-P
+        ];
+
+        m0.ch_params[1].output_range = AnalogUIRange::VMinus5To5;
+
+        let mod0: Box<Module> = Box::new(m0);
+        let mod1: Box<Module> = Box::new(m1);
+        let mod2: Box<Module> = Box::new(m2);
+        let mod3: Box<Module> = Box::new(m3);
+
+        let addr_out_0 = to_bit_address(ADDR_PACKED_PROCESS_OUTPUT_DATA, 0);
+        let addr_in_1 = to_bit_address(ADDR_PACKED_PROCESS_INPUT_DATA, 0);
+        let addr_out_2 = to_bit_address(ADDR_PACKED_PROCESS_OUTPUT_DATA + 4, 0);
+        let addr_out_3 = to_bit_address(ADDR_PACKED_PROCESS_OUTPUT_DATA + 4, 8);
+
+        let o0 = ModuleOffset {
+            input: None,
+            output: Some(addr_out_0),
+        };
+        let o1 = ModuleOffset {
+            input: Some(addr_in_1),
+            output: None,
+        };
+        let o2 = ModuleOffset {
+            input: None,
+            output: Some(addr_out_2),
+        };
+        let o3 = ModuleOffset {
+            input: None,
+            output: Some(addr_out_3),
+        };
+
+        let mut modules = vec![(mod0, o0), (mod1, o1), (mod2, o2), (mod3, o3)];
+
+        let res = process_output_data(&mut modules, data).unwrap();
+        assert_eq!(res.len(), 4);
+        assert_eq!(res[0].len(), 4);
+        assert_eq!(res[1].len(), 0); //TODO: shouldn't this be 4 * None?
+        assert_eq!(res[2].len(), 4);
+        assert_eq!(res[3].len(), 4);
+        assert_eq!(res[0][1], ChannelValue::Decimal32(2.5));
+        assert_eq!(res[2][1], ChannelValue::Bit(true));
+        assert_eq!(res[3][0], ChannelValue::Bit(true));
+    }
+
+    #[test]
+    fn test_process_output_data_with_invalid_offset() {
+        let m0 = super::ur20_4ao_ui_16::Mod::default();
+        let data = &[0, 33, 0, 0];
+        let mod0: Box<Module> = Box::new(m0);
+        let bit = 3; // should not work
+        let addr_out_0 = to_bit_address(ADDR_PACKED_PROCESS_OUTPUT_DATA, bit);
+        let o0 = ModuleOffset {
+            input: None,
+            output: Some(addr_out_0),
+        };
+        let mut modules = vec![(mod0, o0)];
+        assert!(process_output_data(&mut modules, data).is_err());
+    }
+
+    #[test]
+    fn test_process_output_data_with_invalid_data() {
+        let m0 = super::ur20_4ao_ui_16::Mod::default();
+        let m1 = super::ur20_4ao_ui_16::Mod::default();
+        let data = &[0, 33, 0, 0];
+        let mod0: Box<Module> = Box::new(m0);
+        let mod1: Box<Module> = Box::new(m1);
+        let addr_out_0 = to_bit_address(ADDR_PACKED_PROCESS_OUTPUT_DATA, 0);
+        let addr_out_1 = to_bit_address(ADDR_PACKED_PROCESS_OUTPUT_DATA + 4, 0);
+        let o0 = ModuleOffset {
+            input: None,
+            output: Some(addr_out_0),
+        };
+        let o1 = ModuleOffset {
+            input: None,
+            output: Some(addr_out_1),
+        };
+        let mut modules = vec![(mod0, o0), (mod1, o1)];
+        assert!(process_output_data(&mut modules, data).is_err());
     }
 
     #[test]
