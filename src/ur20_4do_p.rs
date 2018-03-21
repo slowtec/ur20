@@ -8,9 +8,16 @@ pub struct Mod {
     pub ch_params: Vec<ChannelParameters>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ChannelParameters {
     pub substitute_value: bool,
+}
+
+impl Mod {
+    pub fn from_parameter_data(data: &[u16]) -> Result<Mod> {
+        let ch_params = parameters_from_raw_data(data)?;
+        Ok(Mod { ch_params })
+    }
 }
 
 impl Default for ChannelParameters {
@@ -62,6 +69,27 @@ impl Module for Mod {
     }
 }
 
+fn parameters_from_raw_data(data: &[u16]) -> Result<Vec<ChannelParameters>> {
+    if data.len() < 4 {
+        return Err(Error::BufferLength);
+    }
+
+    let channel_parameters: Result<Vec<_>> = (0..4)
+        .map(|i| {
+            let mut p = ChannelParameters::default();
+            p.substitute_value = match data[i] {
+                0 => false,
+                1 => true,
+                _ => {
+                    return Err(Error::ChannelParameter);
+                }
+            };
+            Ok(p)
+        })
+        .collect();
+    Ok(channel_parameters?)
+}
+
 #[cfg(test)]
 mod tests {
 
@@ -104,5 +132,72 @@ mod tests {
     fn module_type() {
         let m = Mod::default();
         assert_eq!(m.module_type(), ModuleType::UR20_4DO_P);
+    }
+
+    #[test]
+    fn test_channel_parameters_from_raw_data() {
+        let data = vec![
+            0, // CH 0
+            1, // CH 1
+            0, // CH 2
+            1, // CH 3
+        ];
+
+        assert_eq!(parameters_from_raw_data(&data).unwrap().len(), 4);
+
+        assert_eq!(
+            parameters_from_raw_data(&data).unwrap()[0],
+            ChannelParameters::default()
+        );
+
+        assert_eq!(
+            parameters_from_raw_data(&data).unwrap()[1].substitute_value,
+            true
+        );
+
+        assert_eq!(
+            parameters_from_raw_data(&data).unwrap()[2].substitute_value,
+            false
+        );
+
+        assert_eq!(
+            parameters_from_raw_data(&data).unwrap()[3].substitute_value,
+            true
+        );
+    }
+
+    #[test]
+    fn test_parameters_from_invalid_raw_data() {
+        let mut data = vec![
+            0, // CH 0
+            0, // CH 1
+            0, // CH 2
+            0, // CH 3
+        ];
+        data[0] = 2; // should be max '1'
+        assert!(parameters_from_raw_data(&data).is_err());
+    }
+
+    #[test]
+    fn test_parameters_from_invalid_data_buffer_size() {
+        let data = [0; 0];
+        assert!(parameters_from_raw_data(&data).is_err());
+        let data = [0; 3];
+        assert!(parameters_from_raw_data(&data).is_err());
+        let data = [0; 4];
+        assert!(parameters_from_raw_data(&data).is_ok());
+    }
+
+    #[test]
+    fn create_module_from_parameter_data() {
+        let data = vec![
+            1, // CH 0
+            0, // CH 1
+            1, // CH 2
+            0, // CH 3
+        ];
+        let module = Mod::from_parameter_data(&data).unwrap();
+        assert_eq!(module.ch_params[0].substitute_value, true);
+        assert_eq!(module.ch_params[3].substitute_value, false);
     }
 }
