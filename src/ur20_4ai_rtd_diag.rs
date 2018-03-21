@@ -272,6 +272,28 @@ mod tests {
     }
 
     #[test]
+    fn test_process_input_data_with_underloading() {
+        let mut m = Mod::default();
+
+        m.ch_params[0].measurement_range = RtdRange::PT100;
+        m.ch_params[1].measurement_range = RtdRange::NI1000;
+
+        let input = m.process_input_data(&vec![(-2040_i16 as u16), (-640_i16 as u16), 0, 0]).unwrap();
+
+        if let ChannelValue::Decimal32(v) = input[0] {
+            assert_eq!(v, -204.0);
+        } else {
+            panic!();
+        }
+
+        if let ChannelValue::Decimal32(v) = input[1] {
+            assert_eq!(v, -64.0);
+        } else {
+            panic!();
+        }
+    }
+
+    #[test]
     fn test_process_output_values() {
         let m = Mod::default();
         assert!(
