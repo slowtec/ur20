@@ -2,15 +2,23 @@
 
 use super::*;
 use super::util::test_bit_16;
+use num_traits::cast::FromPrimitive;
 
 #[derive(Debug)]
 pub struct Mod {
     pub ch_params: Vec<ChannelParameters>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ChannelParameters {
     pub input_delay: InputDelay,
+}
+
+impl Mod {
+    pub fn from_parameter_data(data: &[u16]) -> Result<Mod> {
+        let ch_params = parameters_from_raw_data(data)?;
+        Ok(Mod { ch_params })
+    }
 }
 
 impl Default for ChannelParameters {
@@ -56,6 +64,26 @@ impl Module for Mod {
     }
 }
 
+fn parameters_from_raw_data(data: &[u16]) -> Result<Vec<ChannelParameters>> {
+    if data.len() < 4 {
+        return Err(Error::BufferLength);
+    }
+
+    let channel_parameters: Result<Vec<_>> = (0..4)
+        .map(|i| {
+            let mut p = ChannelParameters::default();
+            p.input_delay = match FromPrimitive::from_u16(data[i]) {
+                Some(x) => x,
+                _ => {
+                    return Err(Error::ChannelParameter);
+                }
+            };
+            Ok(p)
+        })
+        .collect();
+    Ok(channel_parameters?)
+}
+
 #[cfg(test)]
 mod tests {
 
@@ -78,5 +106,72 @@ mod tests {
         let m = Mod::default();
         assert!(m.process_output_values(&[ChannelValue::Bit(true)]).is_err());
         assert_eq!(m.process_output_values(&[]).unwrap(), &[]);
+    }
+
+    #[test]
+    fn test_channel_parameters_from_raw_data() {
+        let data = vec![
+            2, // CH 0
+            3, // CH 1
+            4, // CH 2
+            0, // CH 3
+        ];
+
+        assert_eq!(parameters_from_raw_data(&data).unwrap().len(), 4);
+
+        assert_eq!(
+            parameters_from_raw_data(&data).unwrap()[0],
+            ChannelParameters::default()
+        );
+
+        assert_eq!(
+            parameters_from_raw_data(&data).unwrap()[1].input_delay,
+            InputDelay::ms10
+        );
+
+        assert_eq!(
+            parameters_from_raw_data(&data).unwrap()[2].input_delay,
+            InputDelay::ms20
+        );
+
+        assert_eq!(
+            parameters_from_raw_data(&data).unwrap()[3].input_delay,
+            InputDelay::no
+        );
+    }
+
+    #[test]
+    fn test_parameters_from_invalid_raw_data() {
+        let mut data = vec![
+            0, // CH 0
+            0, // CH 1
+            0, // CH 2
+            0, // CH 3
+        ];
+        data[0] = 6; // should be max '5'
+        assert!(parameters_from_raw_data(&data).is_err());
+    }
+
+    #[test]
+    fn test_parameters_from_invalid_data_buffer_size() {
+        let data = [0; 0];
+        assert!(parameters_from_raw_data(&data).is_err());
+        let data = [0; 3];
+        assert!(parameters_from_raw_data(&data).is_err());
+        let data = [0; 4];
+        assert!(parameters_from_raw_data(&data).is_ok());
+    }
+
+    #[test]
+    fn create_module_from_parameter_data() {
+        let data = vec![
+            0, // CH 0
+            3, // CH 1
+            4, // CH 2
+            5, // CH 3
+        ];
+        let module = Mod::from_parameter_data(&data).unwrap();
+        assert_eq!(module.ch_params[0].input_delay, InputDelay::no);
+        assert_eq!(module.ch_params[3].input_delay, InputDelay::ms40);
     }
 }
