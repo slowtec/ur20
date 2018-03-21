@@ -88,7 +88,7 @@ impl Module for Mod {
         let res = (0..8)
             .map(|i| {
                 (
-                    u32::from(data[i]),
+                    f32::from(data[i] as i16),
                     &self.ch_params[i].measurement_range,
                     &self.ch_params[i].data_format,
                 )
@@ -99,8 +99,8 @@ impl Module for Mod {
                     DataFormat::S7 => S7_FACTOR,
                 });
                 match *range {
-                    mA0To20 => ChannelValue::Decimal32((val * 20) as f32 / factor),
-                    mA4To20 => ChannelValue::Decimal32((val * 16) as f32 / factor + 4.0),
+                    mA0To20 => ChannelValue::Decimal32(val * 20.0 / factor),
+                    mA4To20 => ChannelValue::Decimal32(val * 16.0 / factor + 4.0),
                     Disabled => ChannelValue::Disabled,
                 }
             })
@@ -222,6 +222,31 @@ mod tests {
                 Disabled,
             ]
         );
+    }
+
+    #[test]
+    fn test_process_input_data_with_underloading() {
+        let mut m = Mod::default();
+
+        m.ch_params[0].measurement_range = AnalogIRange::mA4To20;
+        m.ch_params[0].data_format = DataFormat::S7;
+
+        m.ch_params[1].measurement_range = AnalogIRange::mA4To20;
+        m.ch_params[1].data_format = DataFormat::S5;
+
+        let input = m.process_input_data(&vec![0xED00, 0x0F333, 0, 0, 0, 0, 0, 0])
+            .unwrap();
+
+        if let ChannelValue::Decimal32(v) = input[0] {
+            assert!((v - 1.19).abs() < 0.01);
+        } else {
+            panic!();
+        }
+        if let ChannelValue::Decimal32(v) = input[1] {
+            assert!((v - 0.8).abs() < 0.01);
+        } else {
+            panic!();
+        }
     }
 
     #[test]
