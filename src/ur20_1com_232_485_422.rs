@@ -371,6 +371,66 @@ fn cnt_ack_to_status_byte(cnt: usize, mut byte: u8) -> u8 {
     byte
 }
 
+#[derive(Debug)]
+pub struct MessageProcessor {
+    in_data: Vec<u8>,
+    out_data: Vec<Vec<u8>>,
+    process_data_len: ProcessDataLength,
+}
+
+impl MessageProcessor {
+    /// Create a new MessageProcessor.
+    pub fn new(process_data_len: ProcessDataLength) -> MessageProcessor {
+        MessageProcessor {
+            in_data: vec![],
+            out_data: vec![],
+            process_data_len,
+        }
+    }
+
+    /// Processes the current process input and output data.
+    /// Returns a `ProcessOutput` object if something needs to be written.
+    pub fn next(&mut self, input: &ProcessInput, output: &ProcessOutput) -> ProcessOutput {
+        let mut out_msg = output.clone();
+        if self.out_data.len() > 0 {
+            if Self::inc_tx_cnt_ack(input.tx_cnt_ack) != output.tx_cnt {
+                out_msg.tx_cnt = Self::inc_tx_cnt_ack(input.tx_cnt_ack);
+                out_msg.active = true;
+                out_msg.data = self.out_data.remove(0);
+            }
+        }
+        if input.data_available {
+            self.in_data.extend_from_slice(&input.data);
+        }
+        out_msg.rx_cnt_ack = input.rx_cnt;
+        out_msg
+    }
+
+    fn inc_tx_cnt_ack(mut tx_cnt_ack: usize) -> usize {
+        tx_cnt_ack += 1;
+        if tx_cnt_ack > 3 {
+            tx_cnt_ack = 0;
+        }
+        tx_cnt_ack
+    }
+
+    /// Read data form internal buffer.
+    pub fn read(&mut self) -> Option<Vec<u8>> {
+        if self.in_data.len() > 0 {
+            Some(self.in_data.split_off(0))
+        } else {
+            None
+        }
+    }
+
+    /// Write data to internal buffer.
+    pub fn write(&mut self, data: &[u8]) {
+        for c in data.chunks(self.process_data_len.user_data_len()) {
+            self.out_data.push(c.to_vec());
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
 
@@ -622,5 +682,167 @@ mod tests {
             .unwrap();
         assert_eq!(res.len(), 8);
         assert_eq!(res, vec![0x0400, 0x0B0A, 0x0C00, 0, 0, 0, 0, 0]);
+    }
+
+    #[test]
+    fn test_eight_byte_message_processor_send_process() {
+        // 1. initial state
+        let mut p = MessageProcessor::new(ProcessDataLength::EightBytes);
+        let mut input = ProcessInput::default();
+        let mut output = ProcessOutput::default();
+
+        // 2. first read
+        input.ready = true;
+        assert_eq!(input.data_available, false);
+
+        // 3. first write
+        // There is no data to send, and nothing to receive
+        // so we don't need to change anything.
+        assert_eq!(p.next(&input, &output), output);
+
+        // 4. write data to processor buffer
+        p.write(b"This msg is >6 bytes");
+
+        // 5. read
+        // We assume that there is still no data to receive
+        // and nothing was send.
+        assert_eq!(input.tx_cnt_ack, 0);
+        assert_eq!(input.data_available, false);
+
+        // 6. write
+        // Now that there is data to transmit the transmission
+        // counter needs to be incremented.
+        output = p.next(&input, &output);
+        assert_eq!(output.data, b"This m");
+        assert_eq!(output.tx_cnt, 1);
+
+        // 7. read
+        // We assume the data is not fully transmitted
+        // so there is no acknowledge.
+        assert_eq!(input.tx_cnt_ack, 0);
+
+        // 8. write
+        // Since we have to wait for tx_cnt == tx_cnt_ack
+        // the output should be unchanged.
+        assert_eq!(p.next(&input, &output), output);
+
+        // 9. read
+        // We can now read the acknowledge of the first message.
+        input.tx_cnt_ack = 1;
+
+        // 10. write
+        // now the next chunk can be send.
+        output = p.next(&input, &output);
+        assert_eq!(output.tx_cnt, 2);
+        assert_eq!(output.data, b"sg is ");
+
+        // 11: read cycle
+        input.tx_cnt_ack = 2;
+
+        // 12. write
+        output = p.next(&input, &output);
+        assert_eq!(output.tx_cnt, 3);
+        assert_eq!(output.data, b">6 byt");
+
+        // 13. read
+        input.tx_cnt_ack = 3;
+
+        // 14. write
+        output = p.next(&input, &output);
+        assert_eq!(output.tx_cnt, 0);
+        assert_eq!(output.data, b"es");
+
+        // 15: read
+        input.tx_cnt_ack = 3;
+
+        // 16: write
+        assert_eq!(p.next(&input, &output), output);
+    }
+
+    #[test]
+    fn test_sixteen_byte_message_processor_send_process() {
+        let mut p = MessageProcessor::new(ProcessDataLength::SixteenBytes);
+        let mut input = ProcessInput::default();
+        let mut output = ProcessOutput::default();
+
+        input.ready = true;
+        p.write(b"This msg is >14 bytes");
+        output = p.next(&input, &output);
+        assert_eq!(output.data, b"This msg is >1");
+        assert_eq!(output.tx_cnt, 1);
+        input.tx_cnt_ack = 1;
+        output = p.next(&input, &output);
+        assert_eq!(output.data, b"4 bytes");
+    }
+
+    #[test]
+    fn test_eight_byte_message_processor_receive_process() {
+        let mut p = MessageProcessor::new(ProcessDataLength::EightBytes);
+        let mut input = ProcessInput::default();
+        let mut output = ProcessOutput::default();
+
+        input.ready = true;
+        assert_eq!(input.data_available, false);
+        output = p.next(&input, &output);
+        assert_eq!(p.read(), None);
+
+        input.data = b"a msg".to_vec();
+        input.data_available = true;
+        output = p.next(&input, &output);
+        assert_eq!(p.read(), Some(b"a msg".to_vec()));
+        assert_eq!(p.read(), None);
+
+        input.data = b"Foo".to_vec();
+        output = p.next(&input, &output);
+        input.data = b" bar".to_vec();
+        output = p.next(&input, &output);
+        input.data = b" baz".to_vec();
+        p.next(&input, &output);
+        assert_eq!(p.read(), Some(b"Foo bar baz".to_vec()));
+    }
+
+    #[test]
+    fn test_message_processor_send_process_with_outdated_tx_cnt() {
+        let test = |ack, cnt, cnt_next, data| {
+            let mut p = MessageProcessor::new(ProcessDataLength::EightBytes);
+            let mut input = ProcessInput::default();
+            let mut output = ProcessOutput::default();
+            input.ready = true;
+            p.out_data = vec![b"some data".to_vec()];
+            input.tx_cnt_ack = ack;
+            output.tx_cnt = cnt;
+            output = p.next(&input, &output);
+            assert_eq!(output.tx_cnt, cnt_next);
+            assert_eq!(output.data.len() > 0, data);
+        };
+
+        test(0, 0, 1, true);
+        test(0, 1, 1, false);
+        test(0, 2, 1, true);
+        test(0, 3, 1, true);
+
+        test(1, 0, 2, true);
+        test(1, 1, 2, true);
+        test(1, 2, 2, false);
+        test(1, 3, 2, true);
+
+        test(2, 0, 3, true);
+        test(2, 1, 3, true);
+        test(2, 2, 3, true);
+        test(2, 3, 3, false);
+
+        test(3, 0, 0, false);
+        test(3, 1, 0, true);
+        test(3, 2, 0, true);
+        test(3, 3, 0, true);
+    }
+
+    #[test]
+    fn test_inc_tx_cnt_ack() {
+        assert_eq!(MessageProcessor::inc_tx_cnt_ack(0), 1);
+        assert_eq!(MessageProcessor::inc_tx_cnt_ack(1), 2);
+        assert_eq!(MessageProcessor::inc_tx_cnt_ack(2), 3);
+        assert_eq!(MessageProcessor::inc_tx_cnt_ack(3), 0);
+        assert_eq!(MessageProcessor::inc_tx_cnt_ack(4), 0);
     }
 }
