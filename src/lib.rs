@@ -44,6 +44,12 @@ pub enum ChannelValue {
     None,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct Address {
+    pub module: usize,
+    pub channel: usize,
+}
+
 type Result<T> = result::Result<T, Error>;
 
 /// A generic description of modules.
