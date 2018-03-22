@@ -2,6 +2,7 @@
 
 use super::*;
 use util::*;
+use ur20_fbc_mod_tcp::ProcessModbusTcpData;
 
 #[derive(Debug)]
 pub struct Mod {
@@ -299,6 +300,12 @@ impl Default for Mod {
 }
 
 impl Module for Mod {
+    fn module_type(&self) -> ModuleType {
+        ModuleType::UR20_1COM_232_485_422
+    }
+}
+
+impl ProcessModbusTcpData for Mod {
     fn process_input_byte_count(&self) -> usize {
         match self.mod_params.process_data_len {
             ProcessDataLength::EightBytes => 8,
@@ -310,9 +317,6 @@ impl Module for Mod {
             ProcessDataLength::EightBytes => 8,
             ProcessDataLength::SixteenBytes => 16,
         }
-    }
-    fn module_type(&self) -> ModuleType {
-        ModuleType::UR20_1COM_232_485_422
     }
     fn process_input_data(&self, data: &[u16]) -> Result<Vec<ChannelValue>> {
         let buf: Vec<u8> = data.iter().fold(vec![], |mut x, elem| {

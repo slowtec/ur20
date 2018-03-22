@@ -50,16 +50,6 @@ type Result<T> = result::Result<T, Error>;
 pub trait Module: std::fmt::Debug {
     /// Get concrete i/o module type.
     fn module_type(&self) -> ModuleType;
-    /// Number of bytes within the process input data buffer.
-    fn process_input_byte_count(&self) -> usize;
-    /// Number of bytes within the process output data buffer.
-    fn process_output_byte_count(&self) -> usize;
-    /// Transform raw module input data into a list of channel values.
-    fn process_input_data(&self, &[u16]) -> Result<Vec<ChannelValue>>;
-    /// Transform raw module output data into a list of channel values.
-    fn process_output_data(&self, &[u16]) -> Result<Vec<ChannelValue>>;
-    /// Transform channel values into raw module output data.
-    fn process_output_values(&self, &[ChannelValue]) -> Result<Vec<u16>>;
 }
 
 /// Describes the general class of a module.

@@ -19,6 +19,19 @@ pub const ADDR_CURRENT_MODULE_LIST        : RegisterAddress = 0x2A00;
 pub const ADDR_MODULE_OFFSETS             : RegisterAddress = 0x2B00;
 pub const ADDR_MODULE_PARAMETERS          : RegisterAddress = 0xC000;
 
+pub trait ProcessModbusTcpData: Module {
+    /// Number of bytes within the process input data buffer.
+    fn process_input_byte_count(&self) -> usize;
+    /// Number of bytes within the process output data buffer.
+    fn process_output_byte_count(&self) -> usize;
+    /// Transform raw module input data into a list of channel values.
+    fn process_input_data(&self, &[u16]) -> Result<Vec<ChannelValue>>;
+    /// Transform raw module output data into a list of channel values.
+    fn process_output_data(&self, &[u16]) -> Result<Vec<ChannelValue>>;
+    /// Transform channel values into raw module output data.
+    fn process_output_values(&self, &[ChannelValue]) -> Result<Vec<u16>>;
+}
+
 /// The packed process data offset addresses of a module.
 #[derive(Debug, Clone, PartialEq)]
 pub struct ModuleOffset {
@@ -40,7 +53,7 @@ pub fn offsets_of_process_data(data: &[Word]) -> Vec<ModuleOffset> {
 
 /// Map the raw input data into values.
 pub fn process_input_data(
-    modules: &mut [(Box<Module>, ModuleOffset)],
+    modules: &mut [(Box<ProcessModbusTcpData>, ModuleOffset)],
     data: &[u16],
 ) -> Result<Vec<Vec<ChannelValue>>> {
     modules
@@ -63,7 +76,7 @@ pub fn process_input_data(
 
 /// Map the raw output data into values.
 pub fn process_output_data(
-    modules: &mut [(Box<Module>, ModuleOffset)],
+    modules: &mut [(Box<ProcessModbusTcpData>, ModuleOffset)],
     data: &[u16],
 ) -> Result<Vec<Vec<ChannelValue>>> {
     modules
@@ -115,7 +128,7 @@ fn prepare_raw_data_to_process(
 
 /// Map values into raw values.
 pub fn process_output_values(
-    modules: &mut [(Box<Module>, ModuleOffset)],
+    modules: &mut [(Box<ProcessModbusTcpData>, ModuleOffset)],
     values: &[Vec<ChannelValue>],
 ) -> Result<Vec<u16>> {
     if modules.len() != values.len() {
@@ -267,10 +280,10 @@ mod tests {
 
         m1.ch_params[1].measurement_range = RtdRange::PT100;
 
-        let mod0: Box<Module> = Box::new(m0);
-        let mod1: Box<Module> = Box::new(m1);
-        let mod2: Box<Module> = Box::new(m2);
-        let mod3: Box<Module> = Box::new(m3);
+        let mod0: Box<ProcessModbusTcpData> = Box::new(m0);
+        let mod1: Box<ProcessModbusTcpData> = Box::new(m1);
+        let mod2: Box<ProcessModbusTcpData> = Box::new(m2);
+        let mod3: Box<ProcessModbusTcpData> = Box::new(m3);
 
         let addr_out_0 = to_bit_address(ADDR_PACKED_PROCESS_OUTPUT_DATA, 0);
         let addr_in_1 = to_bit_address(ADDR_PACKED_PROCESS_INPUT_DATA, 0);
@@ -311,7 +324,7 @@ mod tests {
     fn test_process_input_data_with_invalid_offset() {
         let m0 = super::ur20_4ai_rtd_diag::Mod::default();
         let data = &[0, 33, 0, 0];
-        let mod0: Box<Module> = Box::new(m0);
+        let mod0: Box<ProcessModbusTcpData> = Box::new(m0);
         let bit = 3; // should not work
         let addr_in_0 = to_bit_address(ADDR_PACKED_PROCESS_INPUT_DATA, bit);
         let o0 = ModuleOffset {
@@ -327,8 +340,8 @@ mod tests {
         let m0 = super::ur20_4ai_rtd_diag::Mod::default();
         let m1 = super::ur20_4ai_rtd_diag::Mod::default();
         let data = &[0, 33, 0, 0];
-        let mod0: Box<Module> = Box::new(m0);
-        let mod1: Box<Module> = Box::new(m1);
+        let mod0: Box<ProcessModbusTcpData> = Box::new(m0);
+        let mod1: Box<ProcessModbusTcpData> = Box::new(m1);
         let addr_in_0 = to_bit_address(ADDR_PACKED_PROCESS_INPUT_DATA, 0);
         let addr_in_1 = to_bit_address(ADDR_PACKED_PROCESS_INPUT_DATA + 4, 0);
         let o0 = ModuleOffset {
@@ -358,10 +371,10 @@ mod tests {
 
         m0.ch_params[1].output_range = AnalogUIRange::VMinus5To5;
 
-        let mod0: Box<Module> = Box::new(m0);
-        let mod1: Box<Module> = Box::new(m1);
-        let mod2: Box<Module> = Box::new(m2);
-        let mod3: Box<Module> = Box::new(m3);
+        let mod0: Box<ProcessModbusTcpData> = Box::new(m0);
+        let mod1: Box<ProcessModbusTcpData> = Box::new(m1);
+        let mod2: Box<ProcessModbusTcpData> = Box::new(m2);
+        let mod3: Box<ProcessModbusTcpData> = Box::new(m3);
 
         let addr_out_0 = to_bit_address(ADDR_PACKED_PROCESS_OUTPUT_DATA, 0);
         let addr_in_1 = to_bit_address(ADDR_PACKED_PROCESS_INPUT_DATA, 0);
@@ -402,7 +415,7 @@ mod tests {
     fn test_process_output_data_with_invalid_offset() {
         let m0 = super::ur20_4ao_ui_16::Mod::default();
         let data = &[0, 33, 0, 0];
-        let mod0: Box<Module> = Box::new(m0);
+        let mod0: Box<ProcessModbusTcpData> = Box::new(m0);
         let bit = 3; // should not work
         let addr_out_0 = to_bit_address(ADDR_PACKED_PROCESS_OUTPUT_DATA, bit);
         let o0 = ModuleOffset {
@@ -418,8 +431,8 @@ mod tests {
         let m0 = super::ur20_4ao_ui_16::Mod::default();
         let m1 = super::ur20_4ao_ui_16::Mod::default();
         let data = &[0, 33, 0, 0];
-        let mod0: Box<Module> = Box::new(m0);
-        let mod1: Box<Module> = Box::new(m1);
+        let mod0: Box<ProcessModbusTcpData> = Box::new(m0);
+        let mod1: Box<ProcessModbusTcpData> = Box::new(m1);
         let addr_out_0 = to_bit_address(ADDR_PACKED_PROCESS_OUTPUT_DATA, 0);
         let addr_out_1 = to_bit_address(ADDR_PACKED_PROCESS_OUTPUT_DATA + 4, 0);
         let o0 = ModuleOffset {
@@ -448,8 +461,8 @@ mod tests {
             ],
         ];
 
-        let mod0: Box<Module> = Box::new(m0);
-        let mod1: Box<Module> = Box::new(m1);
+        let mod0: Box<ProcessModbusTcpData> = Box::new(m0);
+        let mod1: Box<ProcessModbusTcpData> = Box::new(m1);
 
         let addr_out_0 = to_bit_address(ADDR_PACKED_PROCESS_OUTPUT_DATA, 0);
         let addr_in_1 = to_bit_address(ADDR_PACKED_PROCESS_INPUT_DATA, 0);
@@ -483,8 +496,8 @@ mod tests {
             vec![],
         ];
 
-        let mod0: Box<Module> = Box::new(m0);
-        let mod1: Box<Module> = Box::new(m1);
+        let mod0: Box<ProcessModbusTcpData> = Box::new(m0);
+        let mod1: Box<ProcessModbusTcpData> = Box::new(m1);
 
         let addr_out_0 = to_bit_address(ADDR_PACKED_PROCESS_OUTPUT_DATA + 10, 0);
         let addr_in_1 = to_bit_address(ADDR_PACKED_PROCESS_INPUT_DATA, 0);
@@ -524,9 +537,9 @@ mod tests {
             ],
         ];
 
-        let mod0: Box<Module> = Box::new(m0);
-        let mod1: Box<Module> = Box::new(m1);
-        let mod2: Box<Module> = Box::new(m2);
+        let mod0: Box<ProcessModbusTcpData> = Box::new(m0);
+        let mod1: Box<ProcessModbusTcpData> = Box::new(m1);
+        let mod2: Box<ProcessModbusTcpData> = Box::new(m2);
 
         let addr_out_0 = to_bit_address(ADDR_PACKED_PROCESS_OUTPUT_DATA + 0, 0);
         let addr_in_1 = to_bit_address(ADDR_PACKED_PROCESS_INPUT_DATA, 0);
@@ -560,7 +573,7 @@ mod tests {
                 ChannelValue::Decimal32(10.0),
             ],
         ];
-        let mod0: Box<Module> = Box::new(m0);
+        let mod0: Box<ProcessModbusTcpData> = Box::new(m0);
         let addr_out_0 = to_bit_address(0, 0);
         let o0 = ModuleOffset {
             input: None,
@@ -602,10 +615,10 @@ mod tests {
         m0.ch_params[1].output_range = AnalogUIRange::mA0To20;
         m0.ch_params[3].output_range = AnalogUIRange::mA0To20;
 
-        let mod0: Box<Module> = Box::new(m0);
-        let mod1: Box<Module> = Box::new(m1);
-        let mod2: Box<Module> = Box::new(m2);
-        let mod3: Box<Module> = Box::new(m3);
+        let mod0: Box<ProcessModbusTcpData> = Box::new(m0);
+        let mod1: Box<ProcessModbusTcpData> = Box::new(m1);
+        let mod2: Box<ProcessModbusTcpData> = Box::new(m2);
+        let mod3: Box<ProcessModbusTcpData> = Box::new(m3);
 
         let addr_out_0 = to_bit_address(ADDR_PACKED_PROCESS_OUTPUT_DATA, 0);
         let addr_in_1 = to_bit_address(ADDR_PACKED_PROCESS_INPUT_DATA, 0);

@@ -3,6 +3,7 @@
 use super::*;
 use super::util::test_bit_16;
 use num_traits::cast::FromPrimitive;
+use ur20_fbc_mod_tcp::ProcessModbusTcpData;
 
 #[derive(Debug)]
 pub struct Mod {
@@ -37,14 +38,17 @@ impl Default for Mod {
 }
 
 impl Module for Mod {
+    fn module_type(&self) -> ModuleType {
+        ModuleType::UR20_4DI_P
+    }
+}
+
+impl ProcessModbusTcpData for Mod {
     fn process_input_byte_count(&self) -> usize {
         1
     }
     fn process_output_byte_count(&self) -> usize {
         0
-    }
-    fn module_type(&self) -> ModuleType {
-        ModuleType::UR20_4DI_P
     }
     fn process_input_data(&self, data: &[u16]) -> Result<Vec<ChannelValue>> {
         if data.len() != 1 {

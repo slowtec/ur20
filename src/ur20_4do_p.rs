@@ -2,6 +2,7 @@
 
 use super::*;
 use util::*;
+use ur20_fbc_mod_tcp::ProcessModbusTcpData;
 
 #[derive(Debug)]
 pub struct Mod {
@@ -36,14 +37,16 @@ impl Default for Mod {
 }
 
 impl Module for Mod {
+    fn module_type(&self) -> ModuleType {
+        ModuleType::UR20_4DO_P
+    }
+}
+impl ProcessModbusTcpData for Mod {
     fn process_input_byte_count(&self) -> usize {
         0
     }
     fn process_output_byte_count(&self) -> usize {
         1
-    }
-    fn module_type(&self) -> ModuleType {
-        ModuleType::UR20_4DO_P
     }
     fn process_input_data(&self, _: &[u16]) -> Result<Vec<ChannelValue>> {
         Ok((0..4).map(|_| ChannelValue::None).collect())

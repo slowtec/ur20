@@ -2,6 +2,7 @@
 
 use super::*;
 use num_traits::cast::FromPrimitive;
+use ur20_fbc_mod_tcp::ProcessModbusTcpData;
 
 #[derive(Debug)]
 pub struct Mod {
@@ -65,14 +66,17 @@ impl Default for Mod {
 }
 
 impl Module for Mod {
+    fn module_type(&self) -> ModuleType {
+        ModuleType::UR20_8AI_I_16_DIAG_HD
+    }
+}
+
+impl ProcessModbusTcpData for Mod {
     fn process_input_byte_count(&self) -> usize {
         16
     }
     fn process_output_byte_count(&self) -> usize {
         0
-    }
-    fn module_type(&self) -> ModuleType {
-        ModuleType::UR20_8AI_I_16_DIAG_HD
     }
     fn process_input_data(&self, data: &[u16]) -> Result<Vec<ChannelValue>> {
         use AnalogIRange::*;
