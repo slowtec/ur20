@@ -8,7 +8,7 @@ pub struct Mod {
     pub mod_params: ModuleParameters,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ProcessInput {
     /// Indicates if there is a telegramm in the receive buffer or not.
     pub data_available: bool,
@@ -29,7 +29,7 @@ pub struct ProcessInput {
     pub data: Vec<u8>,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ProcessOutput {
     /// This flag controls whether the receive buffer will be cleared
     /// or not.
@@ -59,7 +59,7 @@ pub struct ProcessOutput {
 }
 
 #[allow(non_snake_case)]
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ModuleParameters {
     pub operating_mode: OperatingMode,
     pub data_bits: DataBits,
@@ -74,7 +74,7 @@ pub struct ModuleParameters {
 }
 
 #[allow(non_camel_case_types)]
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum OperatingMode {
     Disabled = 0,
     RS232 = 1,
@@ -82,7 +82,7 @@ pub enum OperatingMode {
     RS422 = 3,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum DataBits {
     SevenBits = 0,
     EightBits = 1,
@@ -90,7 +90,7 @@ pub enum DataBits {
 
 #[cfg_attr(rustfmt, rustfmt_skip)]
 #[allow(non_camel_case_types)]
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum BaudRate {
     Baud_300    = 0,
     Baud_600    = 1,
@@ -107,14 +107,14 @@ pub enum BaudRate {
 }
 
 #[cfg_attr(rustfmt, rustfmt_skip)]
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq,Eq)]
 pub enum StopBit {
     OneBit  = 0,
     TwoBits = 1,
 }
 
 #[cfg_attr(rustfmt, rustfmt_skip)]
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Parity {
     None = 0,
     Even = 1,
@@ -123,14 +123,14 @@ pub enum Parity {
 
 #[cfg_attr(rustfmt, rustfmt_skip)]
 #[allow(non_camel_case_types)]
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq,Eq)]
 pub enum FlowControl {
     None     = 0,
     CTS_RTS  = 1,
     XON_XOFF = 2
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ProcessDataLength {
     EightBytes,
     SixteenBytes,
