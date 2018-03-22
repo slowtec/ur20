@@ -32,6 +32,13 @@ pub trait ProcessModbusTcpData: Module {
     fn process_output_values(&self, &[ChannelValue]) -> Result<Vec<u16>>;
 }
 
+pub trait FromModbusParameterData {
+    /// Create a new module instance.
+    fn from_modbus_parameter_data(data: &[u16]) -> Result<Self>
+    where
+        Self: Sized + ProcessModbusTcpData;
+}
+
 /// The packed process data offset addresses of a module.
 #[derive(Debug, Clone, PartialEq)]
 pub struct ModuleOffset {

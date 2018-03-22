@@ -2,7 +2,7 @@
 
 use super::*;
 use num_traits::cast::FromPrimitive;
-use ur20_fbc_mod_tcp::ProcessModbusTcpData;
+use ur20_fbc_mod_tcp::{FromModbusParameterData, ProcessModbusTcpData};
 
 #[derive(Debug)]
 pub struct Mod {
@@ -28,8 +28,8 @@ pub struct ChannelParameters {
     pub low_limit_value: i16,
 }
 
-impl Mod {
-    pub fn from_parameter_data(data: &[u16]) -> Result<Mod> {
+impl FromModbusParameterData for Mod {
+    fn from_modbus_parameter_data(data: &[u16]) -> Result<Mod> {
         let (mod_params, ch_params) = parameters_from_raw_data(data)?;
         Ok(Mod {
             mod_params,
@@ -163,11 +163,11 @@ fn parameters_from_raw_data(data: &[u16]) -> Result<(ModuleParameters, Vec<Chann
     }
     let mut module_parameters = ModuleParameters::default();
 
-    module_parameters.temperature_unit = match data[0] {
-        0 => TemperatureUnit::Celsius,
-        1 => TemperatureUnit::Fahrenheit,
-        2 => TemperatureUnit::Kelvin,
-        _ => return Err(Error::ChannelParameter),
+    module_parameters.temperature_unit = match FromPrimitive::from_u16(data[0]) {
+        Some(x) => x,
+        _ => {
+            return Err(Error::ChannelParameter);
+        }
     };
 
     let channel_parameters: Result<Vec<_>> = (0..4)
@@ -433,7 +433,7 @@ mod tests {
     }
 
     #[test]
-    fn create_module_from_parameter_data() {
+    fn create_module_from_modbus_parameter_data() {
         let data = vec![
             0,                    // Module
             1,  0, 0, 0, 0, 0, 0, // CH 0
@@ -441,7 +441,7 @@ mod tests {
             0,  0, 0, 0, 0, 0, 0, // CH 2
             0,  0, 0, 0, 0, 0, 0, // CH 3
         ];
-        let module = Mod::from_parameter_data(&data).unwrap();
+        let module = Mod::from_modbus_parameter_data(&data).unwrap();
         assert_eq!(module.ch_params[0].measurement_range, RtdRange::PT200);
         assert_eq!(module.ch_params[1].measurement_range, RtdRange::Disabled);
     }

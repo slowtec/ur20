@@ -2,7 +2,7 @@
 
 use super::*;
 use num_traits::cast::FromPrimitive;
-use ur20_fbc_mod_tcp::ProcessModbusTcpData;
+use ur20_fbc_mod_tcp::{FromModbusParameterData, ProcessModbusTcpData};
 
 #[derive(Debug)]
 pub struct Mod {
@@ -16,8 +16,8 @@ pub struct ChannelParameters {
     pub substitute_value: f32,
 }
 
-impl Mod {
-    pub fn from_parameter_data(data: &[u16]) -> Result<Mod> {
+impl FromModbusParameterData for Mod {
+    fn from_modbus_parameter_data(data: &[u16]) -> Result<Mod> {
         let ch_params = parameters_from_raw_data(data)?;
         Ok(Mod { ch_params })
     }
@@ -476,14 +476,14 @@ mod tests {
     }
 
     #[test]
-    fn create_module_from_parameter_data() {
+    fn create_module_from_modbus_parameter_data() {
         let data = vec![
             1, 0, 0,  // CH 0
             0, 8, 0,  // CH 1
             0, 0, 0,  // CH 2
             0, 0, 0,  // CH 3
         ];
-        let module = Mod::from_parameter_data(&data).unwrap();
+        let module = Mod::from_modbus_parameter_data(&data).unwrap();
         assert_eq!(module.ch_params[0].data_format, DataFormat::S7);
         assert_eq!(module.ch_params[1].output_range, AnalogUIRange::Disabled);
     }

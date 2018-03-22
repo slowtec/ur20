@@ -2,7 +2,7 @@
 
 use super::*;
 use util::*;
-use ur20_fbc_mod_tcp::ProcessModbusTcpData;
+use ur20_fbc_mod_tcp::{FromModbusParameterData, ProcessModbusTcpData};
 
 #[derive(Debug)]
 pub struct Mod {
@@ -14,8 +14,8 @@ pub struct ChannelParameters {
     pub substitute_value: bool,
 }
 
-impl Mod {
-    pub fn from_parameter_data(data: &[u16]) -> Result<Mod> {
+impl FromModbusParameterData for Mod {
+    fn from_modbus_parameter_data(data: &[u16]) -> Result<Mod> {
         let ch_params = parameters_from_raw_data(data)?;
         Ok(Mod { ch_params })
     }
@@ -230,14 +230,14 @@ mod tests {
     }
 
     #[test]
-    fn create_module_from_parameter_data() {
+    fn create_module_from_modbus_parameter_data() {
         let data = vec![
             1, // CH 0
             0, // CH 1
             1, // CH 2
             0, // CH 3
         ];
-        let module = Mod::from_parameter_data(&data).unwrap();
+        let module = Mod::from_modbus_parameter_data(&data).unwrap();
         assert_eq!(module.ch_params[0].substitute_value, true);
         assert_eq!(module.ch_params[3].substitute_value, false);
     }

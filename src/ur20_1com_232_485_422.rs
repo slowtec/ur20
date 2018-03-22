@@ -2,7 +2,8 @@
 
 use super::*;
 use util::*;
-use ur20_fbc_mod_tcp::ProcessModbusTcpData;
+use num_traits::cast::FromPrimitive;
+use ur20_fbc_mod_tcp::{FromModbusParameterData, ProcessModbusTcpData};
 
 #[derive(Debug)]
 pub struct Mod {
@@ -75,7 +76,7 @@ pub struct ModuleParameters {
 }
 
 #[allow(non_camel_case_types)]
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, FromPrimitive, ToPrimitive)]
 pub enum OperatingMode {
     Disabled = 0,
     RS232 = 1,
@@ -83,7 +84,7 @@ pub enum OperatingMode {
     RS422 = 3,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, FromPrimitive, ToPrimitive)]
 pub enum DataBits {
     SevenBits = 0,
     EightBits = 1,
@@ -91,7 +92,7 @@ pub enum DataBits {
 
 #[cfg_attr(rustfmt, rustfmt_skip)]
 #[allow(non_camel_case_types)]
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq,FromPrimitive, ToPrimitive)]
 pub enum BaudRate {
     Baud_300    = 0,
     Baud_600    = 1,
@@ -108,14 +109,14 @@ pub enum BaudRate {
 }
 
 #[cfg_attr(rustfmt, rustfmt_skip)]
-#[derive(Debug, Clone, PartialEq,Eq)]
+#[derive(Debug, Clone, PartialEq,Eq,FromPrimitive, ToPrimitive)]
 pub enum StopBit {
     OneBit  = 0,
     TwoBits = 1,
 }
 
 #[cfg_attr(rustfmt, rustfmt_skip)]
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, FromPrimitive, ToPrimitive)]
 pub enum Parity {
     None = 0,
     Even = 1,
@@ -124,17 +125,25 @@ pub enum Parity {
 
 #[cfg_attr(rustfmt, rustfmt_skip)]
 #[allow(non_camel_case_types)]
-#[derive(Debug, Clone, PartialEq,Eq)]
+#[derive(Debug, Clone, PartialEq,Eq,FromPrimitive, ToPrimitive)]
 pub enum FlowControl {
     None     = 0,
     CTS_RTS  = 1,
     XON_XOFF = 2
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(rustfmt, rustfmt_skip)]
+#[derive(Debug, Clone, PartialEq, Eq, FromPrimitive, ToPrimitive)]
 pub enum ProcessDataLength {
-    EightBytes,
-    SixteenBytes,
+    EightBytes   = 0,
+    SixteenBytes = 1,
+}
+
+impl FromModbusParameterData for Mod {
+    fn from_modbus_parameter_data(data: &[u16]) -> Result<Mod> {
+        let mod_params = parameters_from_raw_data(data)?;
+        Ok(Mod { mod_params })
+    }
 }
 
 impl ProcessInput {
@@ -433,6 +442,85 @@ impl MessageProcessor {
             self.out_data.push(c.to_vec());
         }
     }
+}
+
+fn parameters_from_raw_data(data: &[u16]) -> Result<ModuleParameters> {
+    if data.len() < 10 {
+        return Err(Error::BufferLength);
+    }
+    let mut p = ModuleParameters::default();
+
+    p.operating_mode = match FromPrimitive::from_u16(data[0]) {
+        Some(x) => x,
+        _ => {
+            return Err(Error::ChannelParameter);
+        }
+    };
+
+    p.data_bits = match FromPrimitive::from_u16(data[1]) {
+        Some(x) => x,
+        _ => {
+            return Err(Error::ChannelParameter);
+        }
+    };
+
+    p.baud_rate = match FromPrimitive::from_u16(data[2]) {
+        Some(x) => x,
+        _ => {
+            return Err(Error::ChannelParameter);
+        }
+    };
+
+    p.stop_bit = match FromPrimitive::from_u16(data[3]) {
+        Some(x) => x,
+        _ => {
+            return Err(Error::ChannelParameter);
+        }
+    };
+
+    p.parity = match FromPrimitive::from_u16(data[4]) {
+        Some(x) => x,
+        _ => {
+            return Err(Error::ChannelParameter);
+        }
+    };
+
+    p.flow_control = match FromPrimitive::from_u16(data[5]) {
+        Some(x) => x,
+        _ => {
+            return Err(Error::ChannelParameter);
+        }
+    };
+
+    p.XON_char = match data[6] {
+        0...255 => (data[6] as u8) as char,
+        _ => {
+            return Err(Error::ChannelParameter);
+        }
+    };
+
+    p.XOFF_char = match data[7] {
+        0...255 => (data[7] as u8) as char,
+        _ => {
+            return Err(Error::ChannelParameter);
+        }
+    };
+
+    p.terminating_resistor = match data[8] {
+        0 => false,
+        1 => true,
+        _ => {
+            return Err(Error::ChannelParameter);
+        }
+    };
+
+    p.process_data_len = match FromPrimitive::from_u16(data[9]) {
+        Some(x) => x,
+        _ => {
+            return Err(Error::ChannelParameter);
+        }
+    };
+    Ok(p)
 }
 
 #[cfg(test)]
@@ -848,5 +936,105 @@ mod tests {
         assert_eq!(MessageProcessor::inc_tx_cnt_ack(2), 3);
         assert_eq!(MessageProcessor::inc_tx_cnt_ack(3), 0);
         assert_eq!(MessageProcessor::inc_tx_cnt_ack(4), 0);
+    }
+
+    #[test]
+    fn test_module_parameters_from_raw_data() {
+        let data = vec![
+            3,  // operating mode
+            1,  // data bits
+            9,  // baud rate
+            1,  // stop bit
+            2,  // parity
+            2,  // flow control
+            33, // XON char
+            35, // XOFF char
+            1,  // teminating resistor
+            1,  // process data len
+        ];
+
+        let p = parameters_from_raw_data(&data).unwrap();
+
+        assert_eq!(p.operating_mode, OperatingMode::RS422);
+
+        assert_eq!(p.data_bits, DataBits::EightBits);
+
+        assert_eq!(p.baud_rate, BaudRate::Baud_38400,);
+
+        assert_eq!(p.stop_bit, StopBit::TwoBits);
+
+        assert_eq!(p.parity, Parity::Odd);
+
+        assert_eq!(p.flow_control, FlowControl::XON_XOFF);
+
+        assert_eq!(p.XON_char, '!');
+
+        assert_eq!(p.XOFF_char, '#');
+
+        assert_eq!(p.terminating_resistor, true);
+
+        assert_eq!(p.process_data_len, ProcessDataLength::SixteenBytes);
+    }
+
+    #[test]
+    fn test_parameters_from_invalid_raw_data() {
+        let mut data = vec![0; 10];
+
+        data[0] = 4; // should be max '3'
+        assert!(parameters_from_raw_data(&data).is_err());
+
+        data[0] = 0;
+        data[1] = 2; // should be max '1'
+        assert!(parameters_from_raw_data(&data).is_err());
+
+        data[1] = 0;
+        data[2] = 12; // should be max '11'
+        assert!(parameters_from_raw_data(&data).is_err());
+
+        data[2] = 0;
+        data[3] = 2; // should be max '1'
+        assert!(parameters_from_raw_data(&data).is_err());
+
+        data[3] = 0;
+        data[4] = 3; // should be max '2'
+        assert!(parameters_from_raw_data(&data).is_err());
+
+        data[4] = 0;
+        data[5] = 3; // should be max '2'
+        assert!(parameters_from_raw_data(&data).is_err());
+
+        data[5] = 0;
+        data[6] = 256; // should be max '255'
+        assert!(parameters_from_raw_data(&data).is_err());
+
+        data[6] = 0;
+        data[7] = 256; // should be max '255'
+        assert!(parameters_from_raw_data(&data).is_err());
+
+        data[7] = 0;
+        data[8] = 2; // should be max '1'
+        assert!(parameters_from_raw_data(&data).is_err());
+
+        data[8] = 0;
+        data[9] = 2; // should be max '1'
+        assert!(parameters_from_raw_data(&data).is_err());
+    }
+
+    #[test]
+    fn test_parameters_from_invalid_data_buffer_size() {
+        let data = [0; 0];
+        assert!(parameters_from_raw_data(&data).is_err());
+        let data = [0; 9];
+        assert!(parameters_from_raw_data(&data).is_err());
+        let data = [0; 10];
+        assert!(parameters_from_raw_data(&data).is_ok());
+    }
+
+    #[test]
+    fn create_module_from_modbus_parameter_data() {
+        let data = vec![0; 10];
+        let module = Mod::from_modbus_parameter_data(&data).unwrap();
+        assert_eq!(module.mod_params.operating_mode, OperatingMode::Disabled);
+        assert_eq!(module.mod_params.data_bits, DataBits::SevenBits);
     }
 }
