@@ -75,7 +75,7 @@ pub fn process_input_data(
                     data,
                 )?)
             } else {
-                Ok(vec![])
+                Ok(vec![ChannelValue::None; m.module_type().channel_count()])
             }
         })
         .collect()
@@ -98,7 +98,7 @@ pub fn process_output_data(
                     data,
                 )?)
             } else {
-                Ok(vec![])
+                Ok(vec![ChannelValue::None; m.module_type().channel_count()])
             }
         })
         .collect()
@@ -318,7 +318,7 @@ mod tests {
 
         let res = process_input_data(&mut modules, data).unwrap();
         assert_eq!(res.len(), 4);
-        assert_eq!(res[0].len(), 0); // TODO: shouldn't this be 4 * None?
+        assert_eq!(res[0].len(), 4);
         assert_eq!(res[1].len(), 4);
         assert_eq!(res[2].len(), 4);
         assert_eq!(res[3].len(), 4);
@@ -410,10 +410,11 @@ mod tests {
         let res = process_output_data(&mut modules, data).unwrap();
         assert_eq!(res.len(), 4);
         assert_eq!(res[0].len(), 4);
-        assert_eq!(res[1].len(), 0); //TODO: shouldn't this be 4 * None?
+        assert_eq!(res[1].len(), 4);
         assert_eq!(res[2].len(), 4);
         assert_eq!(res[3].len(), 4);
         assert_eq!(res[0][1], ChannelValue::Decimal32(2.5));
+        assert_eq!(res[1][0], ChannelValue::None);
         assert_eq!(res[2][1], ChannelValue::Bit(true));
         assert_eq!(res[3][0], ChannelValue::Bit(true));
     }
