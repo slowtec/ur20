@@ -403,6 +403,7 @@ fn cnt_ack_to_status_byte(cnt: usize, mut byte: u8) -> u8 {
 
 #[derive(Debug)]
 pub struct MessageProcessor {
+    init: bool,
     in_data: Vec<u8>,
     out_data: Vec<Vec<u8>>,
     process_data_len: ProcessDataLength,
@@ -412,6 +413,7 @@ impl MessageProcessor {
     /// Create a new MessageProcessor.
     pub fn new(process_data_len: ProcessDataLength) -> MessageProcessor {
         MessageProcessor {
+            init: true,
             in_data: vec![],
             out_data: vec![],
             process_data_len,
@@ -422,11 +424,19 @@ impl MessageProcessor {
     /// Returns a `ProcessOutput` object if something needs to be written.
     pub fn next(&mut self, input: &ProcessInput, output: &ProcessOutput) -> ProcessOutput {
         let mut out_msg = output.clone();
-        if self.out_data.len() > 0 {
-            if Self::inc_tx_cnt_ack(input.tx_cnt_ack) != output.tx_cnt {
-                out_msg.tx_cnt = Self::inc_tx_cnt_ack(input.tx_cnt_ack);
-                out_msg.active = true;
-                out_msg.data = self.out_data.remove(0);
+        if self.init {
+            // flush RX and TX buffers
+            out_msg.rx_buf_flush = true;
+            out_msg.tx_buf_flush = true;
+            out_msg.active = true;
+            self.init = false;
+        } else {
+            if self.out_data.len() > 0 {
+                if Self::inc_tx_cnt_ack(input.tx_cnt_ack) != output.tx_cnt {
+                    out_msg.tx_cnt = Self::inc_tx_cnt_ack(input.tx_cnt_ack);
+                    out_msg.active = true;
+                    out_msg.data = self.out_data.remove(0);
+                }
             }
         }
         if input.data_available {
@@ -800,6 +810,7 @@ mod tests {
     fn test_eight_byte_message_processor_send_process() {
         // 1. initial state
         let mut p = MessageProcessor::new(ProcessDataLength::EightBytes);
+        p.init = false; // assume we already initialized the processor
         let mut input = ProcessInput::default();
         let mut output = ProcessOutput::default();
 
@@ -874,6 +885,7 @@ mod tests {
     #[test]
     fn test_sixteen_byte_message_processor_send_process() {
         let mut p = MessageProcessor::new(ProcessDataLength::SixteenBytes);
+        p.init = false; // assume we already initialized the processor
         let mut input = ProcessInput::default();
         let mut output = ProcessOutput::default();
 
@@ -885,6 +897,32 @@ mod tests {
         input.tx_cnt_ack = 1;
         output = p.next(&input, &output);
         assert_eq!(output.data, b"4 bytes");
+    }
+
+    #[test]
+    fn test_initial_message_processor_send_process() {
+        let mut p = MessageProcessor::new(ProcessDataLength::SixteenBytes);
+        let mut input = ProcessInput::default();
+        let mut output = ProcessOutput::default();
+
+        input.ready = true;
+        p.write(b"This msg is >14 bytes");
+
+        assert_eq!(p.init, true);
+
+        output = p.next(&input, &output);
+
+        assert_eq!(output.rx_buf_flush, true);
+        assert_eq!(output.tx_buf_flush, true);
+        assert_eq!(output.active, true);
+        assert_eq!(p.init, false);
+        assert_eq!(output.data, vec![]);
+        assert_eq!(output.tx_cnt, 0);
+
+        output = p.next(&input, &output);
+        assert_eq!(output.data, b"This msg is >1");
+        assert_eq!(output.tx_cnt, 1);
+        input.tx_cnt_ack = 1;
     }
 
     #[test]
@@ -917,6 +955,7 @@ mod tests {
     fn test_message_processor_send_process_with_outdated_tx_cnt() {
         let test = |ack, cnt, cnt_next, data| {
             let mut p = MessageProcessor::new(ProcessDataLength::EightBytes);
+            p.init = false;
             let mut input = ProcessInput::default();
             let mut output = ProcessOutput::default();
             input.ready = true;
