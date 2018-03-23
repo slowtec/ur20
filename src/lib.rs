@@ -38,6 +38,8 @@ pub enum ChannelValue {
     ComRsIn(RsIn),
     /// Special output data used by 1COM-232-485-422
     ComRsOut(RsOut),
+    /// Raw binary data.
+    Bytes(Vec<u8>),
     /// The channel is currently disabled.
     Disabled,
     /// The channel has no data at all.
