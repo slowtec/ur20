@@ -236,6 +236,20 @@ impl ModbusParameterRegisterCount for ModuleType {
     }
 }
 
+/// Calculate the parameter addresses and the number of registers by a given list of modules.
+pub fn param_addresses_and_register_counts(modules: &[ModuleType]) -> Vec<(u16, u16)> {
+    modules
+        .iter()
+        .enumerate()
+        .map(|(idx, m)| {
+            (
+                ADDR_MODULE_PARAMETERS + (idx * 256) as u16,
+                m.param_register_count(),
+            )
+        })
+        .collect()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -659,5 +673,22 @@ mod tests {
         assert_eq!(res[2], 0x0); // channel is disabled
         assert_eq!(res[3], 0x3600);
         assert_eq!(res[4], 0b_0000_1100_0000_0010);
+    }
+
+    #[test]
+    fn test_param_addresses_and_register_counts() {
+        assert_eq!(param_addresses_and_register_counts(&[]), vec![]);
+        assert_eq!(
+            param_addresses_and_register_counts(&[ModuleType::UR20_4DI_P]),
+            vec![(0xC000, 4)]
+        );
+        assert_eq!(
+            param_addresses_and_register_counts(&[
+                ModuleType::UR20_4DI_P,
+                ModuleType::UR20_4DO_P,
+                ModuleType::UR20_4AI_RTD_DIAG
+            ]),
+            vec![(0xC000, 4), (0xC100, 4), (0xC200, 29)]
+        );
     }
 }
