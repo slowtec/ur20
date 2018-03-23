@@ -60,12 +60,12 @@ pub fn offsets_of_process_data(data: &[Word]) -> Vec<ModuleOffset> {
 
 /// Map the raw input data into values.
 pub fn process_input_data(
-    modules: &mut [(&Box<ProcessModbusTcpData>, &ModuleOffset)],
+    modules: &[(&Box<ProcessModbusTcpData>, &ModuleOffset)],
     data: &[u16],
 ) -> Result<Vec<Vec<ChannelValue>>> {
     modules
         .into_iter()
-        .map(|&mut (ref mut m, ref offset)| {
+        .map(|&(ref m, ref offset)| {
             if let Some(in_offset) = offset.input {
                 let cnt = m.process_input_byte_count();
                 m.process_input_data(&prepare_raw_data_to_process(
@@ -83,12 +83,12 @@ pub fn process_input_data(
 
 /// Map the raw output data into values.
 pub fn process_output_data(
-    modules: &mut [(&Box<ProcessModbusTcpData>, &ModuleOffset)],
+    modules: &[(&Box<ProcessModbusTcpData>, &ModuleOffset)],
     data: &[u16],
 ) -> Result<Vec<Vec<ChannelValue>>> {
     modules
         .into_iter()
-        .map(|&mut (ref mut m, ref offset)| {
+        .map(|&(ref m, ref offset)| {
             if let Some(out_offset) = offset.output {
                 let cnt = m.process_output_byte_count();
                 m.process_output_data(&prepare_raw_data_to_process(
@@ -135,7 +135,7 @@ fn prepare_raw_data_to_process(
 
 /// Map values into raw values.
 pub fn process_output_values(
-    modules: &mut [(&Box<ProcessModbusTcpData>, &ModuleOffset)],
+    modules: &[(&Box<ProcessModbusTcpData>, &ModuleOffset)],
     values: &[Vec<ChannelValue>],
 ) -> Result<Vec<u16>> {
     if modules.len() != values.len() {
@@ -144,7 +144,7 @@ pub fn process_output_values(
 
     let mut out = vec![];
 
-    for (i, &mut (ref mut m, ref offset)) in modules.into_iter().enumerate() {
+    for (i, &(ref m, ref offset)) in modules.into_iter().enumerate() {
         if let Some(out_offset) = offset.output {
             let data = m.process_output_values(&values[i])?;
             let (start, bit) = to_register_address(out_offset);
@@ -328,9 +328,9 @@ mod tests {
             output: None,
         };
 
-        let mut modules = vec![(&mod0, &o0), (&mod1, &o1), (&mod2, &o2), (&mod3, &o3)];
+        let modules = vec![(&mod0, &o0), (&mod1, &o1), (&mod2, &o2), (&mod3, &o3)];
 
-        let res = process_input_data(&mut modules, data).unwrap();
+        let res = process_input_data(&modules, data).unwrap();
         assert_eq!(res.len(), 4);
         assert_eq!(res[0].len(), 4);
         assert_eq!(res[1].len(), 4);
@@ -352,8 +352,8 @@ mod tests {
             input: Some(addr_in_0),
             output: None,
         };
-        let mut modules = vec![(&mod0, &o0)];
-        assert!(process_input_data(&mut modules, data).is_err());
+        let modules = vec![(&mod0, &o0)];
+        assert!(process_input_data(&modules, data).is_err());
     }
 
     #[test]
@@ -373,8 +373,8 @@ mod tests {
             input: Some(addr_in_1),
             output: None,
         };
-        let mut modules = vec![(&mod0, &o0), (&mod1, &o1)];
-        assert!(process_input_data(&mut modules, data).is_err());
+        let modules = vec![(&mod0, &o0), (&mod1, &o1)];
+        assert!(process_input_data(&modules, data).is_err());
     }
 
     #[test]
@@ -419,9 +419,9 @@ mod tests {
             output: Some(addr_out_3),
         };
 
-        let mut modules = vec![(&mod0, &o0), (&mod1, &o1), (&mod2, &o2), (&mod3, &o3)];
+        let modules = vec![(&mod0, &o0), (&mod1, &o1), (&mod2, &o2), (&mod3, &o3)];
 
-        let res = process_output_data(&mut modules, data).unwrap();
+        let res = process_output_data(&modules, data).unwrap();
         assert_eq!(res.len(), 4);
         assert_eq!(res[0].len(), 4);
         assert_eq!(res[1].len(), 4);
@@ -444,8 +444,8 @@ mod tests {
             input: None,
             output: Some(addr_out_0),
         };
-        let mut modules = vec![(&mod0, &o0)];
-        assert!(process_output_data(&mut modules, data).is_err());
+        let modules = vec![(&mod0, &o0)];
+        assert!(process_output_data(&modules, data).is_err());
     }
 
     #[test]
@@ -465,8 +465,8 @@ mod tests {
             input: None,
             output: Some(addr_out_1),
         };
-        let mut modules = vec![(&mod0, &o0), (&mod1, &o1)];
-        assert!(process_output_data(&mut modules, data).is_err());
+        let modules = vec![(&mod0, &o0), (&mod1, &o1)];
+        assert!(process_output_data(&modules, data).is_err());
     }
 
     #[test]
@@ -498,9 +498,9 @@ mod tests {
             output: None,
         };
 
-        let mut modules = vec![(&mod0, &o0), (&mod1, &o1)];
+        let modules = vec![(&mod0, &o0), (&mod1, &o1)];
 
-        assert!(process_output_values(&mut modules, &values).is_err());
+        assert!(process_output_values(&modules, &values).is_err());
     }
 
     #[test]
@@ -533,8 +533,8 @@ mod tests {
             output: None,
         };
 
-        let mut modules = vec![(&mod0, &o0), (&mod1, &o1)];
-        assert!(process_output_values(&mut modules, &values).is_err());
+        let modules = vec![(&mod0, &o0), (&mod1, &o1)];
+        assert!(process_output_values(&modules, &values).is_err());
     }
 
     #[test]
@@ -580,8 +580,8 @@ mod tests {
             output: Some(addr_out_2),
         };
 
-        let mut modules = vec![(&mod0, &o0), (&mod1, &o1), (&mod2, &o2)];
-        assert!(process_output_values(&mut modules, &values).is_err());
+        let modules = vec![(&mod0, &o0), (&mod1, &o1), (&mod2, &o2)];
+        assert!(process_output_values(&modules, &values).is_err());
     }
 
     #[test]
@@ -601,8 +601,8 @@ mod tests {
             input: None,
             output: Some(addr_out_0),
         };
-        let mut modules = vec![(&mod0, &o0)];
-        assert!(process_output_values(&mut modules, &values).is_err());
+        let modules = vec![(&mod0, &o0)];
+        assert!(process_output_values(&modules, &values).is_err());
     }
 
     #[test]
@@ -664,9 +664,9 @@ mod tests {
             output: Some(addr_out_3),
         };
 
-        let mut modules = vec![(&mod0, &o0), (&mod1, &o1), (&mod2, &o2), (&mod3, &o3)];
+        let modules = vec![(&mod0, &o0), (&mod1, &o1), (&mod2, &o2), (&mod3, &o3)];
 
-        let res = process_output_values(&mut modules, &values).unwrap();
+        let res = process_output_values(&modules, &values).unwrap();
         assert_eq!(res.len(), 5);
         assert_eq!(res[0], 0x0); // channel is disabled
         assert_eq!(res[1], 0x6C00);
