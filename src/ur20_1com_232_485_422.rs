@@ -584,7 +584,7 @@ mod tests {
 
     #[test]
     fn try_process_input_data_data_from_valid_byte_message() {
-        let byte_msg = vec![0b11110001, 3, 0x0, 0xf, 0x5];
+        let byte_msg = vec![0b_1111_0001, 3, 0x0, 0xf, 0x5];
         let msg = ProcessInput::try_from_byte_message(&byte_msg).unwrap();
         assert_eq!(msg.data_available, true);
         assert_eq!(msg.buffer_nearly_full, false);

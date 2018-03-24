@@ -2,6 +2,7 @@
 
 use super::*;
 use util::*;
+use std::collections::HashMap;
 
 type Word = u16;
 type RegisterAddress = u16;
@@ -44,6 +45,182 @@ pub trait FromModbusParameterData {
 pub struct ModuleOffset {
     pub input: Option<BitAddress>,
     pub output: Option<BitAddress>,
+}
+
+/// Modbus TCP coupler implementation.
+pub struct Coupler {
+    /// cached input values
+    in_values: Vec<Vec<ChannelValue>>,
+    /// cached output values
+    out_values: Vec<Vec<ChannelValue>>,
+    /// buffer write requests
+    write: HashMap<Address, ChannelValue>,
+    /// stateless modules
+    modules: Vec<Box<ProcessModbusTcpData>>,
+    /// data offsets
+    offsets: Vec<ModuleOffset>,
+    /// statefull message processors
+    processors: HashMap<usize, ur20_1com_232_485_422::MessageProcessor>,
+}
+
+/// Raw config data to create a coupler instance.
+#[derive(Debug, Clone)]
+pub struct CouplerConfig {
+    /// Register content of `ADDR_CURRENT_MODULE_LIST`.
+    /// Register count: 2 * number of modules
+    pub modules: Vec<ModuleType>,
+    /// Register content of `ADDR_MODULE_OFFSETS`.
+    /// Register count: 2 * number of modules
+    pub offsets: Vec<u16>,
+    /// Register content of `ADDR_MODULE_PARAMETERS`.
+    pub params: Vec<Vec<u16>>,
+}
+
+impl Coupler {
+    pub fn new(cfg: &CouplerConfig) -> Result<Self> {
+        cfg.validate()?;
+
+        let offsets = offsets_of_process_data(&cfg.offsets);
+
+        let mut modules = vec![];
+        let mut processors = HashMap::new();
+        for (i, m) in cfg.modules.iter().enumerate() {
+            let param_data = &cfg.params[i];
+            let x: Box<ProcessModbusTcpData> = match *m {
+                ModuleType::UR20_4DI_P => {
+                    let m = ur20_4di_p::Mod::from_modbus_parameter_data(&param_data)?;
+                    Box::new(m)
+                }
+                ModuleType::UR20_4DO_P => {
+                    let m = ur20_4do_p::Mod::from_modbus_parameter_data(&param_data)?;
+                    Box::new(m)
+                }
+                ModuleType::UR20_4AO_UI_16 => {
+                    let m = ur20_4ao_ui_16::Mod::from_modbus_parameter_data(&param_data)?;
+                    Box::new(m)
+                }
+                ModuleType::UR20_4AI_RTD_DIAG => {
+                    let m = ur20_4ai_rtd_diag::Mod::from_modbus_parameter_data(&param_data)?;
+                    Box::new(m)
+                }
+                ModuleType::UR20_8AI_I_16_DIAG_HD => {
+                    let m = ur20_8ai_i_16_diag_hd::Mod::from_modbus_parameter_data(&param_data)?;
+                    Box::new(m)
+                }
+                ModuleType::UR20_1COM_232_485_422 => {
+                    let m = ur20_1com_232_485_422::Mod::from_modbus_parameter_data(&param_data)?;
+                    let processor = ur20_1com_232_485_422::MessageProcessor::new(
+                        m.mod_params.process_data_len.clone(),
+                    );
+                    processors.insert(i, processor);
+                    Box::new(m)
+                }
+                _ => {
+                    panic!("{:?} is not supported", m);
+                }
+            };
+            modules.push(x);
+        }
+        Ok(Coupler {
+            in_values: vec![],
+            out_values: vec![],
+            write: HashMap::new(),
+            modules,
+            offsets,
+            processors,
+        })
+    }
+
+    fn is_valid_addr(&self, addr: &Address) -> bool {
+        addr.module < self.modules.len()
+            && addr.channel < self.modules[addr.module].module_type().channel_count()
+    }
+
+    pub fn inputs(&self) -> &Vec<Vec<ChannelValue>> {
+        &self.in_values
+    }
+
+    pub fn outputs(&self) -> &Vec<Vec<ChannelValue>> {
+        &self.out_values
+    }
+
+    pub fn set_output(&mut self, addr: &Address, value: ChannelValue) -> Result<()> {
+        if !self.is_valid_addr(addr) {
+            return Err(Error::Address);
+        }
+        self.write.insert(addr.clone(), value);
+        Ok(())
+    }
+
+    pub fn next(&mut self, process_input: &[u16], process_output: &[u16]) -> Result<Vec<u16>> {
+        let mut infos: Vec<_> = self.modules.iter().zip(&self.offsets).collect();
+        self.in_values = process_input_data(&mut *infos, process_input)?;
+        self.out_values = process_output_data(&mut *infos, process_output)?;
+
+        let mut next_out_values = self.out_values.clone();
+        let mut in_bytes = HashMap::new();
+        let mut out_bytes = HashMap::new();
+
+        for (m_nr, (in_v, out_v)) in self.in_values.iter().zip(&self.out_values).enumerate() {
+            if let Some(mut p) = self.processors.get_mut(&m_nr) {
+                if let ChannelValue::ComRsIn(ref in_v) = in_v[0] {
+                    if let ChannelValue::ComRsOut(ref out_v) = out_v[0] {
+                        out_bytes.insert(m_nr, ChannelValue::None);
+                        in_bytes.insert(m_nr, ChannelValue::None);
+
+                        if !out_v.data.is_empty() && out_v.tx_cnt != in_v.tx_cnt_ack {
+                            out_bytes.insert(m_nr, ChannelValue::Bytes(out_v.data.clone()));
+                        }
+
+                        if let Some(v) = self.write.remove(&Address {
+                            module: m_nr,
+                            channel: 0,
+                        }) {
+                            if let ChannelValue::Bytes(ref data) = v {
+                                p.write(data);
+                            }
+                        }
+
+                        let rs_out = p.next(in_v, out_v);
+                        next_out_values[m_nr][0] = ChannelValue::ComRsOut(rs_out);
+                        if let Some(d) = p.read() {
+                            if !d.is_empty() {
+                                in_bytes.insert(m_nr, ChannelValue::Bytes(d));
+                            }
+                        }
+                    }
+                }
+            } else {
+                for (i, _) in out_v.iter().enumerate() {
+                    if let Some(v) = self.write.remove(&Address {
+                        module: m_nr,
+                        channel: i,
+                    }) {
+                        next_out_values[m_nr][i] = v;
+                    }
+                }
+            }
+        }
+        for (m_nr, v) in in_bytes.into_iter() {
+            self.in_values[m_nr][0] = v;
+        }
+        for (m_nr, v) in out_bytes.into_iter() {
+            self.out_values[m_nr][0] = v;
+        }
+        process_output_values(&mut *infos, &next_out_values)
+    }
+}
+
+impl CouplerConfig {
+    fn validate(&self) -> Result<()> {
+        if self.modules.len() != self.params.len() {
+            return Err(Error::BufferLength);
+        }
+        if self.modules.len() * 2 != self.offsets.len() {
+            return Err(Error::ModuleOffset);
+        }
+        Ok(())
+    }
 }
 
 /// Converts the register data into a list of module offsets.
@@ -690,5 +867,188 @@ mod tests {
             ]),
             vec![(0xC000, 4), (0xC100, 4), (0xC200, 29)]
         );
+    }
+
+    #[test]
+    fn validate_coupler_config_data() {
+        assert!(
+            CouplerConfig {
+                modules: vec![],
+                offsets: vec![],
+                params: vec![],
+            }.validate()
+                .is_ok()
+        );
+        assert!(
+            CouplerConfig {
+                modules: vec![ModuleType::UR20_4DI_P],
+                offsets: vec![0xFFFF, 0x0000],
+                params: vec![vec![0; 4]],
+            }.validate()
+                .is_ok()
+        );
+        assert!(
+            CouplerConfig {
+                modules: vec![ModuleType::UR20_4DI_P],
+                offsets: vec![0xFFFF, 0x0000],
+                params: vec![],
+            }.validate()
+                .is_err()
+        );
+        assert!(
+            CouplerConfig {
+                modules: vec![ModuleType::UR20_4DI_P],
+                offsets: vec![],
+                params: vec![vec![0; 4]],
+            }.validate()
+                .is_err()
+        );
+        assert!(
+            CouplerConfig {
+                modules: vec![ModuleType::UR20_4DI_P],
+                offsets: vec![0xFFFF],
+                params: vec![],
+            }.validate()
+                .is_err()
+        );
+    }
+
+    #[test]
+    fn create_new_coupler_instance() {
+        let cfg = CouplerConfig {
+            modules: vec![ModuleType::UR20_4DI_P, ModuleType::UR20_1COM_232_485_422],
+            offsets: vec![0xFFFF, 0x0000, 0x8000, 0x0008],
+            params: vec![vec![0; 4], vec![0; 10]],
+        };
+
+        let mut invalid_cfg = cfg.clone();
+        invalid_cfg.params = vec![];
+        let c = Coupler::new(&cfg).unwrap();
+
+        assert!(Coupler::new(&invalid_cfg).is_err());
+        assert_eq!(c.modules.len(), 2);
+        assert_eq!(c.processors.len(), 1);
+        assert_eq!(c.offsets.len(), 2);
+        assert_eq!(c.in_values.len(), 0);
+        assert_eq!(c.out_values.len(), 0);
+        assert_eq!(c.write.len(), 0);
+    }
+
+    #[test]
+    fn process_in_out_data_with_coupler() {
+        use ur20_1com_232_485_422::*;
+        use num_traits::ToPrimitive;
+
+        let cfg = CouplerConfig {
+            modules: vec![
+                ModuleType::UR20_4DI_P,
+                ModuleType::UR20_4DO_P,
+                ModuleType::UR20_1COM_232_485_422,
+            ],
+            offsets: vec![
+                0xFFFF,
+                0x0000,
+                0x8000,
+                0xFFFF,
+                to_bit_address(0x0801, 0),
+                to_bit_address(0x0001, 0),
+            ],
+            params: vec![
+                vec![0; 4],
+                vec![0; 4],
+                vec![
+                    ProcessDataLength::EightBytes.to_u16().unwrap(),
+                    OperatingMode::RS232.to_u16().unwrap(),
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                    0,
+                ],
+            ],
+        };
+        let mut c = Coupler::new(&cfg).unwrap();
+        let process_input_data = vec![0b_0101, 0b_0000_0100_1111_0001, 0, 0xABCD, 0];
+        let process_output_data = vec![0b_11_00, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+        let process_output_data = c.next(&process_input_data, &process_output_data).unwrap();
+        {
+            let inputs = c.inputs();
+            let outputs = c.outputs();
+
+            assert_eq!(inputs.len(), 3);
+            assert_eq!(outputs.len(), 3);
+
+            assert_eq!(inputs[0].len(), 4);
+            assert_eq!(outputs[0].len(), 4);
+
+            assert_eq!(inputs[0][0], ChannelValue::Bit(true));
+            assert_eq!(inputs[0][1], ChannelValue::Bit(false));
+            assert_eq!(inputs[0][2], ChannelValue::Bit(true));
+            assert_eq!(inputs[0][3], ChannelValue::Bit(false));
+
+            assert_eq!(outputs[1][0], ChannelValue::Bit(false));
+            assert_eq!(outputs[1][1], ChannelValue::Bit(false));
+            assert_eq!(outputs[1][2], ChannelValue::Bit(true));
+            assert_eq!(outputs[1][3], ChannelValue::Bit(true));
+
+            assert_eq!(outputs[0], vec![ChannelValue::None; 4]);
+            assert_eq!(inputs[1], vec![ChannelValue::None; 4]);
+
+            assert_eq!(inputs[2], vec![ChannelValue::Bytes(vec![0, 0, 0xCD, 0xAB])]);
+            assert_eq!(outputs[2], vec![ChannelValue::None]);
+        }
+
+        c.set_output(
+            &Address {
+                module: 2,
+                channel: 0,
+            },
+            ChannelValue::Bytes(b"Hello modbus coupler!".to_vec()),
+        ).unwrap();
+        c.set_output(
+            &Address {
+                module: 1,
+                channel: 1,
+            },
+            ChannelValue::Bit(true),
+        ).unwrap();
+        assert!(c.set_output(
+            &Address {
+                module: 3,
+                channel: 0,
+            },
+            ChannelValue::Bit(true)
+        ).is_err());
+        assert!(c.set_output(
+            &Address {
+                module: 2,
+                channel: 1,
+            },
+            ChannelValue::Bit(true)
+        ).is_err());
+
+        assert_eq!(c.write.len(), 2);
+
+        let process_input_data = vec![0b_0101, 0b_0000_0000_0000_0000, 0, 0, 0];
+        let process_output_data = c.next(&process_input_data, &process_output_data).unwrap();
+        assert_eq!(c.write.len(), 0);
+        {
+            let inputs = c.inputs();
+            let outputs = c.outputs();
+            assert_eq!(outputs[1][1], ChannelValue::Bit(false));
+            assert_eq!(inputs[2][0], ChannelValue::None);
+            assert_eq!(outputs[2][0], ChannelValue::None);
+        }
+        let _process_output_data = c.next(&process_input_data, &process_output_data).unwrap();
+        {
+            let inputs = c.inputs();
+            let outputs = c.outputs();
+            assert_eq!(outputs[1][1], ChannelValue::Bit(true));
+            assert_eq!(inputs[2][0], ChannelValue::None);
+            assert_eq!(outputs[2][0], ChannelValue::Bytes(b"Hello ".to_vec()));
+        }
     }
 }

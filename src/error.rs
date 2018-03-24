@@ -12,6 +12,7 @@ pub enum Error {
     ChannelParameter,
     ChannelValue,
     ModuleOffset,
+    Address,
 }
 
 #[cfg_attr(rustfmt, rustfmt_skip)]
@@ -27,6 +28,7 @@ impl fmt::Display for Error {
             Error::ChannelParameter => write!(f, "invalid channel paramater(s)"),
             Error::ChannelValue     => write!(f, "invalid channel value(s)"),
             Error::ModuleOffset     => write!(f, "invalid module offset"),
+            Error::Address          => write!(f, "invalid module address"),
         }
     }
 }
@@ -44,6 +46,7 @@ impl ::std::error::Error for Error {
             Error::ChannelParameter => "invalid channel paramater(s)",
             Error::ChannelValue     => "invalid channel value(s)",
             Error::ModuleOffset     => "invalid module offset",
+            Error::Address          => "invalid module address",
         }
     }
 }
