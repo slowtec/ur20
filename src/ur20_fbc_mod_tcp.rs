@@ -441,6 +441,23 @@ pub fn param_addresses_and_register_counts(modules: &[ModuleType]) -> Vec<(u16, 
         .collect()
 }
 
+/// Converts the raw coupler register data into a list of module types.
+pub fn module_list_from_registers(registers: &[u16]) -> Result<Vec<ModuleType>> {
+    if registers.is_empty() || registers.len() % 2 != 0 {
+        return Err(Error::RegisterCount);
+    }
+    let mut list = vec![];
+    for i in 0..registers.len() / 2 {
+        let idx = i as usize;
+        let hi = u32::from(registers[idx * 2]);
+        let lo = u32::from(registers[idx * 2 + 1]);
+        let id = (hi << 16) + lo;
+        let m = ModuleType::try_from_u32(id)?;
+        list.push(m);
+    }
+    Ok(list)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1069,5 +1086,21 @@ mod tests {
             let outputs = c.outputs();
             assert_eq!(outputs[2][0], ChannelValue::None);
         }
+    }
+
+    #[test]
+    fn test_module_list_from_registers() {
+        assert_eq!(
+            module_list_from_registers(&vec![]).err().unwrap(),
+            Error::RegisterCount
+        );
+        assert_eq!(
+            module_list_from_registers(&vec![0xAB0C]).err().unwrap(),
+            Error::RegisterCount
+        );
+        assert_eq!(
+            module_list_from_registers(&vec![0x0101, 0x2FA0]).unwrap(),
+            vec![ModuleType::UR20_4DO_P]
+        );
     }
 }
