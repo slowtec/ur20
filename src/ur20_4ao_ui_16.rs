@@ -72,13 +72,12 @@ impl ProcessModbusTcpData for Mod {
                     &self.ch_params[i].data_format,
                 )
             })
-            .map(|(v, range, factor)| {
-                if *range != AnalogUIRange::Disabled {
-                    ChannelValue::Decimal32(u16_to_value(*v, range, factor))
-                } else {
-                    ChannelValue::Disabled
-                }
-            })
+            .map(
+                |(v, range, factor)| match util::u16_to_analog_ui_value(*v, range, factor) {
+                    Some(v) => ChannelValue::Decimal32(v),
+                    None => ChannelValue::Disabled,
+                },
+            )
             .collect())
     }
     fn process_output_values(&self, values: &[ChannelValue]) -> Result<Vec<u16>> {
@@ -104,50 +103,9 @@ impl ProcessModbusTcpData for Mod {
 }
 
 fn value_to_u16(v: &ChannelValue, range: &AnalogUIRange, format: &DataFormat) -> Result<u16> {
-    let factor = f32::from(match *format {
-        DataFormat::S5 => S5_FACTOR,
-        DataFormat::S7 => S7_FACTOR,
-    });
     match *v {
-        ChannelValue::Decimal32(v) => {
-            use AnalogUIRange::*;
-
-            #[cfg_attr(rustfmt, rustfmt_skip)]
-              Ok(match *range {
-                  mA0To20       => (factor * v / 20.0),
-                  mA4To20       => (factor * (v - 4.0) / 16.0),
-                  V0To10        |
-                  VMinus10To10  => (factor * v / 10.0),
-                  V0To5         |
-                  VMinus5To5    => (factor * v / 5.0),
-                  V1To5         => (factor * (v - 1.0) / 4.0),
-                  V2To10        => (factor * (v - 2.0) / 8.0),
-                  Disabled      => 0.0,
-              } as u16)
-        }
+        ChannelValue::Decimal32(v) => Ok(util::analog_ui_value_to_u16(v, range, format)),
         _ => Err(Error::ChannelValue),
-    }
-}
-
-fn u16_to_value(data: u16, range: &AnalogUIRange, format: &DataFormat) -> f32 {
-    let factor = f32::from(match *format {
-        DataFormat::S5 => S5_FACTOR,
-        DataFormat::S7 => S7_FACTOR,
-    });
-    use AnalogUIRange::*;
-    let data = (data as i16) as f32;
-
-    #[cfg_attr(rustfmt, rustfmt_skip)]
-    match *range {
-        mA0To20         => (data * 20.0 / factor),
-        mA4To20         => (data * 16.0 / factor + 4.0),
-        V0To10          |
-        VMinus10To10    => (data * 10.0 / factor),
-        V0To5           |
-        VMinus5To5      => (data * 5.0 / factor),
-        V1To5           => (data * 4.0 / factor + 1.0),
-        V2To10          => (data * 8.0 / factor + 2.0),
-        Disabled        => 0.0,
     }
 }
 
@@ -174,7 +132,12 @@ fn parameters_from_raw_data(data: &[u16]) -> Result<Vec<ChannelParameters>> {
                     return Err(Error::ChannelParameter);
                 }
             };
-            p.substitute_value = u16_to_value(data[idx + 2], &p.output_range, &p.data_format);
+
+            if let Some(v) =
+                util::u16_to_analog_ui_value(data[idx + 2], &p.output_range, &p.data_format)
+            {
+                p.substitute_value = v;
+            }
 
             Ok(p)
         })
@@ -331,89 +294,6 @@ mod tests {
                 Decimal32(2.0),
             ]).unwrap(),
             vec![0x6C00, 0x9400, 0x0, 0x0]
-        );
-    }
-
-    #[test]
-    fn test_u16_to_value() {
-        assert_eq!(
-            u16_to_value(0x3600, &AnalogUIRange::mA0To20, &DataFormat::S7),
-            10.0
-        );
-        assert_eq!(
-            u16_to_value(0x2000, &AnalogUIRange::mA0To20, &DataFormat::S5),
-            10.0
-        );
-
-        assert_eq!(
-            u16_to_value(0x3600, &AnalogUIRange::mA4To20, &DataFormat::S7),
-            12.0
-        );
-        assert_eq!(
-            u16_to_value(0x2000, &AnalogUIRange::mA4To20, &DataFormat::S5),
-            12.0
-        );
-
-        assert_eq!(
-            u16_to_value(0x3600, &AnalogUIRange::V0To10, &DataFormat::S7),
-            5.0
-        );
-        assert_eq!(
-            u16_to_value(0x2000, &AnalogUIRange::V0To10, &DataFormat::S5),
-            5.0
-        );
-
-        assert_eq!(
-            u16_to_value(0x3600, &AnalogUIRange::VMinus10To10, &DataFormat::S7),
-            5.0
-        );
-        assert_eq!(
-            u16_to_value(0x2000, &AnalogUIRange::VMinus10To10, &DataFormat::S5),
-            5.0
-        );
-
-        assert_eq!(
-            u16_to_value(0x3600, &AnalogUIRange::V2To10, &DataFormat::S7),
-            6.0
-        );
-        assert_eq!(
-            u16_to_value(0x2000, &AnalogUIRange::V2To10, &DataFormat::S5),
-            6.0
-        );
-
-        assert_eq!(
-            u16_to_value(0x3600, &AnalogUIRange::V1To5, &DataFormat::S7),
-            3.0
-        );
-        assert_eq!(
-            u16_to_value(0x2000, &AnalogUIRange::V1To5, &DataFormat::S5),
-            3.0
-        );
-
-        assert_eq!(
-            u16_to_value(0x3600, &AnalogUIRange::V0To5, &DataFormat::S7),
-            2.5
-        );
-        assert_eq!(
-            u16_to_value(0x2000, &AnalogUIRange::V0To5, &DataFormat::S5),
-            2.5
-        );
-
-        assert_eq!(
-            u16_to_value(0x3600, &AnalogUIRange::VMinus5To5, &DataFormat::S7),
-            2.5
-        );
-        assert_eq!(
-            u16_to_value(0xCA00, &AnalogUIRange::VMinus5To5, &DataFormat::S7),
-            -2.5
-        );
-        assert_eq!(
-            u16_to_value(0x2000, &AnalogUIRange::VMinus5To5, &DataFormat::S5),
-            2.5
-        );
-        assert_eq!(
-            u16_to_value(0xE000, &AnalogUIRange::VMinus5To5, &DataFormat::S5),
-            -2.5
         );
     }
 

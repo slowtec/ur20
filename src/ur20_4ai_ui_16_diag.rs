@@ -79,8 +79,6 @@ impl ProcessModbusTcpData for Mod {
         0
     }
     fn process_input_data(&self, data: &[u16]) -> Result<Vec<ChannelValue>> {
-        use AnalogUIRange::*;
-
         if data.len() != 4 {
             return Err(Error::BufferLength);
         }
@@ -92,23 +90,17 @@ impl ProcessModbusTcpData for Mod {
         let res = (0..4)
             .map(|i| {
                 (
-                    f32::from(data[i] as i16),
+                    data[i],
                     &self.ch_params[i].measurement_range,
                     &self.ch_params[i].data_format,
                 )
             })
-            .map(|(val, range, format)| {
-                let factor = format.factor();
-                match *range {
-                    mA0To20 => ChannelValue::Decimal32(val * 20.0 / factor),
-                    mA4To20 => ChannelValue::Decimal32(val * 16.0 / factor + 4.0),
-                    V0To10 | VMinus10To10 => ChannelValue::Decimal32(val * 10.0 / factor),
-                    V0To5 | VMinus5To5 => ChannelValue::Decimal32(val * 5.0 / factor),
-                    V1To5 => ChannelValue::Decimal32(val * 4.0 / factor + 1.0),
-                    V2To10 => ChannelValue::Decimal32(val * 8.0 / factor + 2.0),
-                    Disabled => ChannelValue::Disabled,
-                }
-            })
+            .map(
+                |(val, range, format)| match util::u16_to_analog_ui_value(val, range, format) {
+                    Some(v) => ChannelValue::Decimal32(v),
+                    None => ChannelValue::Disabled,
+                },
+            )
             .collect();
         Ok(res)
     }
@@ -202,6 +194,10 @@ mod tests {
     #[test]
     fn test_process_input_data() {
         let mut m = Mod::default();
+        assert_eq!(m.ch_params[0].measurement_range, AnalogUIRange::Disabled);
+        assert_eq!(m.ch_params[1].measurement_range, AnalogUIRange::Disabled);
+        assert_eq!(m.ch_params[2].measurement_range, AnalogUIRange::Disabled);
+        assert_eq!(m.ch_params[3].measurement_range, AnalogUIRange::Disabled);
         assert_eq!(
             m.process_input_data(&vec![5, 0, 7, 8]).unwrap(),
             vec![Disabled; 4]

@@ -96,49 +96,9 @@ impl ProcessModbusTcpData for Mod {
         }
         let res = (0..4)
             .map(|i| (data[i], &self.ch_params[i].measurement_range))
-            .map(|(val, range)| {
-                use RtdRange::*;
-
-                #[cfg_attr(rustfmt, rustfmt_skip)]
-                match *range {
-                    PT100  |
-                    PT200  |
-                    PT500  |
-                    PT1000 |
-                    NI100  |
-                    NI120  |
-                    NI200  |
-                    NI500  |
-                    NI1000 |
-                    Cu10   => {
-                        ChannelValue::Decimal32(f32::from(val as i16) / 10.0)
-                    }
-                    R40   |
-                    R80   |
-                    R150  |
-                    R300  |
-                    R500  |
-                    R1000 |
-                    R2000 |
-                    R4000 => {
-                        let n = match *range {
-                            R40   => 40.0,
-                            R80   => 80.0,
-                            R150  => 150.0,
-                            R300  => 300.0,
-                            R500  => 500.0,
-                            R1000 => 1000.0,
-                            R2000 => 2000.0,
-                            R4000 => 4000.0,
-                            _ => {
-                                unreachable!()
-                            }
-                        };
-                        let d = n * u32::from(val) as f32 / 0x6C00 as f32;
-                        ChannelValue::Decimal32(d)
-                    }
-                    Disabled => ChannelValue::Disabled,
-                }
+            .map(|(val, range)| match util::u16_to_rtd_value(val, range) {
+                Some(v) => ChannelValue::Decimal32(v),
+                None => ChannelValue::Disabled,
             })
             .collect();
         Ok(res)

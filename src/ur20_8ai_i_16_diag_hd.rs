@@ -116,6 +116,7 @@ impl ProcessModbusTcpData for Mod {
     }
     fn process_output_values(&self, values: &[ChannelValue]) -> Result<Vec<u16>> {
         if !values.is_empty() {
+            //TODO: 8 x None should be ok
             return Err(Error::ChannelValue);
         }
         Ok(vec![])
@@ -128,11 +129,8 @@ fn parameters_from_raw_data(data: &[u16]) -> Result<(ModuleParameters, Vec<Chann
     }
     let mut module_parameters = ModuleParameters::default();
 
-    module_parameters.frequency_suppression = match data[0] {
-        0 => FrequencySuppression::Disabled,
-        1 => FrequencySuppression::Hz50,
-        2 => FrequencySuppression::Hz60,
-        3 => FrequencySuppression::Average16,
+    module_parameters.frequency_suppression = match FromPrimitive::from_u16(data[0]) {
+        Some(x) => x,
         _ => return Err(Error::ChannelParameter),
     };
 
