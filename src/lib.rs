@@ -48,9 +48,12 @@ pub enum ChannelValue {
     None,
 }
 
+/// A fieldbus independend channel address.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct Address {
+    /// Module position (beginning at `0`)
     pub module: usize,
+    /// Channel number (beginning at `0`)
     pub channel: usize,
 }
 
@@ -292,6 +295,7 @@ pub enum ConnectionType {
     FourWire  = 2,
 }
 
+/// Time to convert a signal.
 #[cfg_attr(rustfmt, rustfmt_skip)]
 #[allow(non_camel_case_types)]
 #[derive(Debug, Clone, PartialEq, Eq, FromPrimitive, ToPrimitive)]
@@ -304,6 +308,7 @@ pub enum ConversionTime {
     ms36  = 5,
 }
 
+/// Filter signals by defining a minimal duration.
 #[cfg_attr(rustfmt, rustfmt_skip)]
 #[allow(non_camel_case_types)]
 #[derive(Debug, Clone, PartialEq, Eq, FromPrimitive, ToPrimitive)]
@@ -327,6 +332,7 @@ pub enum InputFilter {
     ms333  = 16,
 }
 
+/// Time to delay a signal.
 #[cfg_attr(rustfmt, rustfmt_skip)]
 #[allow(non_camel_case_types)]
 #[derive(Debug, Clone, PartialEq, Eq, FromPrimitive, ToPrimitive)]
@@ -339,6 +345,7 @@ pub enum InputDelay {
     ms40  = 5, // not at PROFIBUS-DP
 }
 
+/// Frequency suppression.
 #[cfg_attr(rustfmt, rustfmt_skip)]
 #[allow(non_camel_case_types)]
 #[derive(Debug, Clone, PartialEq, Eq, FromPrimitive, ToPrimitive)]
