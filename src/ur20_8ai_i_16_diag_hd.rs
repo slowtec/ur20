@@ -108,19 +108,6 @@ impl ProcessModbusTcpData for Mod {
             .collect();
         Ok(res)
     }
-    fn process_output_data(&self, data: &[u16]) -> Result<Vec<ChannelValue>> {
-        if !data.is_empty() {
-            return Err(Error::BufferLength);
-        }
-        Ok((0..8).map(|_| ChannelValue::None).collect())
-    }
-    fn process_output_values(&self, values: &[ChannelValue]) -> Result<Vec<u16>> {
-        if !values.is_empty() {
-            //TODO: 8 x None should be ok
-            return Err(Error::ChannelValue);
-        }
-        Ok(vec![])
-    }
 }
 
 fn parameters_from_raw_data(data: &[u16]) -> Result<(ModuleParameters, Vec<ChannelParameters>)> {
@@ -272,6 +259,11 @@ mod tests {
                 .is_err()
         );
         assert_eq!(m.process_output_values(&[]).unwrap(), &[]);
+        assert_eq!(
+            m.process_output_values(&vec![ChannelValue::None; 8])
+                .unwrap(),
+            &[]
+        );
     }
 
     #[test]

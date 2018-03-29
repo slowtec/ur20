@@ -26,11 +26,30 @@ pub trait ProcessModbusTcpData: Module {
     /// Number of bytes within the process output data buffer.
     fn process_output_byte_count(&self) -> usize;
     /// Transform raw module input data into a list of channel values.
-    fn process_input_data(&self, &[u16]) -> Result<Vec<ChannelValue>>;
+    fn process_input_data(&self, data: &[u16]) -> Result<Vec<ChannelValue>> {
+        if !data.is_empty() {
+            return Err(Error::BufferLength);
+        }
+        let channel_cnt = self.module_type().channel_count();
+        Ok(vec![ChannelValue::None; channel_cnt])
+    }
     /// Transform raw module output data into a list of channel values.
-    fn process_output_data(&self, &[u16]) -> Result<Vec<ChannelValue>>;
+    fn process_output_data(&self, data: &[u16]) -> Result<Vec<ChannelValue>> {
+        if !data.is_empty() {
+            return Err(Error::BufferLength);
+        }
+        let channel_cnt = self.module_type().channel_count();
+        Ok(vec![ChannelValue::None; channel_cnt])
+    }
     /// Transform channel values into raw module output data.
-    fn process_output_values(&self, &[ChannelValue]) -> Result<Vec<u16>>;
+    fn process_output_values(&self, values: &[ChannelValue]) -> Result<Vec<u16>> {
+        if !values.is_empty() {
+            if values.len() != self.module_type().channel_count() {
+                return Err(Error::ChannelValue);
+            }
+        }
+        Ok(vec![])
+    }
 }
 
 pub trait FromModbusParameterData {

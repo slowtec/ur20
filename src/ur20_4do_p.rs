@@ -48,9 +48,6 @@ impl ProcessModbusTcpData for Mod {
     fn process_output_byte_count(&self) -> usize {
         1
     }
-    fn process_input_data(&self, _: &[u16]) -> Result<Vec<ChannelValue>> {
-        Ok((0..4).map(|_| ChannelValue::None).collect())
-    }
     fn process_output_data(&self, data: &[u16]) -> Result<Vec<ChannelValue>> {
         if data.len() != 1 {
             return Err(Error::BufferLength);

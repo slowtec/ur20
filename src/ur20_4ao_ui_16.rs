@@ -53,12 +53,6 @@ impl ProcessModbusTcpData for Mod {
     fn process_output_byte_count(&self) -> usize {
         8
     }
-    fn process_input_data(&self, data: &[u16]) -> Result<Vec<ChannelValue>> {
-        if !data.is_empty() {
-            return Err(Error::BufferLength);
-        }
-        Ok((0..4).map(|_| ChannelValue::None).collect())
-    }
     fn process_output_data(&self, data: &[u16]) -> Result<Vec<ChannelValue>> {
         if data.len() != 4 {
             return Err(Error::BufferLength);
@@ -247,12 +241,8 @@ mod tests {
     fn test_process_output_values() {
         let mut m = Mod::default();
         assert_eq!(
-            m.process_output_values(&[
-                Decimal32(0.0),
-                Decimal32(99.9),
-                Disabled,
-                Decimal32(3.3),
-            ]).unwrap(),
+            m.process_output_values(&[Decimal32(0.0), Decimal32(99.9), Disabled, Decimal32(3.3),])
+                .unwrap(),
             vec![0, 0, 0, 0]
         );
         m.ch_params[0].output_range = AnalogUIRange::mA0To20;
