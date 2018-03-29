@@ -61,6 +61,8 @@ pub struct Coupler {
     offsets: Vec<ModuleOffset>,
     /// statefull message processors
     processors: HashMap<usize, ur20_1com_232_485_422::MessageProcessor>,
+    /// Last transmission counter  state
+    last_tx_cnt: usize,
 }
 
 /// Raw config data to create a coupler instance.
@@ -133,6 +135,7 @@ impl Coupler {
             in_values: vec![],
             out_values: vec![],
             write: HashMap::new(),
+            last_tx_cnt: 0,
             modules,
             offsets,
             processors,
@@ -176,9 +179,10 @@ impl Coupler {
                         out_bytes.insert(m_nr, ChannelValue::None);
                         in_bytes.insert(m_nr, ChannelValue::None);
 
-                        if !out_v.data.is_empty() && out_v.tx_cnt != in_v.tx_cnt_ack {
+                        if !out_v.data.is_empty() && out_v.tx_cnt != self.last_tx_cnt {
                             out_bytes.insert(m_nr, ChannelValue::Bytes(out_v.data.clone()));
                         }
+                        self.last_tx_cnt = out_v.tx_cnt;
 
                         if let Some(v) = self.write.remove(&Address {
                             module: m_nr,
@@ -1052,13 +1056,18 @@ mod tests {
             assert_eq!(inputs[2][0], ChannelValue::None);
             assert_eq!(outputs[2][0], ChannelValue::None);
         }
-        let _process_output_data = c.next(&process_input_data, &process_output_data).unwrap();
+        let process_output_data = c.next(&process_input_data, &process_output_data).unwrap();
         {
             let inputs = c.inputs();
             let outputs = c.outputs();
             assert_eq!(outputs[1][1], ChannelValue::Bit(true));
             assert_eq!(inputs[2][0], ChannelValue::None);
             assert_eq!(outputs[2][0], ChannelValue::Bytes(b"Hello ".to_vec()));
+        }
+        let _process_output_data = c.next(&process_input_data, &process_output_data).unwrap();
+        {
+            let outputs = c.outputs();
+            assert_eq!(outputs[2][0], ChannelValue::None);
         }
     }
 }
