@@ -98,10 +98,7 @@ impl ProcessModbusTcpData for Mod {
                 )
             })
             .map(|(val, range, format)| {
-                let factor = f32::from(match *format {
-                    DataFormat::S5 => S5_FACTOR,
-                    DataFormat::S7 => S7_FACTOR,
-                });
+                let factor = format.factor();
                 match *range {
                     mA0To20 => ChannelValue::Decimal32(val * 20.0 / factor),
                     mA4To20 => ChannelValue::Decimal32(val * 16.0 / factor + 4.0),

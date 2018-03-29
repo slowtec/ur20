@@ -14,6 +14,7 @@ pub(crate) mod util;
 pub mod ur20_fbc_mod_tcp;
 pub mod ur20_1com_232_485_422;
 pub mod ur20_4ao_ui_16;
+pub mod ur20_4ao_ui_16_diag;
 pub mod ur20_4do_p;
 pub mod ur20_4di_p;
 pub mod ur20_4ai_ui_16_diag;
@@ -183,6 +184,15 @@ pub enum DataFormat {
     S5 = 0,
     /// Siemens S7 format
     S7 = 1,
+}
+
+impl DataFormat {
+    fn factor(&self) -> f32 {
+        f32::from(match *self {
+            DataFormat::S5 => S5_FACTOR,
+            DataFormat::S7 => S7_FACTOR,
+        })
+    }
 }
 
 /// Analog input or output range (current and voltage).
