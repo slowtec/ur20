@@ -105,6 +105,7 @@ impl ProcessModbusTcpData for Mod {
 fn value_to_u16(v: &ChannelValue, range: &AnalogUIRange, format: &DataFormat) -> Result<u16> {
     match *v {
         ChannelValue::Decimal32(v) => Ok(util::analog_ui_value_to_u16(v, range, format)),
+        ChannelValue::Disabled => Ok(0),
         _ => Err(Error::ChannelValue),
     }
 }
@@ -215,7 +216,7 @@ mod tests {
             Decimal32(0.0),
             Decimal32(0.0),
             Decimal32(0.0),
-            Decimal32(0.0),
+            Disabled,
         ]).is_ok());
     }
 
@@ -249,7 +250,7 @@ mod tests {
             m.process_output_values(&[
                 Decimal32(0.0),
                 Decimal32(99.9),
-                Decimal32(0.0),
+                Disabled,
                 Decimal32(3.3),
             ]).unwrap(),
             vec![0, 0, 0, 0]

@@ -72,6 +72,9 @@ impl ProcessModbusTcpData for Mod {
                         res = set_bit_16(res, i);
                     }
                 }
+                ChannelValue::Disabled => {
+                    // do nothing
+                }
                 _ => {
                     return Err(Error::ChannelValue);
                 }
@@ -163,6 +166,12 @@ mod tests {
     #[test]
     fn test_process_output_values() {
         let m = Mod::default();
+        assert_eq!(
+            m.process_output_values(&[Bit(true), Bit(false), Bit(true), Bit(true)])
+                .unwrap(),
+            vec![0b0000_0000_0000_0000_1101]
+        );
+
         assert_eq!(
             m.process_output_values(&[Bit(true), Bit(false), Bit(true), Bit(true)])
                 .unwrap(),
