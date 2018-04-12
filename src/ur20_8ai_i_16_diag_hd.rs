@@ -177,7 +177,7 @@ mod tests {
     fn test_process_input_data_with_missing_channel_parameters() {
         let mut m = Mod::default();
         m.ch_params = vec![];
-        assert!(m.process_input_data(&vec![0, 0, 0, 0, 0, 0, 0, 0]).is_err());
+        assert!(m.process_input_data(&vec![0; 8]).is_err());
     }
 
     #[test]
@@ -185,9 +185,7 @@ mod tests {
         let mut m = Mod::default();
         assert_eq!(
             m.process_input_data(&vec![5, 0, 7, 8, 0, 0, 0, 0]).unwrap(),
-            vec![
-                Disabled, Disabled, Disabled, Disabled, Disabled, Disabled, Disabled, Disabled
-            ]
+            vec![Disabled; 8]
         );
 
         m.ch_params[0].measurement_range = AnalogIRange::mA0To20;
@@ -268,6 +266,7 @@ mod tests {
 
     #[test]
     fn test_module_parameters_from_raw_data() {
+        #[cfg_attr(rustfmt, rustfmt_skip)]
         let mut data = vec![
             0,          // Module
             0, 0, 0, 0, // CH 0
@@ -315,6 +314,7 @@ mod tests {
 
     #[test]
     fn test_channel_parameters_from_raw_data() {
+        #[cfg_attr(rustfmt, rustfmt_skip)]
         let data = vec![
             0,          // Module
             0, 0, 1, 2, // CH 0
@@ -366,6 +366,7 @@ mod tests {
 
     #[test]
     fn test_parameters_from_invalid_raw_data() {
+        #[cfg_attr(rustfmt, rustfmt_skip)]
         let mut data = vec![
             0,          // Module
             0, 0, 0, 0, // CH 0
@@ -405,6 +406,7 @@ mod tests {
 
     #[test]
     fn create_module_from_modbus_parameter_data() {
+        #[cfg_attr(rustfmt, rustfmt_skip)]
         let data = vec![
             0,          // Module
             0, 0, 0, 0, // CH 0

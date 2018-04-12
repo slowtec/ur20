@@ -1,8 +1,8 @@
 //! Digital output module UR20-4DO-P
 
 use super::*;
-use util::*;
 use ur20_fbc_mod_tcp::{FromModbusParameterData, ProcessModbusTcpData};
+use util::*;
 
 #[derive(Debug)]
 pub struct Mod {
@@ -54,7 +54,7 @@ impl ProcessModbusTcpData for Mod {
         }
         Ok((0..4)
             .map(|i| test_bit_16(data[0], i))
-            .map(|x| ChannelValue::Bit(x))
+            .map(ChannelValue::Bit)
             .collect())
     }
     fn process_output_values(&self, values: &[ChannelValue]) -> Result<Vec<u16>> {

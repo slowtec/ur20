@@ -1,5 +1,5 @@
-use byteorder::{ByteOrder, LittleEndian};
 use super::*;
+use byteorder::{ByteOrder, LittleEndian};
 
 pub fn set_bit(mut val: u8, bit_nr: usize) -> u8 {
     val |= bit_mask(bit_nr) as u8;

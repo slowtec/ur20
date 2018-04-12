@@ -1,7 +1,7 @@
 //! Digital input module UR20-4DI-P
 
-use super::*;
 use super::util::test_bit_16;
+use super::*;
 use num_traits::cast::FromPrimitive;
 use ur20_fbc_mod_tcp::{FromModbusParameterData, ProcessModbusTcpData};
 

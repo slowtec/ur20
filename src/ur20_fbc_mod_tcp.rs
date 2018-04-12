@@ -1,8 +1,8 @@
 //! Modbus TCP fieldbus coupler UR20-FBC-MOD-TCP
 
 use super::*;
-use util::*;
 use std::collections::HashMap;
+use util::*;
 
 type Word = u16;
 type RegisterAddress = u16;
@@ -43,10 +43,8 @@ pub trait ProcessModbusTcpData: Module {
     }
     /// Transform channel values into raw module output data.
     fn process_output_values(&self, values: &[ChannelValue]) -> Result<Vec<u16>> {
-        if !values.is_empty() {
-            if values.len() != self.module_type().channel_count() {
-                return Err(Error::ChannelValue);
-            }
+        if !values.is_empty() && values.len() != self.module_type().channel_count() {
+            return Err(Error::ChannelValue);
         }
         Ok(vec![])
     }
@@ -184,8 +182,8 @@ impl Coupler {
 
     pub fn next(&mut self, process_input: &[u16], process_output: &[u16]) -> Result<Vec<u16>> {
         let mut infos: Vec<_> = self.modules.iter().zip(&self.offsets).collect();
-        self.in_values = process_input_data(&mut *infos, process_input)?;
-        self.out_values = process_output_data(&mut *infos, process_output)?;
+        self.in_values = process_input_data(&*infos, process_input)?;
+        self.out_values = process_output_data(&*infos, process_output)?;
 
         let mut next_out_values = self.out_values.clone();
         let mut in_bytes = HashMap::new();
@@ -232,10 +230,10 @@ impl Coupler {
                 }
             }
         }
-        for (m_nr, v) in in_bytes.into_iter() {
+        for (m_nr, v) in in_bytes {
             self.in_values[m_nr][0] = v;
         }
-        for (m_nr, v) in out_bytes.into_iter() {
+        for (m_nr, v) in out_bytes {
             self.out_values[m_nr][0] = v;
         }
         process_output_values(&mut *infos, &next_out_values)
@@ -701,14 +699,12 @@ mod tests {
         let m0 = super::ur20_4ao_ui_16::Mod::default();
         let m1 = super::ur20_4ai_rtd_diag::Mod::default();
 
-        let values = vec![
-            vec![
-                ChannelValue::Decimal32(15.0),
-                ChannelValue::Decimal32(20.0),
-                ChannelValue::Decimal32(20.0),
-                ChannelValue::Decimal32(10.0),
-            ],
-        ];
+        let values = vec![vec![
+            ChannelValue::Decimal32(15.0),
+            ChannelValue::Decimal32(20.0),
+            ChannelValue::Decimal32(20.0),
+            ChannelValue::Decimal32(10.0),
+        ]];
 
         let mod0: Box<ProcessModbusTcpData> = Box::new(m0);
         let mod1: Box<ProcessModbusTcpData> = Box::new(m1);
@@ -814,14 +810,12 @@ mod tests {
     #[test]
     fn test_process_output_values_with_invalid_offset_c() {
         let m0 = super::ur20_4ao_ui_16::Mod::default();
-        let values = vec![
-            vec![
-                ChannelValue::Decimal32(15.0),
-                ChannelValue::Decimal32(20.0),
-                ChannelValue::Decimal32(20.0),
-                ChannelValue::Decimal32(10.0),
-            ],
-        ];
+        let values = vec![vec![
+            ChannelValue::Decimal32(15.0),
+            ChannelValue::Decimal32(20.0),
+            ChannelValue::Decimal32(20.0),
+            ChannelValue::Decimal32(10.0),
+        ]];
         let mod0: Box<ProcessModbusTcpData> = Box::new(m0);
         let addr_out_0 = to_bit_address(0, 0);
         let o0 = ModuleOffset {
@@ -913,7 +907,7 @@ mod tests {
             param_addresses_and_register_counts(&[
                 ModuleType::UR20_4DI_P,
                 ModuleType::UR20_4DO_P,
-                ModuleType::UR20_4AI_RTD_DIAG
+                ModuleType::UR20_4AI_RTD_DIAG,
             ]),
             vec![(0xC000, 4), (0xC100, 4), (0xC200, 29)]
         );
@@ -986,8 +980,8 @@ mod tests {
 
     #[test]
     fn process_in_out_data_with_coupler() {
-        use ur20_1com_232_485_422::*;
         use num_traits::ToPrimitive;
+        use ur20_1com_232_485_422::*;
 
         let cfg = CouplerConfig {
             modules: vec![

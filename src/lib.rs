@@ -5,22 +5,22 @@ extern crate byteorder;
 extern crate num_derive;
 extern crate num_traits;
 
-use std::str::FromStr;
 use std::result;
+use std::str::FromStr;
 
 mod error;
 
-pub(crate) mod util;
-pub mod ur20_fbc_mod_tcp;
 pub mod ur20_1com_232_485_422;
-pub mod ur20_4ao_ui_16;
-pub mod ur20_4ao_ui_16_diag;
-pub mod ur20_4do_p;
-pub mod ur20_4di_p;
-pub mod ur20_4ai_ui_16_diag;
-pub mod ur20_8ai_i_16_diag_hd;
 pub mod ur20_2fcnt_100;
 pub mod ur20_4ai_rtd_diag;
+pub mod ur20_4ai_ui_16_diag;
+pub mod ur20_4ao_ui_16;
+pub mod ur20_4ao_ui_16_diag;
+pub mod ur20_4di_p;
+pub mod ur20_4do_p;
+pub mod ur20_8ai_i_16_diag_hd;
+pub mod ur20_fbc_mod_tcp;
+pub(crate) mod util;
 
 pub use error::*;
 

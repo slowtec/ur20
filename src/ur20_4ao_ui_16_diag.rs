@@ -221,7 +221,7 @@ mod tests {
             Bit(false),
             Decimal32(0.0),
             Decimal32(0.0),
-            Decimal32(0.0)
+            Decimal32(0.0),
         ]).is_err());
     }
 
@@ -241,7 +241,7 @@ mod tests {
     fn test_process_output_values() {
         let mut m = Mod::default();
         assert_eq!(
-            m.process_output_values(&[Decimal32(0.0), Decimal32(99.9), Disabled, Decimal32(3.3),])
+            m.process_output_values(&[Decimal32(0.0), Decimal32(99.9), Disabled, Decimal32(3.3)])
                 .unwrap(),
             vec![0, 0, 0, 0]
         );
@@ -290,6 +290,7 @@ mod tests {
 
     #[test]
     fn test_channel_parameters_from_raw_data() {
+        #[cfg_attr(rustfmt, rustfmt_skip)]
         let data = vec![
             1, 8, 0,      0, // CH 0
             1, 0, 0,      1, // CH 1
@@ -358,6 +359,7 @@ mod tests {
 
     #[test]
     fn create_module_from_modbus_parameter_data() {
+        #[cfg_attr(rustfmt, rustfmt_skip)]
         let data = vec![
             1, 0, 0,0,  // CH 0
             0, 8, 0,0,  // CH 1

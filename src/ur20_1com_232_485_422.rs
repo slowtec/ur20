@@ -1,9 +1,9 @@
 //! Serial communication module UR20-1COM-232-485-422
 
 use super::*;
-use util::*;
 use num_traits::cast::FromPrimitive;
 use ur20_fbc_mod_tcp::{FromModbusParameterData, ProcessModbusTcpData};
+use util::*;
 
 #[derive(Debug)]
 pub struct Mod {
@@ -430,14 +430,12 @@ impl MessageProcessor {
             out_msg.tx_buf_flush = true;
             out_msg.active = true;
             self.init = false;
-        } else {
-            if self.out_data.len() > 0 {
-                if Self::inc_tx_cnt_ack(input.tx_cnt_ack) != output.tx_cnt {
-                    out_msg.tx_cnt = Self::inc_tx_cnt_ack(input.tx_cnt_ack);
-                    out_msg.active = true;
-                    out_msg.data = self.out_data.remove(0);
-                }
-            }
+        } else if !self.out_data.is_empty()
+            && Self::inc_tx_cnt_ack(input.tx_cnt_ack) != output.tx_cnt
+        {
+            out_msg.tx_cnt = Self::inc_tx_cnt_ack(input.tx_cnt_ack);
+            out_msg.active = true;
+            out_msg.data = self.out_data.remove(0);
         }
         if input.data_available {
             self.in_data.extend_from_slice(&input.data);
@@ -456,7 +454,7 @@ impl MessageProcessor {
 
     /// Read data form internal buffer.
     pub fn read(&mut self) -> Option<Vec<u8>> {
-        if self.in_data.len() > 0 {
+        if !self.in_data.is_empty() {
             Some(self.in_data.split_off(0))
         } else {
             None
