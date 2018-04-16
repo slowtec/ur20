@@ -1,7 +1,7 @@
 //! Modbus TCP fieldbus coupler UR20-FBC-MOD-TCP
 
 use super::*;
-use std::collections::HashMap;
+use std::{collections::HashMap, io::Read};
 use util::*;
 
 type Word = u16;
@@ -164,12 +164,19 @@ impl Coupler {
             && addr.channel < self.modules[addr.module].module_type().channel_count()
     }
 
+    /// Returns current coupler input state.
     pub fn inputs(&self) -> &Vec<Vec<ChannelValue>> {
         &self.in_values
     }
 
+    /// Returns current coupler output state.
     pub fn outputs(&self) -> &Vec<Vec<ChannelValue>> {
         &self.out_values
+    }
+
+    /// Returns a reader to the underlying communication data buffer.
+    pub fn reader<'r>(&'r mut self, module_nr: usize) -> Option<&'r mut Read> {
+        self.processors.get_mut(&module_nr).map(|r| r as &mut Read)
     }
 
     pub fn set_output(&mut self, addr: &Address, value: ChannelValue) -> Result<()> {
@@ -212,10 +219,9 @@ impl Coupler {
 
                         let rs_out = p.next(in_v, out_v);
                         next_out_values[m_nr][0] = ChannelValue::ComRsOut(rs_out);
-                        if let Some(d) = p.read() {
-                            if !d.is_empty() {
-                                in_bytes.insert(m_nr, ChannelValue::Bytes(d));
-                            }
+
+                        if in_v.data_available && !in_v.data.is_empty() {
+                            in_bytes.insert(m_nr, ChannelValue::Bytes(in_v.data.clone()));
                         }
                     }
                 }
@@ -1000,17 +1006,11 @@ mod tests {
             params: vec![
                 vec![0; 4],
                 vec![0; 4],
+                #[cfg_attr(rustfmt, rustfmt_skip)]
                 vec![
                     ProcessDataLength::EightBytes.to_u16().unwrap(),
                     OperatingMode::RS232.to_u16().unwrap(),
-                    0,
-                    0,
-                    0,
-                    0,
-                    0,
-                    0,
-                    0,
-                    0,
+                    0, 0, 0, 0, 0, 0, 0, 0,
                 ],
             ],
         };
@@ -1076,7 +1076,7 @@ mod tests {
 
         assert_eq!(c.write.len(), 2);
 
-        let process_input_data = vec![0b_0101, 0b_0000_0000_0000_0000, 0, 0, 0];
+        let process_input_data = vec![0b_0101, 0, 0, 0, 0];
         let process_output_data = c.next(&process_input_data, &process_output_data).unwrap();
         assert_eq!(c.write.len(), 0);
         {
@@ -1094,11 +1094,28 @@ mod tests {
             assert_eq!(inputs[2][0], ChannelValue::None);
             assert_eq!(outputs[2][0], ChannelValue::Bytes(b"Hello ".to_vec()));
         }
-        let _process_output_data = c.next(&process_input_data, &process_output_data).unwrap();
+        let process_output_data = c.next(&process_input_data, &process_output_data).unwrap();
         {
             let outputs = c.outputs();
             assert_eq!(outputs[2][0], ChannelValue::None);
         }
+
+        let process_input_data = vec![0b_0101, 0b_0000_0101_1111_0001, 0xDDEE, 0xFFFF, 0x00AA];
+        let _process_output_data = c.next(&process_input_data, &process_output_data).unwrap();
+
+        assert!(c.reader(0).is_none());
+        assert!(c.reader(1).is_none());
+        assert!(c.reader(2).is_some());
+        let mut buf = [0; 20];
+        let reader = c.reader(2).unwrap();
+        let len_0 = reader.read(&mut buf).unwrap();
+        let len_1 = reader.read(&mut buf).unwrap();
+        assert_eq!(len_0, 9);
+        assert_eq!(len_1, 0);
+        assert_eq!(
+            &buf[0..9],
+            &[0, 0, 0xCD, 0xAB, 0xEE, 0xDD, 0xFF, 0xFF, 0xAA]
+        );
     }
 
     #[test]

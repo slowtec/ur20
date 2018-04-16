@@ -2,6 +2,8 @@
 
 use super::*;
 use num_traits::cast::FromPrimitive;
+use std::{cmp,
+          io::{self, Read}};
 use ur20_fbc_mod_tcp::{FromModbusParameterData, ProcessModbusTcpData};
 use util::*;
 
@@ -452,19 +454,25 @@ impl MessageProcessor {
         tx_cnt_ack
     }
 
-    /// Read data form internal buffer.
-    pub fn read(&mut self) -> Option<Vec<u8>> {
-        if !self.in_data.is_empty() {
-            Some(self.in_data.split_off(0))
-        } else {
-            None
-        }
-    }
-
     /// Write data to internal buffer.
     pub fn write(&mut self, data: &[u8]) {
         for c in data.chunks(self.process_data_len.user_data_len()) {
             self.out_data.push(c.to_vec());
+        }
+    }
+}
+
+impl Read for MessageProcessor {
+    fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
+        if !self.in_data.is_empty() {
+            let len = cmp::min(buf.len(), self.in_data.len());
+
+            for i in 0..len {
+                buf[i] = self.in_data.remove(0);
+            }
+            Ok(len)
+        } else {
+            Ok(0)
         }
     }
 }
@@ -928,17 +936,20 @@ mod tests {
         let mut p = MessageProcessor::new(ProcessDataLength::EightBytes);
         let mut input = ProcessInput::default();
         let mut output = ProcessOutput::default();
+        let mut buf = vec![0; 11];
 
         input.ready = true;
         assert_eq!(input.data_available, false);
         output = p.next(&input, &output);
-        assert_eq!(p.read(), None);
+        assert_eq!(p.read(&mut buf).unwrap(), 0);
+        assert_eq!(buf, vec![0; 11]);
 
         input.data = b"a msg".to_vec();
         input.data_available = true;
         output = p.next(&input, &output);
-        assert_eq!(p.read(), Some(b"a msg".to_vec()));
-        assert_eq!(p.read(), None);
+        assert_eq!(p.read(&mut buf).unwrap(), 5);
+        assert_eq!(p.read(&mut buf).unwrap(), 0);
+        assert_eq!(&buf[0..5], b"a msg");
 
         input.data = b"Foo".to_vec();
         output = p.next(&input, &output);
@@ -946,7 +957,9 @@ mod tests {
         output = p.next(&input, &output);
         input.data = b" baz".to_vec();
         p.next(&input, &output);
-        assert_eq!(p.read(), Some(b"Foo bar baz".to_vec()));
+        assert_eq!(p.read(&mut buf).unwrap(), 11);
+        assert_eq!(&buf, b"Foo bar baz");
+        assert_eq!(p.read(&mut buf).unwrap(), 0);
     }
 
     #[test]
