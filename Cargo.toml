@@ -5,8 +5,8 @@ version = "0.3.0"
 authors = ["Markus Kohlhase <markus.kohlhase@slowtec.de>"]
 license = "MIT/Apache-2.0"
 readme = "README.md"
-homepage = "https://github.com/slowtec/rust-ur20"
-repository = "https://github.com/slowtec/rust-ur20"
+homepage = "https://github.com/slowtec/ur20"
+repository = "https://github.com/slowtec/ur20"
 keywords = ["fieldbus"]
 
 [dependencies]
@@ -15,5 +15,5 @@ num-traits = "0.2"
 num-derive = "0.2"
 
 [badges]
-travis-ci = { repository = "slowtec/rust-ur20" }
-appveyor = { repository = "slowtec/rust-ur20" }
+travis-ci = { repository = "slowtec/ur20" }
+appveyor = { repository = "slowtec/ur20" }
