@@ -29,6 +29,7 @@ pub struct ProcessInput {
     pub tx_cnt_ack: usize,
     /// Indicates whether the communication with the device is without fault or
     /// not.
+    /// Flag name: `STAT`.
     pub ready: bool,
     /// User data of the transfered telegramm segment
     pub data: Vec<u8>,
@@ -57,8 +58,9 @@ pub struct ProcessOutput {
     /// been taken over successfully.
     /// The sequence is: 0,1,2,3,0,...
     pub rx_cnt_ack: usize,
-    /// The communication status.
-    pub active: bool,
+    /// Reset communication status.
+    /// Flag name: `STATRES`
+    pub reset: bool,
     /// User data of the transfered telegramm segment
     pub data: Vec<u8>,
 }
@@ -204,7 +206,7 @@ impl Default for ProcessOutput {
             disable_tx_hw_buffer: false,
             tx_cnt: 0,
             rx_cnt_ack: 0,
-            active: false,
+            reset: false,
             data: vec![],
         }
     }
@@ -250,7 +252,7 @@ impl ProcessOutput {
         status = cnt_to_status_byte(self.tx_cnt, status);
         status = cnt_ack_to_status_byte(self.rx_cnt_ack, status);
 
-        if self.active {
+        if self.reset {
             status = set_bit(status, 7);
         }
 
@@ -286,7 +288,7 @@ impl ProcessOutput {
             disable_tx_hw_buffer: test_bit(status, 2),
             tx_cnt: cnt_from_status_byte(status),
             rx_cnt_ack: cnt_ack_from_status_byte(status),
-            active: test_bit(status, 7),
+            reset: test_bit(status, 7),
             data: bytes[2..data_len + 2].into(),
         };
 
@@ -432,13 +434,13 @@ impl MessageProcessor {
             // flush RX and TX buffers
             out_msg.rx_buf_flush = true;
             out_msg.tx_buf_flush = true;
-            out_msg.active = true;
+            out_msg.reset = true;
             self.init = false;
         } else if !self.out_data.is_empty()
             && Self::inc_tx_cnt_ack(input.tx_cnt_ack) != output.tx_cnt
         {
             out_msg.tx_cnt = Self::inc_tx_cnt_ack(input.tx_cnt_ack);
-            out_msg.active = true;
+            out_msg.reset = true;
             out_msg.data = self.out_data.remove(0);
         }
         if input.data_available && self.last_rx_cnt != input.rx_cnt {
@@ -630,7 +632,7 @@ mod tests {
         let default = ProcessOutput::default();
 
         let mut msg = default.clone();
-        msg.active = false;
+        msg.reset = false;
         let empty = msg.try_into_byte_message(&ProcessDataLength::EightBytes)
             .unwrap();
 
@@ -660,8 +662,8 @@ mod tests {
             .unwrap();
 
         let mut msg = default.clone();
-        msg.active = true;
-        let active = msg.try_into_byte_message(&ProcessDataLength::EightBytes)
+        msg.reset = true;
+        let reset = msg.try_into_byte_message(&ProcessDataLength::EightBytes)
             .unwrap();
 
         let mut msg = default.clone();
@@ -675,7 +677,7 @@ mod tests {
         assert_eq!(disable_tx_hw_buffer[0], 0b100);
         assert_eq!(tx_cnt[0], 0b11000);
         assert_eq!(rx_cnt_ack[0], 0b1100000);
-        assert_eq!(active[0], 0b10000000);
+        assert_eq!(reset[0], 0b10000000);
         assert_eq!(data, vec![0, 4, 4, 3, 2, 1, 0, 0]);
     }
 
@@ -688,7 +690,7 @@ mod tests {
         assert_eq!(msg.disable_tx_hw_buffer, false);
         assert_eq!(msg.tx_cnt, 3);
         assert_eq!(msg.rx_cnt_ack, 2);
-        assert_eq!(msg.active, false);
+        assert_eq!(msg.reset, false);
         assert_eq!(msg.data, vec![0, 14, 7]);
     }
 
@@ -710,7 +712,7 @@ mod tests {
             assert_eq!(out.disable_tx_hw_buffer, false);
             assert_eq!(out.tx_cnt, 3);
             assert_eq!(out.rx_cnt_ack, 2);
-            assert_eq!(out.active, false);
+            assert_eq!(out.reset, false);
             assert_eq!(out.data, vec![0, 14, 7]);
         } else {
             panic!("wrong channel data");
@@ -923,7 +925,7 @@ mod tests {
 
         assert_eq!(output.rx_buf_flush, true);
         assert_eq!(output.tx_buf_flush, true);
-        assert_eq!(output.active, true);
+        assert_eq!(output.reset, true);
         assert_eq!(p.init, false);
         assert_eq!(output.data, vec![]);
         assert_eq!(output.tx_cnt, 0);
