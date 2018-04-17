@@ -406,6 +406,7 @@ fn cnt_ack_to_status_byte(cnt: usize, mut byte: u8) -> u8 {
 #[derive(Debug)]
 pub struct MessageProcessor {
     init: bool,
+    last_rx_cnt: usize,
     in_data: Vec<u8>,
     out_data: Vec<Vec<u8>>,
     process_data_len: ProcessDataLength,
@@ -416,6 +417,7 @@ impl MessageProcessor {
     pub fn new(process_data_len: ProcessDataLength) -> MessageProcessor {
         MessageProcessor {
             init: true,
+            last_rx_cnt: 0,
             in_data: vec![],
             out_data: vec![],
             process_data_len,
@@ -439,9 +441,10 @@ impl MessageProcessor {
             out_msg.active = true;
             out_msg.data = self.out_data.remove(0);
         }
-        if input.data_available {
+        if input.data_available && self.last_rx_cnt != input.rx_cnt {
             self.in_data.extend_from_slice(&input.data);
         }
+        self.last_rx_cnt = input.rx_cnt;
         out_msg.rx_cnt_ack = input.rx_cnt;
         out_msg
     }
@@ -946,20 +949,49 @@ mod tests {
 
         input.data = b"a msg".to_vec();
         input.data_available = true;
+        input.rx_cnt = 1;
         output = p.next(&input, &output);
         assert_eq!(p.read(&mut buf).unwrap(), 5);
         assert_eq!(p.read(&mut buf).unwrap(), 0);
         assert_eq!(&buf[0..5], b"a msg");
 
         input.data = b"Foo".to_vec();
+        input.rx_cnt = 2;
         output = p.next(&input, &output);
         input.data = b" bar".to_vec();
+        input.rx_cnt = 3;
         output = p.next(&input, &output);
         input.data = b" baz".to_vec();
+        input.rx_cnt = 0;
         p.next(&input, &output);
         assert_eq!(p.read(&mut buf).unwrap(), 11);
         assert_eq!(&buf, b"Foo bar baz");
         assert_eq!(p.read(&mut buf).unwrap(), 0);
+    }
+
+    #[test]
+    fn test_input_rx_cnt_on_receiving_messages() {
+        let mut p = MessageProcessor::new(ProcessDataLength::EightBytes);
+        p.init = false;
+        let mut input = ProcessInput::default();
+        let output = ProcessOutput::default();
+
+        input.ready = true;
+        input.data = b"foo".to_vec();
+        input.data_available = true;
+        input.rx_cnt = 0;
+        p.next(&input, &output);
+        assert_eq!(p.last_rx_cnt, 0);
+        assert_eq!(p.in_data.len(), 0);
+
+        input.rx_cnt = 1;
+        p.next(&input, &output);
+        assert_eq!(p.last_rx_cnt, 1);
+        assert_eq!(p.in_data.len(), 3);
+
+        p.next(&input, &output);
+        assert_eq!(p.last_rx_cnt, 1);
+        assert_eq!(p.in_data.len(), 3);
     }
 
     #[test]
