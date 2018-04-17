@@ -1015,9 +1015,20 @@ mod tests {
             ],
         };
         let mut c = Coupler::new(&cfg).unwrap();
-        let process_input_data = vec![0b_0101, 0b_0000_0100_1111_0001, 0, 0xABCD, 0];
+        let process_input_data = vec![
+            0b_0101,               // module input for DI_P
+            0b_00000100_1111_0001, // len & status
+            0,                     // data
+            0xABCD,                // data
+            0,
+        ];
         let process_output_data = vec![0b_11_00, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+
+        // make sure the initialization process evolves
         let process_output_data = c.next(&process_input_data, &process_output_data).unwrap();
+        let process_output_data = c.next(&process_input_data, &process_output_data).unwrap();
+        let process_output_data = c.next(&process_input_data, &process_output_data).unwrap();
+
         {
             let inputs = c.inputs();
             let outputs = c.outputs();
@@ -1100,7 +1111,13 @@ mod tests {
             assert_eq!(outputs[2][0], ChannelValue::None);
         }
 
-        let process_input_data = vec![0b_0101, 0b_0000_0101_1111_0001, 0xDDEE, 0xFFFF, 0x00AA];
+        let process_input_data = vec![
+            0b_0101,               // module input for DI_P
+            0b_00000101_1111_1001, // len & status (bit 3&4: RX_CNT , bit 5&6: TX_CNT_ACK)
+            0xDDEE,                // data
+            0xFFFF,                // data
+            0x00AA,                // data
+        ];
         let _process_output_data = c.next(&process_input_data, &process_output_data).unwrap();
 
         assert!(c.reader(0).is_none());
