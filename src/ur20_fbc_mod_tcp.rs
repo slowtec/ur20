@@ -1,7 +1,8 @@
 //! Modbus TCP fieldbus coupler UR20-FBC-MOD-TCP
 
 use super::*;
-use std::{collections::HashMap, io::Read};
+use std::{collections::HashMap,
+          io::{Read, Write}};
 use util::*;
 
 type Word = u16;
@@ -179,6 +180,11 @@ impl Coupler {
         self.processors.get_mut(&module_nr).map(|r| r as &mut Read)
     }
 
+    /// Returns a writer to the underlying communication data buffer.
+    pub fn writer<'r>(&'r mut self, module_nr: usize) -> Option<&'r mut Write> {
+        self.processors.get_mut(&module_nr).map(|r| r as &mut Write)
+    }
+
     pub fn set_output(&mut self, addr: &Address, value: ChannelValue) -> Result<()> {
         if !self.is_valid_addr(addr) {
             return Err(Error::Address);
@@ -213,7 +219,7 @@ impl Coupler {
                             channel: 0,
                         }) {
                             if let ChannelValue::Bytes(ref data) = v {
-                                p.write(data);
+                                p.write(data)?;
                             }
                         }
 
@@ -1123,6 +1129,9 @@ mod tests {
         assert!(c.reader(0).is_none());
         assert!(c.reader(1).is_none());
         assert!(c.reader(2).is_some());
+        assert!(c.writer(0).is_none());
+        assert!(c.writer(1).is_none());
+        assert!(c.writer(2).is_some());
         let mut buf = [0; 20];
         let reader = c.reader(2).unwrap();
         let len_0 = reader.read(&mut buf).unwrap();

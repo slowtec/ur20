@@ -1,4 +1,4 @@
-use std::fmt;
+use std::{fmt, io};
 
 /// UR20 specific errors.
 #[derive(Debug, PartialEq)]
@@ -13,6 +13,7 @@ pub enum Error {
     ChannelValue,
     ModuleOffset,
     Address,
+    Io(String), // TODO
 }
 
 #[cfg_attr(rustfmt, rustfmt_skip)]
@@ -29,6 +30,7 @@ impl fmt::Display for Error {
             Error::ChannelValue     => write!(f, "invalid channel value(s)"),
             Error::ModuleOffset     => write!(f, "invalid module offset"),
             Error::Address          => write!(f, "invalid module address"),
+            Error::Io(ref err)      => write!(f, "I/O error: {}", err),
         }
     }
 }
@@ -47,6 +49,13 @@ impl ::std::error::Error for Error {
             Error::ChannelValue     => "invalid channel value(s)",
             Error::ModuleOffset     => "invalid module offset",
             Error::Address          => "invalid module address",
+            Error::Io(ref err)      => err
         }
+    }
+}
+
+impl From<io::Error> for Error {
+    fn from(e: io::Error) -> Self {
+        Error::Io(format!("{}", e))
     }
 }

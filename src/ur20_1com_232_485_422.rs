@@ -3,7 +3,7 @@
 use super::*;
 use num_traits::cast::FromPrimitive;
 use std::{cmp,
-          io::{self, Read}};
+          io::{self, Read, Write}};
 use ur20_fbc_mod_tcp::{FromModbusParameterData, ProcessModbusTcpData};
 use util::*;
 
@@ -476,13 +476,6 @@ impl MessageProcessor {
         }
         tx_cnt_ack
     }
-
-    /// Write data to internal buffer.
-    pub fn write(&mut self, data: &[u8]) {
-        for c in data.chunks(self.process_data_len.user_data_len()) {
-            self.out_data.push(c.to_vec());
-        }
-    }
 }
 
 impl Read for MessageProcessor {
@@ -497,6 +490,18 @@ impl Read for MessageProcessor {
         } else {
             Ok(0)
         }
+    }
+}
+
+impl Write for MessageProcessor {
+    fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
+        for c in buf.chunks(self.process_data_len.user_data_len()) {
+            self.out_data.push(c.to_vec());
+        }
+        Ok(buf.len())
+    }
+    fn flush(&mut self) -> io::Result<()> {
+        Ok(())
     }
 }
 
@@ -853,7 +858,7 @@ mod tests {
         assert_eq!(p.next(&input, &output), output);
 
         // 4. write data to processor buffer
-        p.write(b"This msg is >6 bytes");
+        p.write(b"This msg is >6 bytes").unwrap();
 
         // 5. read
         // We assume that there is still no data to receive
@@ -919,7 +924,7 @@ mod tests {
         let mut output = ProcessOutput::default();
 
         input.ready = true;
-        p.write(b"This msg is >14 bytes");
+        p.write(b"This msg is >14 bytes").unwrap();
         output = p.next(&input, &output);
         assert_eq!(output.data, b"This msg is >1");
         assert_eq!(output.tx_cnt, 1);
@@ -935,7 +940,7 @@ mod tests {
         let mut output = ProcessOutput::default();
 
         input.ready = true;
-        p.write(b"This msg is >14 bytes");
+        p.write(b"This msg is >14 bytes").unwrap();
 
         assert_eq!(p.init_state, InitState::ClearBuffers);
 
