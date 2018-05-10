@@ -2,8 +2,10 @@
 
 use super::*;
 use num_traits::cast::FromPrimitive;
-use std::{cmp,
-          io::{self, Read, Write}};
+use std::{
+    cmp,
+    io::{self, Read, Write},
+};
 use ur20_fbc_mod_tcp::{FromModbusParameterData, ProcessModbusTcpData};
 use util::*;
 

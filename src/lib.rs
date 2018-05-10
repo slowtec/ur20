@@ -5,8 +5,7 @@ extern crate byteorder;
 extern crate num_derive;
 extern crate num_traits;
 
-use std::result;
-use std::str::FromStr;
+use std::{fmt::Debug, result, str::FromStr};
 
 mod error;
 
@@ -60,7 +59,7 @@ pub struct Address {
 type Result<T> = result::Result<T, Error>;
 
 /// A generic description of modules.
-pub trait Module: std::fmt::Debug {
+pub trait Module: Debug {
     /// Get concrete i/o module type.
     fn module_type(&self) -> ModuleType;
 }
