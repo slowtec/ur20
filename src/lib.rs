@@ -12,6 +12,7 @@ mod error;
 pub mod ur20_1com_232_485_422;
 pub mod ur20_2fcnt_100;
 pub mod ur20_4ai_rtd_diag;
+pub mod ur20_4ai_ui_12;
 pub mod ur20_4ai_ui_16_diag;
 pub mod ur20_4ao_ui_16;
 pub mod ur20_4ao_ui_16_diag;
