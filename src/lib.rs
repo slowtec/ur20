@@ -49,7 +49,7 @@ pub enum ChannelValue {
 }
 
 /// A fieldbus independend channel address.
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Address {
     /// Module position (beginning at `0`)
     pub module: usize,
