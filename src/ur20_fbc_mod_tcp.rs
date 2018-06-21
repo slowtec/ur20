@@ -76,7 +76,7 @@ pub struct Coupler {
     /// buffer write requests
     write: HashMap<Address, ChannelValue>,
     /// stateless modules
-    modules: Vec<Box<ProcessModbusTcpData>>,
+    modules: Vec<Box<dyn ProcessModbusTcpData>>,
     /// data offsets
     offsets: Vec<ModuleOffset>,
     /// statefull message processors
@@ -108,7 +108,7 @@ impl Coupler {
         let mut processors = HashMap::new();
         for (i, m) in cfg.modules.iter().enumerate() {
             let param_data = &cfg.params[i];
-            let x: Box<ProcessModbusTcpData> = match *m {
+            let x: Box<dyn ProcessModbusTcpData> = match *m {
                 ModuleType::UR20_4DI_P => {
                     let m = ur20_4di_p::Mod::from_modbus_parameter_data(&param_data)?;
                     Box::new(m)
