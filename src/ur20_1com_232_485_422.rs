@@ -485,8 +485,8 @@ impl Read for MessageProcessor {
         if !self.in_data.is_empty() {
             let len = cmp::min(buf.len(), self.in_data.len());
 
-            for i in 0..len {
-                buf[i] = self.in_data.remove(0);
+            for x in buf.iter_mut().take(len) {
+                *x = self.in_data.remove(0);
             }
             Ok(len)
         } else {
