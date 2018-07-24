@@ -447,6 +447,7 @@ impl ModbusParameterRegisterCount for ModuleType {
             // Analogue input modules
             UR20_8AI_I_16_DIAG_HD => 1 + 8 * 4,
             UR20_4AI_UI_16_DIAG => 1 + 4 * 5,
+            UR20_4AI_UI_12 => 1 + 4 * 2,
 
             // Analogue output modul
             UR20_4AO_UI_16 => 0 + 4 * 3,
