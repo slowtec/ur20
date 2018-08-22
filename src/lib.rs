@@ -4,6 +4,8 @@ extern crate byteorder;
 #[macro_use]
 extern crate num_derive;
 extern crate num_traits;
+#[macro_use]
+extern crate lazy_static;
 
 use std::{fmt::Debug, result, str::FromStr};
 
@@ -28,6 +30,7 @@ const S5_FACTOR: u16 = 16_384;
 const S7_FACTOR: u16 = 27_648;
 
 use ur20_1com_232_485_422::{ProcessInput as RsIn, ProcessOutput as RsOut};
+use ur20_2fcnt_100::{ProcessInput as FcntIn, ProcessOutput as FcntOut};
 
 /// Data type used by the module channels.
 #[derive(Debug, Clone, PartialEq)]
@@ -40,6 +43,10 @@ pub enum ChannelValue {
     ComRsIn(RsIn),
     /// Special output data used by 1COM-232-485-422
     ComRsOut(RsOut),
+    /// Special input data used by 2FCNT-100
+    FcntIn(FcntIn),
+    /// Special output data used by 2FCNT-100
+    FcntOut(FcntOut),
     /// Raw binary data.
     Bytes(Vec<u8>),
     /// The channel is currently disabled.

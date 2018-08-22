@@ -141,6 +141,10 @@ impl Coupler {
                     let m = ur20_8ai_i_16_diag_hd::Mod::from_modbus_parameter_data(&param_data)?;
                     Box::new(m)
                 }
+                ModuleType::UR20_2FCNT_100 => {
+                    let m = ur20_2fcnt_100::Mod::from_modbus_parameter_data(&param_data)?;
+                    Box::new(m)
+                }
                 ModuleType::UR20_1COM_232_485_422 => {
                     let m = ur20_1com_232_485_422::Mod::from_modbus_parameter_data(&param_data)?;
                     let processor = ur20_1com_232_485_422::MessageProcessor::new(
@@ -455,6 +459,9 @@ impl ModbusParameterRegisterCount for ModuleType {
 
             // Analogue input modules DIAG
             UR20_4AI_RTD_DIAG => 1 + 4 * 7,
+
+            // Counter modules
+            UR20_2FCNT_100 => 0 + 2 * 1,
 
             // Communication modules
             UR20_1COM_232_485_422 => 10,
