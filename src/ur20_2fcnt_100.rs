@@ -9,7 +9,8 @@ lazy_static! {
     static ref MAX_MEASUREMENT_DURATION: Duration = Duration::new(8, 388_607_000);
 }
 
-const MICRO_SECS_PER_SECOND: u32 = 1_000_000;
+const MICROS_PER_SEC: u32 = 1_000_000;
+const NANOS_PER_SEC: u32 = 1_000_000_000;
 const MAX_MEASUREMENT_PERIOD: u64 = 0x7FFF_FFFF;
 
 #[derive(Debug, Clone)]
@@ -27,7 +28,23 @@ pub struct ProcessInput {
     pub active: bool,
 }
 
+impl ProcessInput {
+    /// Calculate the frequency in Hz.
+    pub fn hertz(&self) -> Option<f32> {
+        if let Some(d) = self.duration {
+            //TODO: check overflow!
+            Some(
+                self.count as f32
+                    / (d.as_secs() as f32 + d.subsec_nanos() as f32 / NANOS_PER_SEC as f32),
+            )
+        } else {
+            None
+        }
+    }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq)]
+/// Measurement command
 pub enum Command {
     /// Measurement start
     Start,
@@ -191,8 +208,8 @@ impl ProcessModbusTcpData for Mod {
                     if v.duration > *MAX_MEASUREMENT_DURATION {
                         return Err(Error::ChannelValue);
                     }
-                    let micros = v.duration.as_secs() as u32 * MICRO_SECS_PER_SECOND
-                        + v.duration.subsec_micros();
+                    let micros =
+                        v.duration.as_secs() as u32 * MICROS_PER_SEC + v.duration.subsec_micros();
                     let lo = micros & 0x0000_FFFF;
                     let hi = (micros & 0xFFFF_0000) >> 16;
                     let idx = i * 2;
@@ -506,5 +523,33 @@ mod tests {
             m.process_output_values(&[ch_0.into(), ch_1.into()])
                 .is_err()
         );
+    }
+
+    #[test]
+    fn test_process_input_hertz() {
+        let input = ProcessInput {
+            count: 100,
+            active: true,
+            duration: Some(Duration::new(1, 0)),
+        };
+        assert_eq!(input.hertz().unwrap(), 100.0);
+        let input = ProcessInput {
+            count: 5,
+            active: true,
+            duration: Some(Duration::new(0, 200_000)),
+        };
+        assert_eq!(input.hertz().unwrap(), 25000.0);
+        let input = ProcessInput {
+            count: ::std::u32::MAX,
+            active: true,
+            duration: Some(Duration::new(0, 1_000)),
+        };
+        assert_eq!(input.hertz().unwrap(), 4_294_967_295_000_000.0);
+        let input = ProcessInput {
+            count: 5,
+            active: true,
+            duration: None,
+        };
+        assert_eq!(input.hertz(), None);
     }
 }
