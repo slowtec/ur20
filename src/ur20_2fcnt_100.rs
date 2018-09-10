@@ -11,7 +11,7 @@ lazy_static! {
 
 const MICROS_PER_SEC: u32 = 1_000_000;
 const NANOS_PER_SEC: u32 = 1_000_000_000;
-const MAX_MEASUREMENT_PERIOD: u64 = 0x7FFF_FFFF;
+const MAX_MEASUREMENT_PERIOD: u64 = 0x07FF_FFFF;
 
 #[derive(Debug, Clone)]
 pub struct Mod {
@@ -368,14 +368,14 @@ mod tests {
     fn test_process_input_data_max_duration() {
         let m = Mod::default();
         let mut data = vec![0; 10];
-        data[0] = 0x7FFF;
+        data[0] = 0x07FF;
         data[1] = 0xFFFE;
-        data[4] = 0x7FFF;
+        data[4] = 0x07FF;
         data[5] = 0xFFFF;
         let expected_0 = ChannelValue::FcntIn(ProcessInput {
             count: 0,
             active: false,
-            duration: Some(Duration::from_nanos((0x7FFF_FFFF - 1) * 125)),
+            duration: Some(Duration::from_nanos((0x07FF_FFFF - 1) * 125)),
         });
         let expected_1 = ChannelValue::FcntIn(ProcessInput {
             count: 0,
