@@ -20,6 +20,7 @@ pub mod ur20_4ao_ui_16;
 pub mod ur20_4ao_ui_16_diag;
 pub mod ur20_4di_p;
 pub mod ur20_4do_p;
+pub mod ur20_4ro_co_255;
 pub mod ur20_8ai_i_16_diag_hd;
 pub mod ur20_fbc_mod_tcp;
 pub(crate) mod util;
