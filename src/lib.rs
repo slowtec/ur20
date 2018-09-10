@@ -11,6 +11,7 @@ use std::{fmt::Debug, result, str::FromStr};
 
 mod error;
 
+pub mod ur20_16do_p;
 pub mod ur20_1com_232_485_422;
 pub mod ur20_2fcnt_100;
 pub mod ur20_4ai_rtd_diag;

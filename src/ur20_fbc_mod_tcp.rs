@@ -117,6 +117,10 @@ impl Coupler {
                     let m = ur20_4do_p::Mod::from_modbus_parameter_data(&param_data)?;
                     Box::new(m)
                 }
+                ModuleType::UR20_16DO_P => {
+                    let m = ur20_16do_p::Mod::from_modbus_parameter_data(&param_data)?;
+                    Box::new(m)
+                }
                 ModuleType::UR20_4RO_CO_255 => {
                     let m = ur20_4ro_co_255::Mod::from_modbus_parameter_data(&param_data)?;
                     Box::new(m)
@@ -452,6 +456,7 @@ impl ModbusParameterRegisterCount for ModuleType {
 
             // Digital output modules
             UR20_4DO_P => 0 + 4 * 1,
+            UR20_16DO_P => 0,
             UR20_4RO_CO_255 => 0 + 4 * 1,
 
             // Analogue input modules
