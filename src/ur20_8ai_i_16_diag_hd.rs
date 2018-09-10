@@ -224,7 +224,8 @@ mod tests {
         m.ch_params[1].measurement_range = AnalogIRange::mA4To20;
         m.ch_params[1].data_format = DataFormat::S5;
 
-        let input = m.process_input_data(&vec![0xED00, 0x0F333, 0, 0, 0, 0, 0, 0])
+        let input = m
+            .process_input_data(&vec![0xED00, 0x0F333, 0, 0, 0, 0, 0, 0])
             .unwrap();
 
         if let ChannelValue::Decimal32(v) = input[0] {

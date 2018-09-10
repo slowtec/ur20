@@ -204,7 +204,8 @@ impl Coupler {
     }
 
     pub fn next(&mut self, process_input: &[u16], process_output: &[u16]) -> Result<Vec<u16>> {
-        let infos: Vec<_> = self.modules
+        let infos: Vec<_> = self
+            .modules
             .iter()
             .zip(&self.offsets)
             .map(|(m, o)| (&**m, o))
@@ -1094,20 +1095,24 @@ mod tests {
             },
             ChannelValue::Bit(true),
         ).unwrap();
-        assert!(c.set_output(
-            &Address {
-                module: 3,
-                channel: 0,
-            },
-            ChannelValue::Bit(true)
-        ).is_err());
-        assert!(c.set_output(
-            &Address {
-                module: 2,
-                channel: 1,
-            },
-            ChannelValue::Bit(true)
-        ).is_err());
+        assert!(
+            c.set_output(
+                &Address {
+                    module: 3,
+                    channel: 0,
+                },
+                ChannelValue::Bit(true)
+            ).is_err()
+        );
+        assert!(
+            c.set_output(
+                &Address {
+                    module: 2,
+                    channel: 1,
+                },
+                ChannelValue::Bit(true)
+            ).is_err()
+        );
 
         assert_eq!(c.write.len(), 2);
 

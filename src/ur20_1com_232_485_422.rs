@@ -638,13 +638,16 @@ mod tests {
         msg1.tx_cnt = 4;
         msg2.rx_cnt_ack = 4;
         msg3.data = vec![0, 0, 0, 0, 0, 0, 0];
-        let err1 = msg1.try_into_byte_message(&ProcessDataLength::EightBytes)
+        let err1 = msg1
+            .try_into_byte_message(&ProcessDataLength::EightBytes)
             .err()
             .unwrap();
-        let err2 = msg2.try_into_byte_message(&ProcessDataLength::EightBytes)
+        let err2 = msg2
+            .try_into_byte_message(&ProcessDataLength::EightBytes)
             .err()
             .unwrap();
-        let err3 = msg3.try_into_byte_message(&ProcessDataLength::EightBytes)
+        let err3 = msg3
+            .try_into_byte_message(&ProcessDataLength::EightBytes)
             .err()
             .unwrap();
         assert_eq!(err1, Error::SequenceNumber);
@@ -658,42 +661,50 @@ mod tests {
 
         let mut msg = default.clone();
         msg.reset = false;
-        let empty = msg.try_into_byte_message(&ProcessDataLength::EightBytes)
+        let empty = msg
+            .try_into_byte_message(&ProcessDataLength::EightBytes)
             .unwrap();
 
         let mut msg = default.clone();
         msg.rx_buf_flush = true;
-        let flush_rx_buf = msg.try_into_byte_message(&ProcessDataLength::EightBytes)
+        let flush_rx_buf = msg
+            .try_into_byte_message(&ProcessDataLength::EightBytes)
             .unwrap();
 
         let mut msg = default.clone();
         msg.tx_buf_flush = true;
-        let flush_tx_buf = msg.try_into_byte_message(&ProcessDataLength::EightBytes)
+        let flush_tx_buf = msg
+            .try_into_byte_message(&ProcessDataLength::EightBytes)
             .unwrap();
 
         let mut msg = default.clone();
         msg.disable_tx_hw_buffer = true;
-        let disable_tx_hw_buffer = msg.try_into_byte_message(&ProcessDataLength::EightBytes)
+        let disable_tx_hw_buffer = msg
+            .try_into_byte_message(&ProcessDataLength::EightBytes)
             .unwrap();
 
         let mut msg = default.clone();
         msg.tx_cnt = 3;
-        let tx_cnt = msg.try_into_byte_message(&ProcessDataLength::EightBytes)
+        let tx_cnt = msg
+            .try_into_byte_message(&ProcessDataLength::EightBytes)
             .unwrap();
 
         let mut msg = default.clone();
         msg.rx_cnt_ack = 3;
-        let rx_cnt_ack = msg.try_into_byte_message(&ProcessDataLength::EightBytes)
+        let rx_cnt_ack = msg
+            .try_into_byte_message(&ProcessDataLength::EightBytes)
             .unwrap();
 
         let mut msg = default.clone();
         msg.reset = true;
-        let reset = msg.try_into_byte_message(&ProcessDataLength::EightBytes)
+        let reset = msg
+            .try_into_byte_message(&ProcessDataLength::EightBytes)
             .unwrap();
 
         let mut msg = default.clone();
         msg.data = vec![4, 3, 2, 1];
-        let data = msg.try_into_byte_message(&ProcessDataLength::EightBytes)
+        let data = msg
+            .try_into_byte_message(&ProcessDataLength::EightBytes)
             .unwrap();
 
         assert_eq!(empty, vec![0, 0, 0, 0, 0, 0, 0, 0]);
@@ -765,10 +776,12 @@ mod tests {
     fn test_process_output_values_with_invalid_input_len() {
         let m = Mod::default();
         assert!(m.process_output_values(&vec![]).is_err());
-        assert!(m.process_output_values(&vec![
-            ChannelValue::ComRsIn(ProcessInput::default()),
-            ChannelValue::ComRsIn(ProcessInput::default()),
-        ]).is_err());
+        assert!(
+            m.process_output_values(&vec![
+                ChannelValue::ComRsIn(ProcessInput::default()),
+                ChannelValue::ComRsIn(ProcessInput::default()),
+            ]).is_err()
+        );
     }
 
     #[test]
@@ -836,7 +849,8 @@ mod tests {
         m.mod_params.process_data_len = ProcessDataLength::SixteenBytes;
         let mut out = ProcessOutput::default();
         out.data = vec![0x0A, 0x0B, 0, 0x0C];
-        let res = m.process_output_values(&vec![ChannelValue::ComRsOut(out)])
+        let res = m
+            .process_output_values(&vec![ChannelValue::ComRsOut(out)])
             .unwrap();
         assert_eq!(res.len(), 8);
         assert_eq!(res, vec![0x0400, 0x0B0A, 0x0C00, 0, 0, 0, 0, 0]);

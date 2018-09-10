@@ -59,7 +59,8 @@ impl ProcessModbusTcpData for Mod {
         if data.len() != 4 {
             return Err(Error::BufferLength);
         }
-        Ok(data.into_iter()
+        Ok(data
+            .into_iter()
             .enumerate()
             .map(|(i, v)| {
                 (
@@ -206,35 +207,33 @@ mod tests {
             m.process_output_values(&[Decimal32(0.0), Decimal32(0.0), Decimal32(0.0)])
                 .is_err()
         );
-        assert!(m.process_output_values(&[
-            Decimal32(0.0),
-            Decimal32(0.0),
-            Disabled,
-            Decimal32(0.0),
-        ]).is_ok());
+        assert!(
+            m.process_output_values(&[Decimal32(0.0), Decimal32(0.0), Disabled, Decimal32(0.0),])
+                .is_ok()
+        );
     }
 
     #[test]
     fn test_process_output_values_with_invalid_channel_values() {
         let m = Mod::default();
-        assert!(m.process_output_values(&[
-            Bit(false),
-            Decimal32(0.0),
-            Decimal32(0.0),
-            Decimal32(0.0),
-        ]).is_err());
+        assert!(
+            m.process_output_values(&[Bit(false), Decimal32(0.0), Decimal32(0.0), Decimal32(0.0),])
+                .is_err()
+        );
     }
 
     #[test]
     fn test_process_output_values_with_missing_channel_parameters() {
         let mut m = Mod::default();
         m.ch_params = vec![];
-        assert!(m.process_output_values(&[
-            Decimal32(0.0),
-            Decimal32(0.0),
-            Decimal32(0.0),
-            Decimal32(0.0),
-        ]).is_err());
+        assert!(
+            m.process_output_values(&[
+                Decimal32(0.0),
+                Decimal32(0.0),
+                Decimal32(0.0),
+                Decimal32(0.0),
+            ]).is_err()
+        );
     }
 
     #[test]

@@ -236,7 +236,8 @@ mod tests {
         m.ch_params[0].measurement_range = RtdRange::PT100;
         m.ch_params[1].measurement_range = RtdRange::NI1000;
 
-        let input = m.process_input_data(&vec![(-2040_i16 as u16), (-640_i16 as u16), 0, 0])
+        let input = m
+            .process_input_data(&vec![(-2040_i16 as u16), (-640_i16 as u16), 0, 0])
             .unwrap();
 
         if let ChannelValue::Decimal32(v) = input[0] {
