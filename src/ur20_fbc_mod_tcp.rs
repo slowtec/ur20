@@ -1,11 +1,11 @@
 //! Modbus TCP fieldbus coupler UR20-FBC-MOD-TCP
 
 use super::*;
+use crate::util::*;
 use std::{
     collections::HashMap,
     io::{Read, Write},
 };
-use util::*;
 
 type Word = u16;
 type RegisterAddress = u16;
@@ -956,46 +956,41 @@ mod tests {
 
     #[test]
     fn validate_coupler_config_data() {
-        assert!(
-            CouplerConfig {
-                modules: vec![],
-                offsets: vec![],
-                params: vec![],
-            }.validate()
-                .is_ok()
-        );
-        assert!(
-            CouplerConfig {
-                modules: vec![ModuleType::UR20_4DI_P],
-                offsets: vec![0xFFFF, 0x0000],
-                params: vec![vec![0; 4]],
-            }.validate()
-                .is_ok()
-        );
-        assert!(
-            CouplerConfig {
-                modules: vec![ModuleType::UR20_4DI_P],
-                offsets: vec![0xFFFF, 0x0000],
-                params: vec![],
-            }.validate()
-                .is_err()
-        );
-        assert!(
-            CouplerConfig {
-                modules: vec![ModuleType::UR20_4DI_P],
-                offsets: vec![],
-                params: vec![vec![0; 4]],
-            }.validate()
-                .is_err()
-        );
-        assert!(
-            CouplerConfig {
-                modules: vec![ModuleType::UR20_4DI_P],
-                offsets: vec![0xFFFF],
-                params: vec![],
-            }.validate()
-                .is_err()
-        );
+        assert!(CouplerConfig {
+            modules: vec![],
+            offsets: vec![],
+            params: vec![],
+        }
+        .validate()
+        .is_ok());
+        assert!(CouplerConfig {
+            modules: vec![ModuleType::UR20_4DI_P],
+            offsets: vec![0xFFFF, 0x0000],
+            params: vec![vec![0; 4]],
+        }
+        .validate()
+        .is_ok());
+        assert!(CouplerConfig {
+            modules: vec![ModuleType::UR20_4DI_P],
+            offsets: vec![0xFFFF, 0x0000],
+            params: vec![],
+        }
+        .validate()
+        .is_err());
+        assert!(CouplerConfig {
+            modules: vec![ModuleType::UR20_4DI_P],
+            offsets: vec![],
+            params: vec![vec![0; 4]],
+        }
+        .validate()
+        .is_err());
+        assert!(CouplerConfig {
+            modules: vec![ModuleType::UR20_4DI_P],
+            offsets: vec![0xFFFF],
+            params: vec![],
+        }
+        .validate()
+        .is_err());
     }
 
     #[test]
@@ -1021,8 +1016,8 @@ mod tests {
 
     #[test]
     fn process_in_out_data_with_coupler() {
+        use crate::ur20_1com_232_485_422::*;
         use num_traits::ToPrimitive;
-        use ur20_1com_232_485_422::*;
 
         let cfg = CouplerConfig {
             modules: vec![
@@ -1097,32 +1092,34 @@ mod tests {
                 channel: 0,
             },
             ChannelValue::Bytes(b"Hello modbus coupler!".to_vec()),
-        ).unwrap();
+        )
+        .unwrap();
         c.set_output(
             &Address {
                 module: 1,
                 channel: 1,
             },
             ChannelValue::Bit(true),
-        ).unwrap();
-        assert!(
-            c.set_output(
+        )
+        .unwrap();
+        assert!(c
+            .set_output(
                 &Address {
                     module: 3,
                     channel: 0,
                 },
                 ChannelValue::Bit(true)
-            ).is_err()
-        );
-        assert!(
-            c.set_output(
+            )
+            .is_err());
+        assert!(c
+            .set_output(
                 &Address {
                     module: 2,
                     channel: 1,
                 },
                 ChannelValue::Bit(true)
-            ).is_err()
-        );
+            )
+            .is_err());
 
         assert_eq!(c.write.len(), 2);
 

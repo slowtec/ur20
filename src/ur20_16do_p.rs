@@ -1,8 +1,8 @@
 //! Digital output module UR20-16DO-P
 
 use super::*;
-use ur20_fbc_mod_tcp::{FromModbusParameterData, ProcessModbusTcpData};
-use util::*;
+use crate::ur20_fbc_mod_tcp::{FromModbusParameterData, ProcessModbusTcpData};
+use crate::util::*;
 
 #[derive(Debug)]
 pub struct Mod;
@@ -72,7 +72,7 @@ impl ProcessModbusTcpData for Mod {
 mod tests {
 
     use super::*;
-    use ChannelValue::*;
+    use crate::ChannelValue::*;
 
     #[test]
     fn test_process_output_values_with_invalid_channel_len() {

@@ -26,13 +26,13 @@ pub mod ur20_8ai_i_16_diag_hd;
 pub mod ur20_fbc_mod_tcp;
 pub(crate) mod util;
 
-pub use error::*;
+pub use crate::error::*;
 
 const S5_FACTOR: u16 = 16_384;
 const S7_FACTOR: u16 = 27_648;
 
-use ur20_1com_232_485_422::{ProcessInput as RsIn, ProcessOutput as RsOut};
-use ur20_2fcnt_100::{ProcessInput as FcntIn, ProcessOutput as FcntOut};
+use crate::ur20_1com_232_485_422::{ProcessInput as RsIn, ProcessOutput as RsOut};
+use crate::ur20_2fcnt_100::{ProcessInput as FcntIn, ProcessOutput as FcntOut};
 
 /// Data type used by the module channels.
 #[derive(Debug, Clone, PartialEq)]
@@ -367,7 +367,7 @@ pub enum FrequencySuppression {
 
 impl ModuleType {
     pub fn try_from_u32(id: u32) -> Result<Self> {
-        use ModuleType::*;
+        use crate::ModuleType::*;
 
         let t = match id {
             0x0009_1F84 => UR20_4DI_P,
@@ -450,7 +450,7 @@ impl ModuleType {
     /// Returns the number of channels for a specific module type.
     #[cfg_attr(rustfmt, rustfmt_skip)]
     pub fn channel_count(&self) -> usize {
-        use ModuleType::*;
+        use crate::ModuleType::*;
 
         match *self {
 
@@ -531,7 +531,7 @@ impl ModuleType {
 impl FromStr for ModuleType {
     type Err = Error;
     fn from_str(s: &str) -> result::Result<Self, Self::Err> {
-        use ModuleType::*;
+        use crate::ModuleType::*;
         let t = match &*s.to_uppercase().replace("-","_") {
             "UR20_4DI_P"               => UR20_4DI_P,
             "UR20_4DI_P_3W"            => UR20_4DI_P_3W,
@@ -618,7 +618,7 @@ impl FromStr for ModuleType {
 impl FromStr for ModuleCategory {
     type Err = Error;
     fn from_str(s: &str) -> result::Result<Self, Self::Err> {
-        use ModuleCategory::*;
+        use crate::ModuleCategory::*;
         let c = match &*s.to_uppercase() {
             "DI"  => DI,
             "DO"  => DO,
@@ -641,8 +641,8 @@ impl FromStr for ModuleCategory {
 #[cfg_attr(rustfmt, rustfmt_skip)]
 impl Into<ModuleCategory> for ModuleType {
     fn into(self) -> ModuleCategory {
-        use ModuleType::*;
-        use ModuleCategory::*;
+        use crate::ModuleType::*;
+        use crate::ModuleCategory::*;
         match self {
             UR20_4DI_P              |
             UR20_4DI_P_3W           |

@@ -8,6 +8,7 @@ readme = "README.md"
 homepage = "https://github.com/slowtec/ur20"
 repository = "https://github.com/slowtec/ur20"
 keywords = ["fieldbus"]
+edition = "2018"
 
 [dependencies]
 byteorder = "1"

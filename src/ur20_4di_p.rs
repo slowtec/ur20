@@ -2,8 +2,8 @@
 
 use super::util::test_bit_16;
 use super::*;
+use crate::ur20_fbc_mod_tcp::{FromModbusParameterData, ProcessModbusTcpData};
 use num_traits::cast::FromPrimitive;
-use ur20_fbc_mod_tcp::{FromModbusParameterData, ProcessModbusTcpData};
 
 #[derive(Debug)]
 pub struct Mod {
@@ -86,7 +86,7 @@ fn parameters_from_raw_data(data: &[u16]) -> Result<Vec<ChannelParameters>> {
 mod tests {
 
     use super::*;
-    use ChannelValue::*;
+    use crate::ChannelValue::*;
 
     #[test]
     fn test_process_input_data() {

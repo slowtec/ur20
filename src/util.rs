@@ -54,7 +54,7 @@ pub fn shift_data(data: &[u16]) -> Vec<u16> {
 
 pub fn analog_ui_value_to_u16(v: f32, range: &AnalogUIRange, format: &DataFormat) -> u16 {
     let factor = format.factor();
-    use AnalogUIRange::*;
+    use crate::AnalogUIRange::*;
 
     #[cfg_attr(rustfmt, rustfmt_skip)]
     let v = match *range {
@@ -77,7 +77,7 @@ pub fn u16_to_analog_ui_value(
     format: &DataFormat,
 ) -> Option<f32> {
     let factor = format.factor();
-    use AnalogUIRange::*;
+    use crate::AnalogUIRange::*;
     let data = f32::from(data as i16);
 
     #[cfg_attr(rustfmt, rustfmt_skip)]
@@ -95,7 +95,7 @@ pub fn u16_to_analog_ui_value(
 }
 
 pub fn u16_to_rtd_value(data: u16, range: &RtdRange) -> Option<f32> {
-    use RtdRange::*;
+    use crate::RtdRange::*;
 
     #[cfg_attr(rustfmt, rustfmt_skip)]
     match *range {

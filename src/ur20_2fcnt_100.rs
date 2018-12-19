@@ -1,9 +1,9 @@
 //! Digital frequency counter module UR20-2FCNT-100
 
 use super::*;
+use crate::ur20_fbc_mod_tcp::{FromModbusParameterData, ProcessModbusTcpData};
 use num_traits::cast::FromPrimitive;
 use std::time::Duration;
-use ur20_fbc_mod_tcp::{FromModbusParameterData, ProcessModbusTcpData};
 
 lazy_static! {
     static ref MAX_MEASUREMENT_DURATION: Duration = Duration::new(8, 388_607_000);
@@ -469,10 +469,9 @@ mod tests {
     #[test]
     fn test_process_output_values_with_invalid_channel_values() {
         let m = Mod::default();
-        assert!(
-            m.process_output_values(&[ChannelValue::Bit(false), ChannelValue::Decimal32(0.0),])
-                .is_err()
-        );
+        assert!(m
+            .process_output_values(&[ChannelValue::Bit(false), ChannelValue::Decimal32(0.0),])
+            .is_err());
     }
 
     #[test]
@@ -519,10 +518,9 @@ mod tests {
         let mut ch_1 = ProcessOutput::default();
         ch_0.duration = Duration::new(0, 1_000);
         ch_1.duration = Duration::new(8, 388_608_000);
-        assert!(
-            m.process_output_values(&[ch_0.into(), ch_1.into()])
-                .is_err()
-        );
+        assert!(m
+            .process_output_values(&[ch_0.into(), ch_1.into()])
+            .is_err());
     }
 
     #[test]

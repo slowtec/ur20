@@ -1,8 +1,8 @@
 //! Digital output module UR20-4DO-P
 
 use super::*;
-use ur20_fbc_mod_tcp::{FromModbusParameterData, ProcessModbusTcpData};
-use util::*;
+use crate::ur20_fbc_mod_tcp::{FromModbusParameterData, ProcessModbusTcpData};
+use crate::util::*;
 
 #[derive(Debug)]
 pub struct Mod {
@@ -106,20 +106,18 @@ fn parameters_from_raw_data(data: &[u16]) -> Result<Vec<ChannelParameters>> {
 mod tests {
 
     use super::*;
-    use ChannelValue::*;
+    use crate::ChannelValue::*;
 
     #[test]
     fn test_process_output_values_with_invalid_channel_len() {
         let m = Mod::default();
         assert!(m.process_output_values(&[]).is_err());
-        assert!(
-            m.process_output_values(&[Bit(true), Bit(false), Bit(true)])
-                .is_err()
-        );
-        assert!(
-            m.process_output_values(&[Bit(true), Bit(false), Bit(true), Bit(true)])
-                .is_ok()
-        );
+        assert!(m
+            .process_output_values(&[Bit(true), Bit(false), Bit(true)])
+            .is_err());
+        assert!(m
+            .process_output_values(&[Bit(true), Bit(false), Bit(true), Bit(true)])
+            .is_ok());
     }
 
     #[test]
@@ -154,10 +152,9 @@ mod tests {
     #[test]
     fn test_process_output_values_with_invalid_channel_values() {
         let m = Mod::default();
-        assert!(
-            m.process_output_values(&[Bit(false), Bit(true), Bit(false), Decimal32(0.0)])
-                .is_err()
-        );
+        assert!(m
+            .process_output_values(&[Bit(false), Bit(true), Bit(false), Decimal32(0.0)])
+            .is_err());
     }
 
     #[test]

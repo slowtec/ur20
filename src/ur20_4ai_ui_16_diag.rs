@@ -1,8 +1,8 @@
 //! Analog input module UR20-4AI-UI-16-DIAG
 
 use super::*;
+use crate::ur20_fbc_mod_tcp::{FromModbusParameterData, ProcessModbusTcpData};
 use num_traits::cast::FromPrimitive;
-use ur20_fbc_mod_tcp::{FromModbusParameterData, ProcessModbusTcpData};
 
 #[derive(Debug)]
 pub struct Mod {
@@ -169,7 +169,7 @@ fn parameters_from_raw_data(data: &[u16]) -> Result<(ModuleParameters, Vec<Chann
 mod tests {
 
     use super::*;
-    use ChannelValue::*;
+    use crate::ChannelValue::*;
 
     #[test]
     fn test_process_input_data_with_empty_buffer() {
@@ -252,10 +252,9 @@ mod tests {
     #[test]
     fn test_process_output_values() {
         let m = Mod::default();
-        assert!(
-            m.process_output_values(&[ChannelValue::Decimal32(0.0)])
-                .is_err()
-        );
+        assert!(m
+            .process_output_values(&[ChannelValue::Decimal32(0.0)])
+            .is_err());
         assert_eq!(m.process_output_values(&[]).unwrap(), &[]);
         assert_eq!(
             m.process_output_values(&vec![ChannelValue::None; 4])

@@ -1,8 +1,8 @@
 //! Analog output module UR20-4AO-UI-16-DIAG
 
 use super::*;
+use crate::ur20_fbc_mod_tcp::{FromModbusParameterData, ProcessModbusTcpData};
 use num_traits::cast::FromPrimitive;
-use ur20_fbc_mod_tcp::{FromModbusParameterData, ProcessModbusTcpData};
 
 #[derive(Debug)]
 pub struct Mod {
@@ -145,7 +145,7 @@ fn parameters_from_raw_data(data: &[u16]) -> Result<Vec<ChannelParameters>> {
 mod tests {
 
     use super::*;
-    use ChannelValue::*;
+    use crate::ChannelValue::*;
 
     #[test]
     fn test_process_input_data() {
@@ -203,37 +203,34 @@ mod tests {
     fn test_process_output_values_with_invalid_channel_len() {
         let m = Mod::default();
         assert!(m.process_output_values(&[]).is_err());
-        assert!(
-            m.process_output_values(&[Decimal32(0.0), Decimal32(0.0), Decimal32(0.0)])
-                .is_err()
-        );
-        assert!(
-            m.process_output_values(&[Decimal32(0.0), Decimal32(0.0), Disabled, Decimal32(0.0),])
-                .is_ok()
-        );
+        assert!(m
+            .process_output_values(&[Decimal32(0.0), Decimal32(0.0), Decimal32(0.0)])
+            .is_err());
+        assert!(m
+            .process_output_values(&[Decimal32(0.0), Decimal32(0.0), Disabled, Decimal32(0.0),])
+            .is_ok());
     }
 
     #[test]
     fn test_process_output_values_with_invalid_channel_values() {
         let m = Mod::default();
-        assert!(
-            m.process_output_values(&[Bit(false), Decimal32(0.0), Decimal32(0.0), Decimal32(0.0),])
-                .is_err()
-        );
+        assert!(m
+            .process_output_values(&[Bit(false), Decimal32(0.0), Decimal32(0.0), Decimal32(0.0),])
+            .is_err());
     }
 
     #[test]
     fn test_process_output_values_with_missing_channel_parameters() {
         let mut m = Mod::default();
         m.ch_params = vec![];
-        assert!(
-            m.process_output_values(&[
+        assert!(m
+            .process_output_values(&[
                 Decimal32(0.0),
                 Decimal32(0.0),
                 Decimal32(0.0),
                 Decimal32(0.0),
-            ]).is_err()
-        );
+            ])
+            .is_err());
     }
 
     #[test]
@@ -254,7 +251,8 @@ mod tests {
                 Decimal32(20.0),
                 Decimal32(10.0),
                 Decimal32(0.0),
-            ]).unwrap(),
+            ])
+            .unwrap(),
             vec![0x7EFF, 0x6C00, 0x3600, 0x0]
         );
 
@@ -268,7 +266,8 @@ mod tests {
                 Decimal32(12.0),
                 Decimal32(10.0),
                 Decimal32(-10.0),
-            ]).unwrap(),
+            ])
+            .unwrap(),
             vec![0x3600, 0x3600, 0x6C00, 0x9400]
         );
 
@@ -282,7 +281,8 @@ mod tests {
                 Decimal32(-5.0),
                 Decimal32(1.0),
                 Decimal32(2.0),
-            ]).unwrap(),
+            ])
+            .unwrap(),
             vec![0x6C00, 0x9400, 0x0, 0x0]
         );
     }

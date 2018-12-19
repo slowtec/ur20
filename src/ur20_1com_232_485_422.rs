@@ -1,13 +1,13 @@
 //! Serial communication module UR20-1COM-232-485-422
 
 use super::*;
+use crate::ur20_fbc_mod_tcp::{FromModbusParameterData, ProcessModbusTcpData};
+use crate::util::*;
 use num_traits::cast::FromPrimitive;
 use std::{
     cmp,
     io::{self, Read, Write},
 };
-use ur20_fbc_mod_tcp::{FromModbusParameterData, ProcessModbusTcpData};
-use util::*;
 
 #[derive(Debug)]
 pub struct Mod {
@@ -378,7 +378,8 @@ impl ProcessModbusTcpData for Mod {
                 if current_output.data.len() > count {
                     return Err(Error::BufferLength);
                 }
-                let msg = current_output.try_into_byte_message(&self.mod_params.process_data_len)?;
+                let msg =
+                    current_output.try_into_byte_message(&self.mod_params.process_data_len)?;
                 Ok(u8_to_u16(&msg))
             }
             _ => Err(Error::ChannelValue),
@@ -776,21 +777,20 @@ mod tests {
     fn test_process_output_values_with_invalid_input_len() {
         let m = Mod::default();
         assert!(m.process_output_values(&vec![]).is_err());
-        assert!(
-            m.process_output_values(&vec![
+        assert!(m
+            .process_output_values(&vec![
                 ChannelValue::ComRsIn(ProcessInput::default()),
                 ChannelValue::ComRsIn(ProcessInput::default()),
-            ]).is_err()
-        );
+            ])
+            .is_err());
     }
 
     #[test]
     fn test_process_output_values_with_invalid_channel_data() {
         let m = Mod::default();
-        assert!(
-            m.process_output_values(&vec![ChannelValue::Decimal32(0.0)])
-                .is_err()
-        );
+        assert!(m
+            .process_output_values(&vec![ChannelValue::Decimal32(0.0)])
+            .is_err());
     }
 
     #[test]
@@ -811,36 +811,30 @@ mod tests {
         let mut five = ProcessOutput::default();
         five.data = vec![0, 5];
 
-        assert!(
-            m.process_output_values(&vec![ChannelValue::ComRsOut(five)])
-                .is_ok()
-        );
+        assert!(m
+            .process_output_values(&vec![ChannelValue::ComRsOut(five)])
+            .is_ok());
 
-        assert!(
-            m.process_output_values(&vec![ChannelValue::ComRsOut(fourteen.clone())])
-                .is_ok()
-        );
+        assert!(m
+            .process_output_values(&vec![ChannelValue::ComRsOut(fourteen.clone())])
+            .is_ok());
 
-        assert!(
-            m.process_output_values(&vec![ChannelValue::ComRsOut(fifteen.clone())])
-                .is_err()
-        );
+        assert!(m
+            .process_output_values(&vec![ChannelValue::ComRsOut(fifteen.clone())])
+            .is_err());
 
         m.mod_params.process_data_len = ProcessDataLength::EightBytes;
-        assert!(
-            m.process_output_values(&vec![ChannelValue::ComRsOut(fourteen)])
-                .is_err()
-        );
+        assert!(m
+            .process_output_values(&vec![ChannelValue::ComRsOut(fourteen)])
+            .is_err());
 
-        assert!(
-            m.process_output_values(&vec![ChannelValue::ComRsOut(seven.clone())])
-                .is_err()
-        );
+        assert!(m
+            .process_output_values(&vec![ChannelValue::ComRsOut(seven.clone())])
+            .is_err());
 
-        assert!(
-            m.process_output_values(&vec![ChannelValue::ComRsOut(six.clone())])
-                .is_ok()
-        );
+        assert!(m
+            .process_output_values(&vec![ChannelValue::ComRsOut(six.clone())])
+            .is_ok());
     }
 
     #[test]
