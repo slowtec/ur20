@@ -571,10 +571,10 @@ mod tests {
 
         m1.ch_params[1].measurement_range = RtdRange::PT100;
 
-        let mod0: &ProcessModbusTcpData = &m0;
-        let mod1: &ProcessModbusTcpData = &m1;
-        let mod2: &ProcessModbusTcpData = &m2;
-        let mod3: &ProcessModbusTcpData = &m3;
+        let mod0: &dyn ProcessModbusTcpData = &m0;
+        let mod1: &dyn ProcessModbusTcpData = &m1;
+        let mod2: &dyn ProcessModbusTcpData = &m2;
+        let mod3: &dyn ProcessModbusTcpData = &m3;
 
         let addr_out_0 = to_bit_address(ADDR_PACKED_PROCESS_OUTPUT_DATA, 0);
         let addr_in_1 = to_bit_address(ADDR_PACKED_PROCESS_INPUT_DATA, 0);
@@ -615,7 +615,7 @@ mod tests {
     fn test_process_input_data_with_invalid_offset() {
         let m0 = super::ur20_4ai_rtd_diag::Mod::default();
         let data = &[0, 33, 0, 0];
-        let mod0: &ProcessModbusTcpData = &m0;
+        let mod0: &dyn ProcessModbusTcpData = &m0;
         let bit = 3; // should not work
         let addr_in_0 = to_bit_address(ADDR_PACKED_PROCESS_INPUT_DATA, bit);
         let o0 = ModuleOffset {
@@ -631,8 +631,8 @@ mod tests {
         let m0 = super::ur20_4ai_rtd_diag::Mod::default();
         let m1 = super::ur20_4ai_rtd_diag::Mod::default();
         let data = &[0, 33, 0, 0];
-        let mod0: &ProcessModbusTcpData = &m0;
-        let mod1: &ProcessModbusTcpData = &m1;
+        let mod0: &dyn ProcessModbusTcpData = &m0;
+        let mod1: &dyn ProcessModbusTcpData = &m1;
         let addr_in_0 = to_bit_address(ADDR_PACKED_PROCESS_INPUT_DATA, 0);
         let addr_in_1 = to_bit_address(ADDR_PACKED_PROCESS_INPUT_DATA + 4, 0);
         let o0 = ModuleOffset {
@@ -662,10 +662,10 @@ mod tests {
 
         m0.ch_params[1].output_range = AnalogUIRange::VMinus5To5;
 
-        let mod0: &ProcessModbusTcpData = &m0;
-        let mod1: &ProcessModbusTcpData = &m1;
-        let mod2: &ProcessModbusTcpData = &m2;
-        let mod3: &ProcessModbusTcpData = &m3;
+        let mod0: &dyn ProcessModbusTcpData = &m0;
+        let mod1: &dyn ProcessModbusTcpData = &m1;
+        let mod2: &dyn ProcessModbusTcpData = &m2;
+        let mod3: &dyn ProcessModbusTcpData = &m3;
 
         let addr_out_0 = to_bit_address(ADDR_PACKED_PROCESS_OUTPUT_DATA, 0);
         let addr_in_1 = to_bit_address(ADDR_PACKED_PROCESS_INPUT_DATA, 0);
@@ -707,7 +707,7 @@ mod tests {
     fn test_process_output_data_with_invalid_offset() {
         let m0 = super::ur20_4ao_ui_16::Mod::default();
         let data = &[0, 33, 0, 0];
-        let mod0: &ProcessModbusTcpData = &m0;
+        let mod0: &dyn ProcessModbusTcpData = &m0;
         let bit = 3; // should not work
         let addr_out_0 = to_bit_address(ADDR_PACKED_PROCESS_OUTPUT_DATA, bit);
         let o0 = ModuleOffset {
@@ -723,8 +723,8 @@ mod tests {
         let m0 = super::ur20_4ao_ui_16::Mod::default();
         let m1 = super::ur20_4ao_ui_16::Mod::default();
         let data = &[0, 33, 0, 0];
-        let mod0: &ProcessModbusTcpData = &m0;
-        let mod1: &ProcessModbusTcpData = &m1;
+        let mod0: &dyn ProcessModbusTcpData = &m0;
+        let mod1: &dyn ProcessModbusTcpData = &m1;
         let addr_out_0 = to_bit_address(ADDR_PACKED_PROCESS_OUTPUT_DATA, 0);
         let addr_out_1 = to_bit_address(ADDR_PACKED_PROCESS_OUTPUT_DATA + 4, 0);
         let o0 = ModuleOffset {
@@ -751,8 +751,8 @@ mod tests {
             ChannelValue::Decimal32(10.0),
         ]];
 
-        let mod0: &ProcessModbusTcpData = &m0;
-        let mod1: &ProcessModbusTcpData = &m1;
+        let mod0: &dyn ProcessModbusTcpData = &m0;
+        let mod1: &dyn ProcessModbusTcpData = &m1;
 
         let addr_out_0 = to_bit_address(ADDR_PACKED_PROCESS_OUTPUT_DATA, 0);
         let addr_in_1 = to_bit_address(ADDR_PACKED_PROCESS_INPUT_DATA, 0);
@@ -786,8 +786,8 @@ mod tests {
             vec![],
         ];
 
-        let mod0: &ProcessModbusTcpData = &m0;
-        let mod1: &ProcessModbusTcpData = &m1;
+        let mod0: &dyn ProcessModbusTcpData = &m0;
+        let mod1: &dyn ProcessModbusTcpData = &m1;
 
         let addr_out_0 = to_bit_address(ADDR_PACKED_PROCESS_OUTPUT_DATA + 10, 0);
         let addr_in_1 = to_bit_address(ADDR_PACKED_PROCESS_INPUT_DATA, 0);
@@ -827,9 +827,9 @@ mod tests {
             ],
         ];
 
-        let mod0: &ProcessModbusTcpData = &m0;
-        let mod1: &ProcessModbusTcpData = &m1;
-        let mod2: &ProcessModbusTcpData = &m2;
+        let mod0: &dyn ProcessModbusTcpData = &m0;
+        let mod1: &dyn ProcessModbusTcpData = &m1;
+        let mod2: &dyn ProcessModbusTcpData = &m2;
 
         let addr_out_0 = to_bit_address(ADDR_PACKED_PROCESS_OUTPUT_DATA + 0, 0);
         let addr_in_1 = to_bit_address(ADDR_PACKED_PROCESS_INPUT_DATA, 0);
@@ -861,7 +861,7 @@ mod tests {
             ChannelValue::Decimal32(20.0),
             ChannelValue::Decimal32(10.0),
         ]];
-        let mod0: &ProcessModbusTcpData = &m0;
+        let mod0: &dyn ProcessModbusTcpData = &m0;
         let addr_out_0 = to_bit_address(0, 0);
         let o0 = ModuleOffset {
             input: None,
@@ -903,10 +903,10 @@ mod tests {
         m0.ch_params[1].output_range = AnalogUIRange::mA0To20;
         m0.ch_params[3].output_range = AnalogUIRange::mA0To20;
 
-        let mod0: &ProcessModbusTcpData = &m0;
-        let mod1: &ProcessModbusTcpData = &m1;
-        let mod2: &ProcessModbusTcpData = &m2;
-        let mod3: &ProcessModbusTcpData = &m3;
+        let mod0: &dyn ProcessModbusTcpData = &m0;
+        let mod1: &dyn ProcessModbusTcpData = &m1;
+        let mod2: &dyn ProcessModbusTcpData = &m2;
+        let mod3: &dyn ProcessModbusTcpData = &m3;
 
         let addr_out_0 = to_bit_address(ADDR_PACKED_PROCESS_OUTPUT_DATA, 0);
         let addr_in_1 = to_bit_address(ADDR_PACKED_PROCESS_INPUT_DATA, 0);
@@ -1040,7 +1040,7 @@ mod tests {
             params: vec![
                 vec![0; 4],
                 vec![0; 4],
-                #[rustfmt::skip]
+                #[cfg_attr(rustfmt, rustfmt_skip)]
                 vec![
                     ProcessDataLength::EightBytes.to_u16().unwrap(),
                     OperatingMode::RS232.to_u16().unwrap(),
