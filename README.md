@@ -10,7 +10,7 @@
 
 ## License
 
-Copyright (c) 2017 - 2018, slowtec GmbH
+Copyright (c) 2017 - 2020, slowtec GmbH
 
 Licensed under either of
 
