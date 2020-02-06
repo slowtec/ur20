@@ -58,7 +58,7 @@ impl ProcessModbusTcpData for Mod {
             return Err(Error::BufferLength);
         }
         Ok(data
-            .into_iter()
+            .iter()
             .enumerate()
             .map(|(i, v)| {
                 (
@@ -83,7 +83,7 @@ impl ProcessModbusTcpData for Mod {
             return Err(Error::ChannelParameter);
         }
         values
-            .into_iter()
+            .iter()
             .enumerate()
             .map(|(i, v)| {
                 (
@@ -289,7 +289,7 @@ mod tests {
 
     #[test]
     fn test_channel_parameters_from_raw_data() {
-        #[cfg_attr(rustfmt, rustfmt_skip)]
+        #[rustfmt::skip]
         let data = vec![
             1, 8, 0,        // CH 0
             1, 0, 0,        // CH 1
@@ -322,7 +322,7 @@ mod tests {
 
     #[test]
     fn test_parameters_from_invalid_raw_data() {
-        #[cfg_attr(rustfmt, rustfmt_skip)]
+        #[rustfmt::skip]
         let mut data = vec![
             0, 0, 0,  // CH 0
             0, 0, 0,  // CH 1
@@ -349,7 +349,7 @@ mod tests {
 
     #[test]
     fn create_module_from_modbus_parameter_data() {
-        #[cfg_attr(rustfmt, rustfmt_skip)]
+        #[rustfmt::skip]
         let data = vec![
             1, 0, 0,  // CH 0
             0, 8, 0,  // CH 1

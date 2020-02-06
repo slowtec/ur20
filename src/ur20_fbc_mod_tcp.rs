@@ -194,13 +194,17 @@ impl Coupler {
     }
 
     /// Returns a reader to the underlying communication data buffer.
-    pub fn reader(&mut self, module_nr: usize) -> Option<&mut Read> {
-        self.processors.get_mut(&module_nr).map(|r| r as &mut Read)
+    pub fn reader(&mut self, module_nr: usize) -> Option<&mut dyn Read> {
+        self.processors
+            .get_mut(&module_nr)
+            .map(|r| r as &mut dyn Read)
     }
 
     /// Returns a writer to the underlying communication data buffer.
-    pub fn writer(&mut self, module_nr: usize) -> Option<&mut Write> {
-        self.processors.get_mut(&module_nr).map(|r| r as &mut Write)
+    pub fn writer(&mut self, module_nr: usize) -> Option<&mut dyn Write> {
+        self.processors
+            .get_mut(&module_nr)
+            .map(|r| r as &mut dyn Write)
     }
 
     pub fn set_output(&mut self, addr: &Address, value: ChannelValue) -> Result<()> {
@@ -226,7 +230,7 @@ impl Coupler {
         let mut out_bytes = HashMap::new();
 
         for (m_nr, (in_v, out_v)) in self.in_values.iter().zip(&self.out_values).enumerate() {
-            if let Some(mut p) = self.processors.get_mut(&m_nr) {
+            if let Some(p) = self.processors.get_mut(&m_nr) {
                 if let ChannelValue::ComRsIn(ref in_v) = in_v[0] {
                     if let ChannelValue::ComRsOut(ref out_v) = out_v[0] {
                         out_bytes.insert(m_nr, ChannelValue::None);
@@ -301,11 +305,11 @@ pub fn offsets_of_process_data(data: &[Word]) -> Vec<ModuleOffset> {
 
 /// Map the raw input data into values.
 pub fn process_input_data(
-    modules: &[(&ProcessModbusTcpData, &ModuleOffset)],
+    modules: &[(&dyn ProcessModbusTcpData, &ModuleOffset)],
     data: &[u16],
 ) -> Result<Vec<Vec<ChannelValue>>> {
     modules
-        .into_iter()
+        .iter()
         .map(|&(ref m, ref offset)| {
             if let Some(in_offset) = offset.input {
                 let cnt = m.process_input_byte_count();
@@ -324,11 +328,11 @@ pub fn process_input_data(
 
 /// Map the raw output data into values.
 pub fn process_output_data(
-    modules: &[(&ProcessModbusTcpData, &ModuleOffset)],
+    modules: &[(&dyn ProcessModbusTcpData, &ModuleOffset)],
     data: &[u16],
 ) -> Result<Vec<Vec<ChannelValue>>> {
     modules
-        .into_iter()
+        .iter()
         .map(|&(ref m, ref offset)| {
             if let Some(out_offset) = offset.output {
                 let cnt = m.process_output_byte_count();
@@ -376,7 +380,7 @@ fn prepare_raw_data_to_process(
 
 /// Map values into raw values.
 pub fn process_output_values(
-    modules: &[(&ProcessModbusTcpData, &ModuleOffset)],
+    modules: &[(&dyn ProcessModbusTcpData, &ModuleOffset)],
     values: &[Vec<ChannelValue>],
 ) -> Result<Vec<u16>> {
     if modules.len() != values.len() {
@@ -385,7 +389,7 @@ pub fn process_output_values(
 
     let mut out = vec![];
 
-    for (i, &(ref m, ref offset)) in modules.into_iter().enumerate() {
+    for (i, &(ref m, ref offset)) in modules.iter().enumerate() {
         if let Some(out_offset) = offset.output {
             let data = m.process_output_values(&values[i])?;
             let (start, bit) = to_register_address(out_offset);
@@ -559,7 +563,7 @@ mod tests {
         let m2 = super::ur20_4di_p::Mod::default();
         let m3 = super::ur20_4di_p::Mod::default();
 
-        #[cfg_attr(rustfmt, rustfmt_skip)]
+        #[rustfmt::skip]
         let data = &[
             0,33,0,0,             // UR20-4AI-P
             0b0000_0001_0000_0010 // UR20-4DI-P + UR20-4DI-P
@@ -650,7 +654,7 @@ mod tests {
         let m2 = super::ur20_4do_p::Mod::default();
         let m3 = super::ur20_4do_p::Mod::default();
 
-        #[cfg_attr(rustfmt, rustfmt_skip)]
+        #[rustfmt::skip]
         let data = &[
             0,0x3600,0,0,         // UR20-4AO-P
             0b0000_0001_0000_0010 // UR20-4DO-P + UR20-4DO-P
@@ -1036,7 +1040,7 @@ mod tests {
             params: vec![
                 vec![0; 4],
                 vec![0; 4],
-                #[cfg_attr(rustfmt, rustfmt_skip)]
+                #[rustfmt::skip]
                 vec![
                     ProcessDataLength::EightBytes.to_u16().unwrap(),
                     OperatingMode::RS232.to_u16().unwrap(),

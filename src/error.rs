@@ -16,7 +16,7 @@ pub enum Error {
     Io(String), // TODO
 }
 
-#[cfg_attr(rustfmt, rustfmt_skip)]
+#[rustfmt::skip]
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
@@ -35,7 +35,7 @@ impl fmt::Display for Error {
     }
 }
 
-#[cfg_attr(rustfmt, rustfmt_skip)]
+#[rustfmt::skip]
 impl ::std::error::Error for Error {
     fn description(&self) -> &str {
         match *self {

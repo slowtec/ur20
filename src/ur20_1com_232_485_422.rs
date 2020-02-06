@@ -1,8 +1,10 @@
 //! Serial communication module UR20-1COM-232-485-422
 
 use super::*;
-use crate::ur20_fbc_mod_tcp::{FromModbusParameterData, ProcessModbusTcpData};
-use crate::util::*;
+use crate::{
+    ur20_fbc_mod_tcp::{FromModbusParameterData, ProcessModbusTcpData},
+    util::*,
+};
 use num_traits::cast::FromPrimitive;
 use std::{
     cmp,
@@ -102,7 +104,7 @@ pub enum DataBits {
     EightBits = 1,
 }
 
-#[cfg_attr(rustfmt, rustfmt_skip)]
+#[rustfmt::skip]
 #[allow(non_camel_case_types)]
 #[derive(Debug, Clone, PartialEq, Eq,FromPrimitive, ToPrimitive)]
 pub enum BaudRate {
@@ -120,14 +122,14 @@ pub enum BaudRate {
     Baud_115200 = 11,
 }
 
-#[cfg_attr(rustfmt, rustfmt_skip)]
+#[rustfmt::skip]
 #[derive(Debug, Clone, PartialEq,Eq,FromPrimitive, ToPrimitive)]
 pub enum StopBit {
     OneBit  = 0,
     TwoBits = 1,
 }
 
-#[cfg_attr(rustfmt, rustfmt_skip)]
+#[rustfmt::skip]
 #[derive(Debug, Clone, PartialEq, Eq, FromPrimitive, ToPrimitive)]
 pub enum Parity {
     None = 0,
@@ -135,7 +137,7 @@ pub enum Parity {
     Odd  = 2
 }
 
-#[cfg_attr(rustfmt, rustfmt_skip)]
+#[rustfmt::skip]
 #[allow(non_camel_case_types)]
 #[derive(Debug, Clone, PartialEq,Eq,FromPrimitive, ToPrimitive)]
 pub enum FlowControl {
@@ -144,7 +146,7 @@ pub enum FlowControl {
     XON_XOFF = 2
 }
 
-#[cfg_attr(rustfmt, rustfmt_skip)]
+#[rustfmt::skip]
 #[derive(Debug, Clone, PartialEq, Eq, FromPrimitive, ToPrimitive)]
 pub enum ProcessDataLength {
     EightBytes   = 0,
@@ -574,14 +576,14 @@ fn parameters_from_raw_data(data: &[u16]) -> Result<(ModuleParameters, ChannelPa
     };
 
     p.XON_char = match data[8] {
-        0...255 => (data[8] as u8) as char,
+        0..=255 => (data[8] as u8) as char,
         _ => {
             return Err(Error::ChannelParameter);
         }
     };
 
     p.XOFF_char = match data[9] {
-        0...255 => (data[9] as u8) as char,
+        0..=255 => (data[9] as u8) as char,
         _ => {
             return Err(Error::ChannelParameter);
         }

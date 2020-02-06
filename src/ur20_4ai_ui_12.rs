@@ -252,7 +252,7 @@ mod tests {
 
     #[test]
     fn test_channel_parameters_from_raw_data() {
-        #[cfg_attr(rustfmt, rustfmt_skip)]
+        #[rustfmt::skip]
         let data = vec![
             0,    // Module
             1, 8, // CH 0
@@ -312,7 +312,7 @@ mod tests {
 
     #[test]
     fn create_module_from_modbus_parameter_data() {
-        #[cfg_attr(rustfmt, rustfmt_skip)]
+        #[rustfmt::skip]
         let data = vec![
             0,    // Module
             0, 1, // CH 0

@@ -287,7 +287,7 @@ pub enum RtdRange {
 }
 
 /// The unit a temperature value is represented in.
-#[cfg_attr(rustfmt, rustfmt_skip)]
+#[rustfmt::skip]
 #[derive(Debug, Clone, PartialEq, Eq, FromPrimitive, ToPrimitive)]
 pub enum TemperatureUnit {
     Celsius    = 0,
@@ -296,7 +296,7 @@ pub enum TemperatureUnit {
 }
 
 /// Describes how the resistor is physically conneted.
-#[cfg_attr(rustfmt, rustfmt_skip)]
+#[rustfmt::skip]
 #[derive(Debug, Clone, PartialEq, Eq, FromPrimitive, ToPrimitive)]
 pub enum ConnectionType {
     TwoWire   = 0,
@@ -305,7 +305,7 @@ pub enum ConnectionType {
 }
 
 /// Time to convert a signal.
-#[cfg_attr(rustfmt, rustfmt_skip)]
+#[rustfmt::skip]
 #[allow(non_camel_case_types)]
 #[derive(Debug, Clone, PartialEq, Eq, FromPrimitive, ToPrimitive)]
 pub enum ConversionTime {
@@ -318,7 +318,7 @@ pub enum ConversionTime {
 }
 
 /// Filter signals by defining a minimal duration.
-#[cfg_attr(rustfmt, rustfmt_skip)]
+#[rustfmt::skip]
 #[allow(non_camel_case_types)]
 #[derive(Debug, Clone, PartialEq, Eq, FromPrimitive, ToPrimitive)]
 pub enum InputFilter {
@@ -342,7 +342,7 @@ pub enum InputFilter {
 }
 
 /// Time to delay a signal.
-#[cfg_attr(rustfmt, rustfmt_skip)]
+#[rustfmt::skip]
 #[allow(non_camel_case_types)]
 #[derive(Debug, Clone, PartialEq, Eq, FromPrimitive, ToPrimitive)]
 pub enum InputDelay {
@@ -355,7 +355,7 @@ pub enum InputDelay {
 }
 
 /// Frequency suppression.
-#[cfg_attr(rustfmt, rustfmt_skip)]
+#[rustfmt::skip]
 #[allow(non_camel_case_types)]
 #[derive(Debug, Clone, PartialEq, Eq, FromPrimitive, ToPrimitive)]
 pub enum FrequencySuppression {
@@ -448,7 +448,7 @@ impl ModuleType {
     }
 
     /// Returns the number of channels for a specific module type.
-    #[cfg_attr(rustfmt, rustfmt_skip)]
+    #[rustfmt::skip]
     pub fn channel_count(&self) -> usize {
         use crate::ModuleType::*;
 
@@ -527,7 +527,7 @@ impl ModuleType {
     }
 }
 
-#[cfg_attr(rustfmt, rustfmt_skip)]
+#[rustfmt::skip]
 impl FromStr for ModuleType {
     type Err = Error;
     fn from_str(s: &str) -> result::Result<Self, Self::Err> {
@@ -614,7 +614,7 @@ impl FromStr for ModuleType {
     }
 }
 
-#[cfg_attr(rustfmt, rustfmt_skip)]
+#[rustfmt::skip]
 impl FromStr for ModuleCategory {
     type Err = Error;
     fn from_str(s: &str) -> result::Result<Self, Self::Err> {
@@ -638,7 +638,7 @@ impl FromStr for ModuleCategory {
     }
 }
 
-#[cfg_attr(rustfmt, rustfmt_skip)]
+#[rustfmt::skip]
 impl Into<ModuleCategory> for ModuleType {
     fn into(self) -> ModuleCategory {
         use crate::ModuleType::*;

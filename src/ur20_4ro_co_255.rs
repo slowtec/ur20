@@ -63,7 +63,7 @@ impl ProcessModbusTcpData for Mod {
             return Err(Error::ChannelValue);
         }
         let mut res = 0;
-        for (i, v) in values.into_iter().enumerate() {
+        for (i, v) in values.iter().enumerate() {
             match *v {
                 ChannelValue::Bit(state) => {
                     if state {

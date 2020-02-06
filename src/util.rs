@@ -56,7 +56,7 @@ pub fn analog_ui_value_to_u16(v: f32, range: &AnalogUIRange, format: &DataFormat
     let factor = format.factor();
     use crate::AnalogUIRange::*;
 
-    #[cfg_attr(rustfmt, rustfmt_skip)]
+    #[rustfmt::skip]
     let v = match *range {
         mA0To20       => (factor * v / 20.0),
         mA4To20       => (factor * (v - 4.0) / 16.0),

@@ -202,7 +202,7 @@ impl ProcessModbusTcpData for Mod {
         }
         let mut out = vec![0; 6];
 
-        for (i, v) in values.into_iter().enumerate() {
+        for (i, v) in values.iter().enumerate() {
             match v {
                 ChannelValue::FcntOut(v) => {
                     if v.duration > *MAX_MEASUREMENT_DURATION {
