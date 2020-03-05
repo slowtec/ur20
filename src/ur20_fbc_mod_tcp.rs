@@ -23,7 +23,7 @@ pub const ADDR_CURRENT_MODULE_LIST        : RegisterAddress = 0x2A00;
 pub const ADDR_MODULE_OFFSETS             : RegisterAddress = 0x2B00;
 pub const ADDR_MODULE_PARAMETERS          : RegisterAddress = 0xC000;
 
-pub trait ProcessModbusTcpData: Module {
+pub trait ProcessModbusTcpData: Module + Send {
     /// Number of bytes within the process input data buffer.
     fn process_input_byte_count(&self) -> usize;
     /// Number of bytes within the process output data buffer.
