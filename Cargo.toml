@@ -1,13 +1,13 @@
 [package]
 name = "ur20"
 description = "Rust library for the Weidmüller u-remote IP20 system"
-version = "0.5.0"
-authors = ["Markus Kohlhase <markus.kohlhase@slowtec.de>"]
+version = "0.5.1"
+authors = ["slowtec GmbH", "Markus Kohlhase <markus.kohlhase@slowtec.de>"]
 license = "MIT/Apache-2.0"
 readme = "README.md"
 homepage = "https://github.com/slowtec/ur20"
 repository = "https://github.com/slowtec/ur20"
-keywords = ["fieldbus"]
+keywords = ["fieldbus", "industrial", "io"]
 edition = "2018"
 
 [dependencies]
