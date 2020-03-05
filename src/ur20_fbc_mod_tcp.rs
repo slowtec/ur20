@@ -68,6 +68,7 @@ pub struct ModuleOffset {
 }
 
 /// Modbus TCP coupler implementation.
+#[derive(Debug)]
 pub struct Coupler {
     /// cached input values
     in_values: Vec<Vec<ChannelValue>>,
