@@ -20,9 +20,9 @@ pub mod ur20_4ai_ui_16_diag;
 pub mod ur20_4ao_ui_16;
 pub mod ur20_4ao_ui_16_diag;
 pub mod ur20_4di_p;
-pub mod ur20_4do_p;
 pub mod ur20_4ro_co_255;
 pub mod ur20_8ai_i_16_diag_hd;
+pub mod ur20_do_generic;
 pub mod ur20_fbc_mod_tcp;
 pub(crate) mod util;
 
@@ -366,7 +366,7 @@ pub enum FrequencySuppression {
 }
 
 impl ModuleType {
-    pub fn try_from_u32(id: u32) -> Result<Self> {
+    pub const fn try_from_u32(id: u32) -> Result<Self> {
         use crate::ModuleType::*;
 
         let t = match id {
@@ -449,11 +449,10 @@ impl ModuleType {
 
     /// Returns the number of channels for a specific module type.
     #[rustfmt::skip]
-    pub fn channel_count(&self) -> usize {
+    pub const fn channel_count(&self) -> usize {
         use crate::ModuleType::*;
 
         match *self {
-
             UR20_PF_I               |
             UR20_PF_O               |
             UR20_PF_O_1DI_SIL       |
@@ -522,7 +521,6 @@ impl ModuleType {
             UR20_16DO_P_PLC_INT     |
             UR20_16DO_N             |
             UR20_16DO_N_PLC_INT     => 16,
-
         }
     }
 }
