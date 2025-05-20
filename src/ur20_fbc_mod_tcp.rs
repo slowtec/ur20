@@ -115,7 +115,7 @@ impl Coupler {
                     Box::new(m)
                 }
                 ModuleType::UR20_4DO_P => {
-                    let m = ur20_4do_p::Mod::from_modbus_parameter_data(param_data)?;
+                    let m = ur20_do_generic::Mod::<ur20_do_generic::UR20_4DO_P>::from_modbus_parameter_data(param_data)?;
                     Box::new(m)
                 }
                 ModuleType::UR20_16DO_P => {
@@ -650,8 +650,8 @@ mod tests {
     fn test_process_output_data() {
         let mut m0 = super::ur20_4ao_ui_16::Mod::default();
         let m1 = super::ur20_4ai_rtd_diag::Mod::default();
-        let m2 = super::ur20_4do_p::Mod::default();
-        let m3 = super::ur20_4do_p::Mod::default();
+        let m2 = super::ur20_do_generic::Mod::<super::ur20_do_generic::UR20_4DO_P>::default();
+        let m3 = super::ur20_do_generic::Mod::<super::ur20_do_generic::UR20_4DO_P>::default();
 
         #[rustfmt::skip]
         let data = &[
@@ -808,7 +808,7 @@ mod tests {
     fn test_process_output_values_with_invalid_offset_b() {
         let m0 = super::ur20_4ao_ui_16::Mod::default();
         let m1 = super::ur20_4ai_rtd_diag::Mod::default();
-        let m2 = super::ur20_4do_p::Mod::default();
+        let m2 = super::ur20_do_generic::Mod::<super::ur20_do_generic::UR20_4DO_P>::default();
 
         let values = vec![
             vec![
@@ -874,8 +874,8 @@ mod tests {
     fn test_process_output_values() {
         let mut m0 = super::ur20_4ao_ui_16::Mod::default();
         let m1 = super::ur20_4ai_rtd_diag::Mod::default();
-        let m2 = super::ur20_4do_p::Mod::default();
-        let m3 = super::ur20_4do_p::Mod::default();
+        let m2 = super::ur20_do_generic::Mod::<super::ur20_do_generic::UR20_4DO_P>::default();
+        let m3 = super::ur20_do_generic::Mod::<super::ur20_do_generic::UR20_4DO_P>::default();
 
         let values = vec![
             vec![
