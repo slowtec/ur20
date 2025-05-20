@@ -870,7 +870,7 @@ mod tests {
         assert_eq!(p.next(&input, &output), output);
 
         // 4. write data to processor buffer
-        p.write(b"This msg is >6 bytes").unwrap();
+        p.write_all(b"This msg is >6 bytes").unwrap();
 
         // 5. read
         // We assume that there is still no data to receive
@@ -936,7 +936,7 @@ mod tests {
         let mut output = ProcessOutput::default();
 
         input.ready = true;
-        p.write(b"This msg is >14 bytes").unwrap();
+        p.write_all(b"This msg is >14 bytes").unwrap();
         output = p.next(&input, &output);
         assert_eq!(output.data, b"This msg is >1");
         assert_eq!(output.tx_cnt, 1);
@@ -952,7 +952,7 @@ mod tests {
         let mut output = ProcessOutput::default();
 
         input.ready = true;
-        p.write(b"This msg is >14 bytes").unwrap();
+        p.write_all(b"This msg is >14 bytes").unwrap();
 
         assert_eq!(p.init_state, InitState::ClearBuffers);
 
