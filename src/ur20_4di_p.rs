@@ -69,12 +69,13 @@ fn parameters_from_raw_data(data: &[u16]) -> Result<Vec<ChannelParameters>> {
 
     let channel_parameters: Result<Vec<_>> = (0..4)
         .map(|i| {
-            let mut p = ChannelParameters::default();
-            p.input_delay = match FromPrimitive::from_u16(data[i]) {
-                Some(x) => x,
-                _ => {
-                    return Err(Error::ChannelParameter);
-                }
+            let p = ChannelParameters {
+                input_delay: match FromPrimitive::from_u16(data[i]) {
+                    Some(x) => x,
+                    _ => {
+                        return Err(Error::ChannelParameter);
+                    }
+                },
             };
             Ok(p)
         })

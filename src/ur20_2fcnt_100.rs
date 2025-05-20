@@ -239,13 +239,13 @@ fn parameters_from_raw_data(data: &[u16]) -> Result<Vec<ChannelParameters>> {
 
     let channel_parameters: Result<Vec<_>> = (0..2)
         .map(|idx| {
-            let mut p = ChannelParameters::default();
-
-            p.input_filter = match FromPrimitive::from_u16(data[idx]) {
-                Some(x) => x,
-                _ => {
-                    return Err(Error::ChannelParameter);
-                }
+            let p = ChannelParameters {
+                input_filter: match FromPrimitive::from_u16(data[idx]) {
+                    Some(x) => x,
+                    _ => {
+                        return Err(Error::ChannelParameter);
+                    }
+                },
             };
 
             Ok(p)
@@ -306,8 +306,7 @@ mod tests {
 
     #[test]
     fn test_process_input_data_with_missing_channel_parameters() {
-        let mut m = Mod::default();
-        m.ch_params = vec![];
+        let m = Mod { ch_params: vec![] };
         assert!(m.process_input_data(&[0; 10]).is_err());
     }
 
@@ -455,8 +454,7 @@ mod tests {
 
     #[test]
     fn test_process_output_values_with_missing_channel_parameters() {
-        let mut m = Mod::default();
-        m.ch_params = vec![];
+        let m = Mod { ch_params: vec![] };
         let out = ProcessOutput::default();
         assert!(m.process_output_values(&vec![out.into(); 2]).is_err());
     }
@@ -533,7 +531,7 @@ mod tests {
         };
         assert_eq!(input.hertz().unwrap(), 25000.0);
         let input = ProcessInput {
-            count: ::std::u32::MAX,
+            count: u32::MAX,
             active: true,
             duration: Some(Duration::new(0, 1_000)),
         };

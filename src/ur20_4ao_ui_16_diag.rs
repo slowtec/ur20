@@ -219,8 +219,7 @@ mod tests {
 
     #[test]
     fn test_process_output_values_with_missing_channel_parameters() {
-        let mut m = Mod::default();
-        m.ch_params = vec![];
+        let m = Mod { ch_params: vec![] };
         assert!(m
             .process_output_values(&[
                 Decimal32(0.0),

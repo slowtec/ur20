@@ -178,8 +178,10 @@ mod tests {
 
     #[test]
     fn test_process_input_data_with_missing_channel_parameters() {
-        let mut m = Mod::default();
-        m.ch_params = vec![];
+        let m = Mod {
+            ch_params: vec![],
+            ..Default::default()
+        };
         assert!(m.process_input_data(&[0; 4]).is_err());
     }
 

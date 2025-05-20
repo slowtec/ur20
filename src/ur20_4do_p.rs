@@ -80,13 +80,14 @@ fn parameters_from_raw_data(data: &[u16]) -> Result<Vec<ChannelParameters>> {
 
     let channel_parameters: Result<Vec<_>> = (0..4)
         .map(|i| {
-            let mut p = ChannelParameters::default();
-            p.substitute_value = match data[i] {
-                0 => false,
-                1 => true,
-                _ => {
-                    return Err(Error::ChannelParameter);
-                }
+            let p = ChannelParameters {
+                substitute_value: match data[i] {
+                    0 => false,
+                    1 => true,
+                    _ => {
+                        return Err(Error::ChannelParameter);
+                    }
+                },
             };
             Ok(p)
         })

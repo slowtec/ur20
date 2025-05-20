@@ -109,13 +109,13 @@ fn parameters_from_raw_data(data: &[u16]) -> Result<(ModuleParameters, Vec<Chann
     if data.len() < 29 {
         return Err(Error::BufferLength);
     }
-    let mut module_parameters = ModuleParameters::default();
-
-    module_parameters.temperature_unit = match FromPrimitive::from_u16(data[0]) {
-        Some(x) => x,
-        _ => {
-            return Err(Error::ChannelParameter);
-        }
+    let module_parameters = ModuleParameters {
+        temperature_unit: match FromPrimitive::from_u16(data[0]) {
+            Some(x) => x,
+            _ => {
+                return Err(Error::ChannelParameter);
+            }
+        },
     };
 
     let channel_parameters: Result<Vec<_>> = (0..4)
@@ -183,8 +183,10 @@ mod tests {
 
     #[test]
     fn test_process_input_data_with_missing_channel_parameters() {
-        let mut m = Mod::default();
-        m.ch_params = vec![];
+        let m = Mod {
+            ch_params: vec![],
+            ..Default::default()
+        };
         assert!(m.process_input_data(&[0, 0, 0, 0]).is_err());
     }
 
@@ -341,12 +343,12 @@ mod tests {
         assert!(parameters_from_raw_data(&data).unwrap().1[3].limit_value_monitoring);
         assert_eq!(
             parameters_from_raw_data(&data).unwrap().1[3].high_limit_value,
-            ::std::i16::MAX
+            i16::MAX
         );
 
         assert_eq!(
             parameters_from_raw_data(&data).unwrap().1[3].low_limit_value,
-            ::std::i16::MIN
+            i16::MIN
         );
     }
 

@@ -242,13 +242,11 @@ impl Coupler {
                         }
                         self.last_tx_cnt = out_v.tx_cnt;
 
-                        if let Some(v) = self.write.remove(&Address {
+                        if let Some(ChannelValue::Bytes(ref data)) = self.write.remove(&Address {
                             module: m_nr,
                             channel: 0,
                         }) {
-                            if let ChannelValue::Bytes(ref data) = v {
-                                p.write_all(data)?;
-                            }
+                            p.write_all(data)?;
                         }
 
                         let rs_out = p.next(in_v, out_v);
@@ -1050,6 +1048,7 @@ mod tests {
             ],
         };
         let mut c = Coupler::new(&cfg).unwrap();
+        #[allow(clippy::unusual_byte_groupings)]
         let process_input_data = vec![
             0b_0101,               // module input for DI_P
             0b_00000100_1111_0001, // len & status
@@ -1151,7 +1150,7 @@ mod tests {
             let outputs = c.outputs();
             assert_eq!(outputs[2][0], ChannelValue::None);
         }
-
+        #[allow(clippy::unusual_byte_groupings)]
         let process_input_data = vec![
             0b_0101,               // module input for DI_P
             0b_00000101_1111_1001, // len & status (bit 3&4: RX_CNT , bit 5&6: TX_CNT_ACK)

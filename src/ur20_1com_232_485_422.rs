@@ -49,11 +49,11 @@ pub struct ProcessOutput {
     pub tx_buf_flush: bool,
     /// This flag controls the hardware transmit buffer:
     ///
-    /// - `false`:  The hardware transmit buffer is released.
-    ///             A character will be sent as soon as it reaches the buffer.
-    /// - `true`:   The hardware transmit buffer is locked.
-    ///             Characters will only be sent, when the flag is set to
-    ///             `false` again.
+    /// - `false`: The hardware transmit buffer is released.
+    ///   A character will be sent as soon as it reaches the buffer.
+    /// - `true`: The hardware transmit buffer is locked.
+    ///   Characters will only be sent, when the flag is set to
+    ///   `false` again.
     pub disable_tx_hw_buffer: bool,
     /// The transmitting sequence number.
     /// The sequence is: 0,1,2,3,0,...
@@ -768,6 +768,7 @@ mod tests {
             .is_err());
     }
 
+    #[allow(clippy::field_reassign_with_default)]
     #[test]
     fn test_process_output_values_with_invalid_byte_len() {
         let mut m = Mod::default();
@@ -812,6 +813,7 @@ mod tests {
             .is_ok());
     }
 
+    #[allow(clippy::field_reassign_with_default)]
     #[test]
     fn test_process_output_values() {
         let mut m = Mod::default();
