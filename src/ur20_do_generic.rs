@@ -6,15 +6,27 @@ use super::*;
 use crate::ur20_fbc_mod_tcp::{FromModbusParameterData, ProcessModbusTcpData};
 use crate::util::*;
 
-#[allow(non_camel_case_types)]
-#[derive(Debug)]
-pub struct UR20_4DO_P;
-impl DOVariant for UR20_4DO_P {
-    const MODULE_TYPE: ModuleType = ModuleType::UR20_4DO_P;
-}
-
 trait DOVariant: Debug + Send {
     const MODULE_TYPE: ModuleType;
+}
+
+macro_rules! make_variants {
+    ($(struct $name:ident),*) => {
+        $(
+            #[allow(non_camel_case_types)]
+            #[derive(Debug)]
+            pub struct $name;
+            impl DOVariant for $name {
+                const MODULE_TYPE: ModuleType = ModuleType::$name;
+            }
+        )*
+    };
+}
+
+make_variants! {
+    struct UR20_4DO_P,
+    struct UR20_4DO_P_2A,
+    struct UR20_8DO_P
 }
 
 #[derive(Debug)]

@@ -118,6 +118,14 @@ impl Coupler {
                     let m = ur20_do_generic::Mod::<ur20_do_generic::UR20_4DO_P>::from_modbus_parameter_data(param_data)?;
                     Box::new(m)
                 }
+                ModuleType::UR20_4DO_P_2A => {
+                    let m = ur20_do_generic::Mod::<ur20_do_generic::UR20_4DO_P_2A>::from_modbus_parameter_data(param_data)?;
+                    Box::new(m)
+                }
+                ModuleType::UR20_8DO_P => {
+                    let m = ur20_do_generic::Mod::<ur20_do_generic::UR20_8DO_P>::from_modbus_parameter_data(param_data)?;
+                    Box::new(m)
+                }
                 ModuleType::UR20_16DO_P => {
                     let m = ur20_16do_p::Mod::from_modbus_parameter_data(param_data)?;
                     Box::new(m)
