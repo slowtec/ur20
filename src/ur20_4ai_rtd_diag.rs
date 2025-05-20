@@ -178,21 +178,21 @@ mod tests {
     #[test]
     fn test_process_input_data_with_empty_buffer() {
         let m = Mod::default();
-        assert!(m.process_input_data(&vec![]).is_err());
+        assert!(m.process_input_data(&[]).is_err());
     }
 
     #[test]
     fn test_process_input_data_with_missing_channel_parameters() {
         let mut m = Mod::default();
         m.ch_params = vec![];
-        assert!(m.process_input_data(&vec![0, 0, 0, 0]).is_err());
+        assert!(m.process_input_data(&[0, 0, 0, 0]).is_err());
     }
 
     #[test]
     fn test_process_input_data_with_disabled_channels() {
         let m = Mod::default();
         assert_eq!(
-            m.process_input_data(&vec![5, 0, 7, 8]).unwrap(),
+            m.process_input_data(&[5, 0, 7, 8]).unwrap(),
             vec![Disabled, Disabled, Disabled, Disabled]
         );
     }
@@ -207,7 +207,7 @@ mod tests {
         m.ch_params[3].measurement_range = RtdRange::PT1000;
 
         assert_eq!(
-            m.process_input_data(&vec![0x6C00, 0x7EFF, 55, 99]).unwrap(),
+            m.process_input_data(&[0x6C00, 0x7EFF, 55, 99]).unwrap(),
             vec![
                 Decimal32(40.0),
                 Decimal32(47.03559),
@@ -224,7 +224,7 @@ mod tests {
         m.ch_params[1].measurement_range = RtdRange::Cu10;
 
         assert_eq!(
-            m.process_input_data(&vec![0xF830, 0xFF38, 0, 0]).unwrap(),
+            m.process_input_data(&[0xF830, 0xFF38, 0, 0]).unwrap(),
             vec![Decimal32(-200.0), Decimal32(-20.0), Disabled, Disabled]
         );
     }
@@ -237,7 +237,7 @@ mod tests {
         m.ch_params[1].measurement_range = RtdRange::NI1000;
 
         let input = m
-            .process_input_data(&vec![(-2040_i16 as u16), (-640_i16 as u16), 0, 0])
+            .process_input_data(&[(-2040_i16 as u16), (-640_i16 as u16), 0, 0])
             .unwrap();
 
         if let ChannelValue::Decimal32(v) = input[0] {
@@ -256,7 +256,7 @@ mod tests {
     #[test]
     fn test_process_output_data() {
         let m = Mod::default();
-        assert!(m.process_output_data(&vec![0; 4]).is_err());
+        assert!(m.process_output_data(&[0; 4]).is_err());
         assert_eq!(
             m.process_output_data(&[]).unwrap(),
             vec![ChannelValue::None; 4]
@@ -336,15 +336,9 @@ mod tests {
             ConversionTime::ms130
         );
 
-        assert_eq!(
-            parameters_from_raw_data(&data).unwrap().1[3].channel_diagnostics,
-            true
-        );
+        assert!(parameters_from_raw_data(&data).unwrap().1[3].channel_diagnostics);
 
-        assert_eq!(
-            parameters_from_raw_data(&data).unwrap().1[3].limit_value_monitoring,
-            true
-        );
+        assert!(parameters_from_raw_data(&data).unwrap().1[3].limit_value_monitoring);
         assert_eq!(
             parameters_from_raw_data(&data).unwrap().1[3].high_limit_value,
             ::std::i16::MAX

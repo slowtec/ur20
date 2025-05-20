@@ -20,7 +20,7 @@ pub fn test_bit_16(val: u16, bit_nr: usize) -> bool {
 }
 
 fn bit_mask(bit: usize) -> usize {
-    (1 << bit)
+    1 << bit
 }
 
 pub fn u16_to_u8(words: &[u16]) -> Vec<u8> {
@@ -58,14 +58,14 @@ pub fn analog_ui_value_to_u16(v: f32, range: &AnalogUIRange, format: &DataFormat
 
     #[rustfmt::skip]
     let v = match *range {
-        mA0To20       => (factor * v / 20.0),
-        mA4To20       => (factor * (v - 4.0) / 16.0),
+        mA0To20       => factor * v / 20.0,
+        mA4To20       => factor * (v - 4.0) / 16.0,
         V0To10        |
-        VMinus10To10  => (factor * v / 10.0),
+        VMinus10To10  => factor * v / 10.0,
         V0To5         |
-        VMinus5To5    => (factor * v / 5.0),
-        V1To5         => (factor * (v - 1.0) / 4.0),
-        V2To10        => (factor * (v - 2.0) / 8.0),
+        VMinus5To5    => factor * v / 5.0,
+        V1To5         => factor * (v - 1.0) / 4.0,
+        V2To10        => factor * (v - 2.0) / 8.0,
         Disabled      => 0.0,
     };
     v as u16
@@ -124,8 +124,8 @@ mod tests {
 
     #[test]
     fn test_bit() {
-        assert_eq!(super::test_bit(0b10, 0), false);
-        assert_eq!(super::test_bit(0b10, 1), true);
+        assert!(!super::test_bit(0b10, 0));
+        assert!(super::test_bit(0b10, 1));
     }
 
     #[test]
@@ -154,7 +154,7 @@ mod tests {
 
     #[test]
     fn shift_data() {
-        assert_eq!(super::shift_data(&vec![0xABCD]), vec![0x00AB]);
+        assert_eq!(super::shift_data(&[0xABCD]), vec![0x00AB]);
     }
 
     #[test]

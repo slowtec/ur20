@@ -31,15 +31,10 @@ pub struct ProcessInput {
 impl ProcessInput {
     /// Calculate the frequency in Hz.
     pub fn hertz(&self) -> Option<f32> {
-        if let Some(d) = self.duration {
-            //TODO: check overflow!
-            Some(
-                self.count as f32
-                    / (d.as_secs() as f32 + d.subsec_nanos() as f32 / NANOS_PER_SEC as f32),
-            )
-        } else {
-            None
-        }
+        self.duration.map(|d| {
+            self.count as f32
+                / (d.as_secs() as f32 + d.subsec_nanos() as f32 / NANOS_PER_SEC as f32)
+        })
     }
 }
 
@@ -256,7 +251,7 @@ fn parameters_from_raw_data(data: &[u16]) -> Result<Vec<ChannelParameters>> {
             Ok(p)
         })
         .collect();
-    Ok(channel_parameters?)
+    channel_parameters
 }
 
 #[cfg(test)]
@@ -303,17 +298,17 @@ mod tests {
     #[test]
     fn test_process_input_data_with_invalid_buffer_size() {
         let m = Mod::default();
-        assert!(m.process_input_data(&vec![]).is_err());
-        assert!(m.process_input_data(&vec![0; 2]).is_err());
-        assert!(m.process_input_data(&vec![0; 9]).is_err());
-        assert!(m.process_input_data(&vec![0; 10]).is_ok());
+        assert!(m.process_input_data(&[]).is_err());
+        assert!(m.process_input_data(&[0; 2]).is_err());
+        assert!(m.process_input_data(&[0; 9]).is_err());
+        assert!(m.process_input_data(&[0; 10]).is_ok());
     }
 
     #[test]
     fn test_process_input_data_with_missing_channel_parameters() {
         let mut m = Mod::default();
         m.ch_params = vec![];
-        assert!(m.process_input_data(&vec![0; 10]).is_err());
+        assert!(m.process_input_data(&[0; 10]).is_err());
     }
 
     #[test]

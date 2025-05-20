@@ -138,7 +138,7 @@ fn parameters_from_raw_data(data: &[u16]) -> Result<Vec<ChannelParameters>> {
             Ok(p)
         })
         .collect();
-    Ok(channel_parameters?)
+    channel_parameters
 }
 
 #[cfg(test)]
@@ -166,7 +166,7 @@ mod tests {
     fn test_process_output_data() {
         let mut m = Mod::default();
         assert_eq!(
-            m.process_output_data(&vec![123, 456, 789, 0]).unwrap(),
+            m.process_output_data(&[123, 456, 789, 0]).unwrap(),
             &[
                 ChannelValue::Disabled,
                 ChannelValue::Disabled,
@@ -179,8 +179,7 @@ mod tests {
         m.ch_params[2].output_range = AnalogUIRange::mA0To20;
         m.ch_params[3].output_range = AnalogUIRange::mA0To20;
         assert_eq!(
-            m.process_output_data(&vec![0x0, 0x6C00, 0x3600, 0x0])
-                .unwrap(),
+            m.process_output_data(&[0x0, 0x6C00, 0x3600, 0x0]).unwrap(),
             &[
                 Decimal32(0.0),
                 Decimal32(20.0),
@@ -193,10 +192,10 @@ mod tests {
     #[test]
     fn test_process_output_data_with_invalid_buffer_size() {
         let m = Mod::default();
-        assert!(m.process_output_data(&vec![]).is_err());
-        assert!(m.process_output_data(&vec![0; 3]).is_err());
-        assert!(m.process_output_data(&vec![0; 5]).is_err());
-        assert!(m.process_output_data(&vec![0; 4]).is_ok());
+        assert!(m.process_output_data(&[]).is_err());
+        assert!(m.process_output_data(&[0; 3]).is_err());
+        assert!(m.process_output_data(&[0; 5]).is_err());
+        assert!(m.process_output_data(&[0; 4]).is_ok());
     }
 
     #[test]

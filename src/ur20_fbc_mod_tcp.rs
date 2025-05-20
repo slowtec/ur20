@@ -12,16 +12,16 @@ type RegisterAddress = u16;
 type BitAddress = u16;
 type BitNr = usize;
 
-pub const ADDR_PACKED_PROCESS_INPUT_DATA  : RegisterAddress = 0x0000;
-pub const ADDR_PACKED_PROCESS_OUTPUT_DATA : RegisterAddress = 0x0800;
-pub const ADDR_PROCESS_OUTPUT_LEN         : RegisterAddress = 0x1010;
-pub const ADDR_PROCESS_INPUT_LEN          : RegisterAddress = 0x1011;
-pub const ADDR_COUPLER_ID                 : RegisterAddress = 0x1000;
-pub const ADDR_COUPLER_STATUS             : RegisterAddress = 0x100C;
-pub const ADDR_CURRENT_MODULE_COUNT       : RegisterAddress = 0x27FE;
-pub const ADDR_CURRENT_MODULE_LIST        : RegisterAddress = 0x2A00;
-pub const ADDR_MODULE_OFFSETS             : RegisterAddress = 0x2B00;
-pub const ADDR_MODULE_PARAMETERS          : RegisterAddress = 0xC000;
+pub const ADDR_PACKED_PROCESS_INPUT_DATA: RegisterAddress = 0x0000;
+pub const ADDR_PACKED_PROCESS_OUTPUT_DATA: RegisterAddress = 0x0800;
+pub const ADDR_PROCESS_OUTPUT_LEN: RegisterAddress = 0x1010;
+pub const ADDR_PROCESS_INPUT_LEN: RegisterAddress = 0x1011;
+pub const ADDR_COUPLER_ID: RegisterAddress = 0x1000;
+pub const ADDR_COUPLER_STATUS: RegisterAddress = 0x100C;
+pub const ADDR_CURRENT_MODULE_COUNT: RegisterAddress = 0x27FE;
+pub const ADDR_CURRENT_MODULE_LIST: RegisterAddress = 0x2A00;
+pub const ADDR_MODULE_OFFSETS: RegisterAddress = 0x2B00;
+pub const ADDR_MODULE_PARAMETERS: RegisterAddress = 0xC000;
 
 pub trait ProcessModbusTcpData: Module + Send {
     /// Number of bytes within the process input data buffer.
@@ -111,51 +111,51 @@ impl Coupler {
             let param_data = &cfg.params[i];
             let x: Box<dyn ProcessModbusTcpData> = match *m {
                 ModuleType::UR20_4DI_P => {
-                    let m = ur20_4di_p::Mod::from_modbus_parameter_data(&param_data)?;
+                    let m = ur20_4di_p::Mod::from_modbus_parameter_data(param_data)?;
                     Box::new(m)
                 }
                 ModuleType::UR20_4DO_P => {
-                    let m = ur20_4do_p::Mod::from_modbus_parameter_data(&param_data)?;
+                    let m = ur20_4do_p::Mod::from_modbus_parameter_data(param_data)?;
                     Box::new(m)
                 }
                 ModuleType::UR20_16DO_P => {
-                    let m = ur20_16do_p::Mod::from_modbus_parameter_data(&param_data)?;
+                    let m = ur20_16do_p::Mod::from_modbus_parameter_data(param_data)?;
                     Box::new(m)
                 }
                 ModuleType::UR20_4RO_CO_255 => {
-                    let m = ur20_4ro_co_255::Mod::from_modbus_parameter_data(&param_data)?;
+                    let m = ur20_4ro_co_255::Mod::from_modbus_parameter_data(param_data)?;
                     Box::new(m)
                 }
                 ModuleType::UR20_4AO_UI_16 => {
-                    let m = ur20_4ao_ui_16::Mod::from_modbus_parameter_data(&param_data)?;
+                    let m = ur20_4ao_ui_16::Mod::from_modbus_parameter_data(param_data)?;
                     Box::new(m)
                 }
                 ModuleType::UR20_4AO_UI_16_DIAG => {
-                    let m = ur20_4ao_ui_16_diag::Mod::from_modbus_parameter_data(&param_data)?;
+                    let m = ur20_4ao_ui_16_diag::Mod::from_modbus_parameter_data(param_data)?;
                     Box::new(m)
                 }
                 ModuleType::UR20_4AI_RTD_DIAG => {
-                    let m = ur20_4ai_rtd_diag::Mod::from_modbus_parameter_data(&param_data)?;
+                    let m = ur20_4ai_rtd_diag::Mod::from_modbus_parameter_data(param_data)?;
                     Box::new(m)
                 }
                 ModuleType::UR20_4AI_UI_16_DIAG => {
-                    let m = ur20_4ai_ui_16_diag::Mod::from_modbus_parameter_data(&param_data)?;
+                    let m = ur20_4ai_ui_16_diag::Mod::from_modbus_parameter_data(param_data)?;
                     Box::new(m)
                 }
                 ModuleType::UR20_4AI_UI_12 => {
-                    let m = ur20_4ai_ui_12::Mod::from_modbus_parameter_data(&param_data)?;
+                    let m = ur20_4ai_ui_12::Mod::from_modbus_parameter_data(param_data)?;
                     Box::new(m)
                 }
                 ModuleType::UR20_8AI_I_16_DIAG_HD => {
-                    let m = ur20_8ai_i_16_diag_hd::Mod::from_modbus_parameter_data(&param_data)?;
+                    let m = ur20_8ai_i_16_diag_hd::Mod::from_modbus_parameter_data(param_data)?;
                     Box::new(m)
                 }
                 ModuleType::UR20_2FCNT_100 => {
-                    let m = ur20_2fcnt_100::Mod::from_modbus_parameter_data(&param_data)?;
+                    let m = ur20_2fcnt_100::Mod::from_modbus_parameter_data(param_data)?;
                     Box::new(m)
                 }
                 ModuleType::UR20_1COM_232_485_422 => {
-                    let m = ur20_1com_232_485_422::Mod::from_modbus_parameter_data(&param_data)?;
+                    let m = ur20_1com_232_485_422::Mod::from_modbus_parameter_data(param_data)?;
                     let processor = ur20_1com_232_485_422::MessageProcessor::new(
                         m.mod_params.process_data_len.clone(),
                     );
@@ -212,7 +212,7 @@ impl Coupler {
         if !self.is_valid_addr(addr) {
             return Err(Error::Address);
         }
-        self.write.insert(addr.clone(), value);
+        self.write.insert(*addr, value);
         Ok(())
     }
 
@@ -223,8 +223,8 @@ impl Coupler {
             .zip(&self.offsets)
             .map(|(m, o)| (&**m, o))
             .collect();
-        self.in_values = process_input_data(&*infos, process_input)?;
-        self.out_values = process_output_data(&*infos, process_output)?;
+        self.in_values = process_input_data(&infos, process_input)?;
+        self.out_values = process_output_data(&infos, process_output)?;
 
         let mut next_out_values = self.out_values.clone();
         let mut in_bytes = HashMap::new();
@@ -276,7 +276,7 @@ impl Coupler {
         for (m_nr, v) in out_bytes {
             self.out_values[m_nr][0] = v;
         }
-        process_output_values(&*infos, &next_out_values)
+        process_output_values(&infos, &next_out_values)
     }
 }
 
@@ -311,7 +311,7 @@ pub fn process_input_data(
 ) -> Result<Vec<Vec<ChannelValue>>> {
     modules
         .iter()
-        .map(|&(ref m, ref offset)| {
+        .map(|&(m, offset)| {
             if let Some(in_offset) = offset.input {
                 let cnt = m.process_input_byte_count();
                 m.process_input_data(&prepare_raw_data_to_process(
@@ -334,7 +334,7 @@ pub fn process_output_data(
 ) -> Result<Vec<Vec<ChannelValue>>> {
     modules
         .iter()
-        .map(|&(ref m, ref offset)| {
+        .map(|&(m, offset)| {
             if let Some(out_offset) = offset.output {
                 let cnt = m.process_output_byte_count();
                 m.process_output_data(&prepare_raw_data_to_process(
@@ -374,7 +374,7 @@ fn prepare_raw_data_to_process(
 
     match bit {
         0 => Ok(output.to_vec()),
-        8 => Ok(shift_data(&output)),
+        8 => Ok(shift_data(output)),
         _ => Err(Error::ModuleOffset),
     }
 }
@@ -390,7 +390,7 @@ pub fn process_output_values(
 
     let mut out = vec![];
 
-    for (i, &(ref m, ref offset)) in modules.iter().enumerate() {
+    for (i, &(m, offset)) in modules.iter().enumerate() {
         if let Some(out_offset) = offset.output {
             let data = m.process_output_values(&values[i])?;
             let (start, bit) = to_register_address(out_offset);
@@ -410,11 +410,11 @@ pub fn process_output_values(
                     if out.len() != start + 1 {
                         return Err(Error::ModuleOffset);
                     }
-                    let shared_low_byte = out[start as usize] & 0x00FF;
+                    let shared_low_byte = out[start] & 0x00FF;
                     let buf = u16_to_u8(&data);
                     let shared_high_byte = u16::from(buf[0]) << 8;
                     let word = shared_high_byte | shared_low_byte;
-                    out[start as usize] = word;
+                    out[start] = word;
                 }
                 _ => {
                     return Err(Error::ModuleOffset);
@@ -438,7 +438,7 @@ fn word_to_offset(word: Word) -> Option<BitAddress> {
 pub fn to_register_address(addr: BitAddress) -> (RegisterAddress, BitNr) {
     let register = (addr & 0xFFF0) >> 4;
     let bit = (addr & 0x000F) as usize;
-    (register as u16, bit)
+    (register, bit)
 }
 
 /// Merges a register address and a bit number into a bit address.
@@ -456,13 +456,13 @@ impl ModbusParameterRegisterCount for ModuleType {
         use super::ModuleType::*;
         match *self {
             // Digital input modules
-            UR20_4DI_P | UR20_4DI_P_3W => 0 + 4 * 1,
-            UR20_8DI_P_2W | UR20_8DI_P_3W => 0 + 8 * 1,
+            UR20_4DI_P | UR20_4DI_P_3W => 4,
+            UR20_8DI_P_2W | UR20_8DI_P_3W => 8,
 
             // Digital output modules
-            UR20_4DO_P => 0 + 4 * 1,
+            UR20_4DO_P => 4,
             UR20_16DO_P => 0,
-            UR20_4RO_CO_255 => 0 + 4 * 1,
+            UR20_4RO_CO_255 => 4,
 
             // Analogue input modules
             UR20_8AI_I_16_DIAG_HD => 1 + 8 * 4,
@@ -470,14 +470,14 @@ impl ModbusParameterRegisterCount for ModuleType {
             UR20_4AI_UI_12 => 1 + 4 * 2,
 
             // Analogue output modul
-            UR20_4AO_UI_16 => 0 + 4 * 3,
-            UR20_4AO_UI_16_DIAG => 0 + 4 * 4,
+            UR20_4AO_UI_16 => 4 * 3,
+            UR20_4AO_UI_16_DIAG => 4 * 4,
 
             // Analogue input modules DIAG
             UR20_4AI_RTD_DIAG => 1 + 4 * 7,
 
             // Counter modules
-            UR20_2FCNT_100 => 0 + 2 * 1,
+            UR20_2FCNT_100 => 2,
 
             // Communication modules
             UR20_1COM_232_485_422 => 10,
@@ -511,7 +511,7 @@ pub fn module_list_from_registers(registers: &[u16]) -> Result<Vec<ModuleType>> 
     }
     let mut list = vec![];
     for i in 0..registers.len() / 2 {
-        let idx = i as usize;
+        let idx = i;
         let hi = u32::from(registers[idx * 2]);
         let lo = u32::from(registers[idx * 2 + 1]);
         let id = (hi << 16) + lo;
@@ -527,9 +527,9 @@ mod tests {
 
     #[test]
     fn test_offsets_of_process_data() {
-        assert_eq!(offsets_of_process_data(&vec![]), vec![]);
+        assert_eq!(offsets_of_process_data(&[]), vec![]);
         assert_eq!(
-            offsets_of_process_data(&vec![0xFFFF, 0x0000, 0x8000, 0x0040, 0x8050, 0xFFFF]),
+            offsets_of_process_data(&[0xFFFF, 0x0000, 0x8000, 0x0040, 0x8050, 0xFFFF]),
             vec![
                 ModuleOffset {
                     output: None,
@@ -832,7 +832,7 @@ mod tests {
         let mod1: &dyn ProcessModbusTcpData = &m1;
         let mod2: &dyn ProcessModbusTcpData = &m2;
 
-        let addr_out_0 = to_bit_address(ADDR_PACKED_PROCESS_OUTPUT_DATA + 0, 0);
+        let addr_out_0 = to_bit_address(ADDR_PACKED_PROCESS_OUTPUT_DATA, 0);
         let addr_in_1 = to_bit_address(ADDR_PACKED_PROCESS_INPUT_DATA, 0);
         let addr_out_2 = to_bit_address(ADDR_PACKED_PROCESS_OUTPUT_DATA + 1, 8);
 
@@ -1182,15 +1182,15 @@ mod tests {
     #[test]
     fn test_module_list_from_registers() {
         assert_eq!(
-            module_list_from_registers(&vec![]).err().unwrap(),
+            module_list_from_registers(&[]).err().unwrap(),
             Error::RegisterCount
         );
         assert_eq!(
-            module_list_from_registers(&vec![0xAB0C]).err().unwrap(),
+            module_list_from_registers(&[0xAB0C]).err().unwrap(),
             Error::RegisterCount
         );
         assert_eq!(
-            module_list_from_registers(&vec![0x0101, 0x2FA0]).unwrap(),
+            module_list_from_registers(&[0x0101, 0x2FA0]).unwrap(),
             vec![ModuleType::UR20_4DO_P]
         );
     }

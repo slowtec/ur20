@@ -17,7 +17,7 @@ pub struct Mod {
     pub ch_params: Vec<ChannelParameters>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct ProcessInput {
     /// Indicates if there is a telegramm in the receive buffer or not.
     pub data_available: bool,
@@ -39,7 +39,7 @@ pub struct ProcessInput {
     pub data: Vec<u8>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct ProcessOutput {
     /// This flag controls whether the receive buffer will be cleared
     /// or not.
@@ -186,33 +186,6 @@ impl ProcessInput {
         };
 
         Ok(msg)
-    }
-}
-
-impl Default for ProcessInput {
-    fn default() -> Self {
-        ProcessInput {
-            data_available: false,
-            buffer_nearly_full: false,
-            rx_cnt: 0,
-            tx_cnt_ack: 0,
-            ready: false,
-            data: vec![],
-        }
-    }
-}
-
-impl Default for ProcessOutput {
-    fn default() -> Self {
-        ProcessOutput {
-            rx_buf_flush: false,
-            tx_buf_flush: false,
-            disable_tx_hw_buffer: false,
-            tx_cnt: 0,
-            rx_cnt_ack: 0,
-            reset: false,
-            data: vec![],
-        }
     }
 }
 
@@ -601,21 +574,21 @@ mod tests {
     fn try_process_input_data_data_from_empty_byte_message() {
         let byte_msg = vec![0, 0];
         let msg = ProcessInput::try_from_byte_message(&byte_msg).unwrap();
-        assert_eq!(msg.data_available, false);
-        assert_eq!(msg.buffer_nearly_full, false);
+        assert!(!msg.data_available);
+        assert!(!msg.buffer_nearly_full);
         assert_eq!(msg.rx_cnt, 0);
         assert_eq!(msg.tx_cnt_ack, 0);
-        assert_eq!(msg.ready, false);
+        assert!(!msg.ready);
         assert_eq!(msg.data, vec![]);
     }
 
     #[test]
     fn try_process_input_data_data_from_invalid_byte_message() {
-        let too_small_err = ProcessInput::try_from_byte_message(&vec![0]).err().unwrap();
-        let missmatched_len_err = ProcessInput::try_from_byte_message(&vec![0, 5, 0])
+        let too_small_err = ProcessInput::try_from_byte_message(&[0]).err().unwrap();
+        let missmatched_len_err = ProcessInput::try_from_byte_message(&[0, 5, 0])
             .err()
             .unwrap();
-        let ok_res = ProcessInput::try_from_byte_message(&vec![0, 5, 0, 0, 0, 0, 0]);
+        let ok_res = ProcessInput::try_from_byte_message(&[0, 5, 0, 0, 0, 0, 0]);
         assert_eq!(too_small_err, Error::BufferLength);
         assert_eq!(missmatched_len_err, Error::BufferLength);
         assert!(ok_res.is_ok());
@@ -625,11 +598,11 @@ mod tests {
     fn try_process_input_data_data_from_valid_byte_message() {
         let byte_msg = vec![0b_1111_0001, 3, 0x0, 0xf, 0x5];
         let msg = ProcessInput::try_from_byte_message(&byte_msg).unwrap();
-        assert_eq!(msg.data_available, true);
-        assert_eq!(msg.buffer_nearly_full, false);
+        assert!(msg.data_available);
+        assert!(!msg.buffer_nearly_full);
         assert_eq!(msg.rx_cnt, 2);
         assert_eq!(msg.tx_cnt_ack, 3);
-        assert_eq!(msg.ready, true);
+        assert!(msg.ready);
         assert_eq!(msg.data, vec![0, 15, 5]);
     }
 
@@ -724,19 +697,19 @@ mod tests {
     fn try_process_output_from_valid_byte_message() {
         let byte_msg = vec![0b01011010, 3, 0x0, 0xe, 0x7];
         let msg = ProcessOutput::try_from_byte_message(&byte_msg).unwrap();
-        assert_eq!(msg.rx_buf_flush, false);
-        assert_eq!(msg.tx_buf_flush, true);
-        assert_eq!(msg.disable_tx_hw_buffer, false);
+        assert!(!msg.rx_buf_flush);
+        assert!(msg.tx_buf_flush);
+        assert!(!msg.disable_tx_hw_buffer);
         assert_eq!(msg.tx_cnt, 3);
         assert_eq!(msg.rx_cnt_ack, 2);
-        assert_eq!(msg.reset, false);
+        assert!(!msg.reset);
         assert_eq!(msg.data, vec![0, 14, 7]);
     }
 
     #[test]
     fn test_process_input_data_with_empty_buffer() {
         let m = Mod::default();
-        assert!(m.process_input_data(&vec![]).is_err());
+        assert!(m.process_input_data(&[]).is_err());
     }
 
     #[test]
@@ -746,12 +719,12 @@ mod tests {
         let values = m.process_output_data(&data).unwrap();
         assert_eq!(values.len(), 1);
         if let ChannelValue::ComRsOut(ref out) = values[0] {
-            assert_eq!(out.rx_buf_flush, false);
-            assert_eq!(out.tx_buf_flush, true);
-            assert_eq!(out.disable_tx_hw_buffer, false);
+            assert!(!out.rx_buf_flush);
+            assert!(out.tx_buf_flush);
+            assert!(!out.disable_tx_hw_buffer);
             assert_eq!(out.tx_cnt, 3);
             assert_eq!(out.rx_cnt_ack, 2);
-            assert_eq!(out.reset, false);
+            assert!(!out.reset);
             assert_eq!(out.data, vec![0, 14, 7]);
         } else {
             panic!("wrong channel data");
@@ -761,13 +734,13 @@ mod tests {
     #[test]
     fn test_process_output_data_with_empty_buffer() {
         let m = Mod::default();
-        assert!(m.process_output_data(&vec![]).is_err());
+        assert!(m.process_output_data(&[]).is_err());
     }
 
     #[test]
     fn test_process_input_data_with_valid_input_data() {
         let m = Mod::default();
-        let result = m.process_input_data(&vec![0x0600, 0, 0xABCD, 0]).unwrap();
+        let result = m.process_input_data(&[0x0600, 0, 0xABCD, 0]).unwrap();
         if let ChannelValue::ComRsIn(ref msg) = result[0] {
             assert_eq!(msg.data, vec![0, 0, 0xCD, 0xAB, 0, 0]);
         } else {
@@ -778,11 +751,11 @@ mod tests {
     #[test]
     fn test_process_output_values_with_invalid_input_len() {
         let m = Mod::default();
-        assert!(m.process_output_values(&vec![]).is_err());
+        assert!(m.process_output_values(&[]).is_err());
         assert!(m
-            .process_output_values(&vec![
+            .process_output_values(&[
                 ChannelValue::ComRsIn(ProcessInput::default()),
-                ChannelValue::ComRsIn(ProcessInput::default()),
+                ChannelValue::ComRsIn(ProcessInput::default())
             ])
             .is_err());
     }
@@ -791,7 +764,7 @@ mod tests {
     fn test_process_output_values_with_invalid_channel_data() {
         let m = Mod::default();
         assert!(m
-            .process_output_values(&vec![ChannelValue::Decimal32(0.0)])
+            .process_output_values(&[ChannelValue::Decimal32(0.0)])
             .is_err());
     }
 
@@ -814,28 +787,28 @@ mod tests {
         five.data = vec![0, 5];
 
         assert!(m
-            .process_output_values(&vec![ChannelValue::ComRsOut(five)])
+            .process_output_values(&[ChannelValue::ComRsOut(five)])
             .is_ok());
 
         assert!(m
-            .process_output_values(&vec![ChannelValue::ComRsOut(fourteen.clone())])
+            .process_output_values(&[ChannelValue::ComRsOut(fourteen.clone())])
             .is_ok());
 
         assert!(m
-            .process_output_values(&vec![ChannelValue::ComRsOut(fifteen.clone())])
+            .process_output_values(&[ChannelValue::ComRsOut(fifteen.clone())])
             .is_err());
 
         m.mod_params.process_data_len = ProcessDataLength::EightBytes;
         assert!(m
-            .process_output_values(&vec![ChannelValue::ComRsOut(fourteen)])
+            .process_output_values(&[ChannelValue::ComRsOut(fourteen)])
             .is_err());
 
         assert!(m
-            .process_output_values(&vec![ChannelValue::ComRsOut(seven.clone())])
+            .process_output_values(&[ChannelValue::ComRsOut(seven.clone())])
             .is_err());
 
         assert!(m
-            .process_output_values(&vec![ChannelValue::ComRsOut(six.clone())])
+            .process_output_values(&[ChannelValue::ComRsOut(six.clone())])
             .is_ok());
     }
 
@@ -846,7 +819,7 @@ mod tests {
         let mut out = ProcessOutput::default();
         out.data = vec![0x0A, 0x0B, 0, 0x0C];
         let res = m
-            .process_output_values(&vec![ChannelValue::ComRsOut(out)])
+            .process_output_values(&[ChannelValue::ComRsOut(out)])
             .unwrap();
         assert_eq!(res.len(), 8);
         assert_eq!(res, vec![0x0400, 0x0B0A, 0x0C00, 0, 0, 0, 0, 0]);
@@ -862,7 +835,7 @@ mod tests {
 
         // 2. first read
         input.ready = true;
-        assert_eq!(input.data_available, false);
+        assert!(!input.data_available);
 
         // 3. first write
         // There is no data to send, and nothing to receive
@@ -876,7 +849,7 @@ mod tests {
         // We assume that there is still no data to receive
         // and nothing was send.
         assert_eq!(input.tx_cnt_ack, 0);
-        assert_eq!(input.data_available, false);
+        assert!(!input.data_available);
 
         // 6. write
         // Now that there is data to transmit the transmission
@@ -958,15 +931,15 @@ mod tests {
 
         output = p.next(&input, &output);
 
-        assert_eq!(output.rx_buf_flush, true);
-        assert_eq!(output.tx_buf_flush, true);
-        assert_eq!(output.reset, false);
+        assert!(output.rx_buf_flush);
+        assert!(output.tx_buf_flush);
+        assert!(!output.reset);
         assert_eq!(p.init_state, InitState::Reset);
 
         output = p.next(&input, &output);
-        assert_eq!(output.rx_buf_flush, false);
-        assert_eq!(output.tx_buf_flush, false);
-        assert_eq!(output.reset, true);
+        assert!(!output.rx_buf_flush);
+        assert!(!output.tx_buf_flush);
+        assert!(output.reset);
         assert_eq!(p.init_state, InitState::Done);
         assert_eq!(p.last_rx_cnt, 4);
         assert_eq!(output.data, vec![]);
@@ -986,7 +959,7 @@ mod tests {
         let mut buf = vec![0; 11];
 
         input.ready = true;
-        assert_eq!(input.data_available, false);
+        assert!(!input.data_available);
         output = p.next(&input, &output);
         assert_eq!(p.read(&mut buf).unwrap(), 0);
         assert_eq!(buf, vec![0; 11]);
@@ -1057,7 +1030,7 @@ mod tests {
             output.tx_cnt = cnt;
             output = p.next(&input, &output);
             assert_eq!(output.tx_cnt, cnt_next);
-            assert_eq!(output.data.len() > 0, data);
+            assert_eq!(!output.data.is_empty(), data);
         };
 
         test(0, 0, 1, true);
@@ -1115,7 +1088,7 @@ mod tests {
         assert_eq!(p.parity, Parity::Odd);
         assert_eq!(p.flow_control, FlowControl::XON_XOFF);
         assert_eq!(p.data_bits, DataBits::EightBits);
-        assert_eq!(p.terminating_resistor, true);
+        assert!(p.terminating_resistor);
         assert_eq!(p.XON_char, '!');
         assert_eq!(p.XOFF_char, '#');
     }

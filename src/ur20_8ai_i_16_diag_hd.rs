@@ -170,21 +170,21 @@ mod tests {
     #[test]
     fn test_process_input_data_with_empty_buffer() {
         let m = Mod::default();
-        assert!(m.process_input_data(&vec![]).is_err());
+        assert!(m.process_input_data(&[]).is_err());
     }
 
     #[test]
     fn test_process_input_data_with_missing_channel_parameters() {
         let mut m = Mod::default();
         m.ch_params = vec![];
-        assert!(m.process_input_data(&vec![0; 8]).is_err());
+        assert!(m.process_input_data(&[0; 8]).is_err());
     }
 
     #[test]
     fn test_process_input_data() {
         let mut m = Mod::default();
         assert_eq!(
-            m.process_input_data(&vec![5, 0, 7, 8, 0, 0, 0, 0]).unwrap(),
+            m.process_input_data(&[5, 0, 7, 8, 0, 0, 0, 0]).unwrap(),
             vec![Disabled; 8]
         );
 
@@ -199,7 +199,7 @@ mod tests {
         m.ch_params[5].data_format = DataFormat::S5;
 
         assert_eq!(
-            m.process_input_data(&vec![0x6C00, 0x3600, 0x4000, 0x6C00, 0x3600, 0x4000, 0, 0])
+            m.process_input_data(&[0x6C00, 0x3600, 0x4000, 0x6C00, 0x3600, 0x4000, 0, 0])
                 .unwrap(),
             vec![
                 Decimal32(20.0),
@@ -225,7 +225,7 @@ mod tests {
         m.ch_params[1].data_format = DataFormat::S5;
 
         let input = m
-            .process_input_data(&vec![0xED00, 0x0F333, 0, 0, 0, 0, 0, 0])
+            .process_input_data(&[0xED00, 0x0F333, 0, 0, 0, 0, 0, 0])
             .unwrap();
 
         if let ChannelValue::Decimal32(v) = input[0] {
@@ -243,7 +243,7 @@ mod tests {
     #[test]
     fn test_process_output_data() {
         let m = Mod::default();
-        assert!(m.process_output_data(&vec![0; 8]).is_err());
+        assert!(m.process_output_data(&[0; 8]).is_err());
         assert_eq!(
             m.process_output_data(&[]).unwrap(),
             vec![ChannelValue::None; 8]
@@ -333,14 +333,8 @@ mod tests {
             ChannelParameters::default()
         );
 
-        assert_eq!(
-            parameters_from_raw_data(&data).unwrap().1[1].channel_diagnostics,
-            true
-        );
-        assert_eq!(
-            parameters_from_raw_data(&data).unwrap().1[1].diag_short_circuit,
-            false
-        );
+        assert!(parameters_from_raw_data(&data).unwrap().1[1].channel_diagnostics);
+        assert!(!parameters_from_raw_data(&data).unwrap().1[1].diag_short_circuit);
         assert_eq!(
             parameters_from_raw_data(&data).unwrap().1[1].data_format,
             DataFormat::S5
@@ -350,10 +344,7 @@ mod tests {
             AnalogIRange::Disabled
         );
 
-        assert_eq!(
-            parameters_from_raw_data(&data).unwrap().1[2].diag_short_circuit,
-            true
-        );
+        assert!(parameters_from_raw_data(&data).unwrap().1[2].diag_short_circuit);
         assert_eq!(
             parameters_from_raw_data(&data).unwrap().1[3].data_format,
             DataFormat::S7
@@ -424,6 +415,6 @@ mod tests {
             module.ch_params[1].measurement_range,
             AnalogIRange::Disabled
         );
-        assert_eq!(module.ch_params[2].channel_diagnostics, true);
+        assert!(module.ch_params[2].channel_diagnostics);
     }
 }

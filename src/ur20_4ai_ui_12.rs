@@ -111,8 +111,7 @@ fn parameters_from_raw_data(data: &[u16]) -> Result<(ModuleParameters, Vec<Chann
         return Err(Error::BufferLength);
     }
 
-    let frequency_suppression =
-        FromPrimitive::from_u16(data[0]).ok_or_else(|| Error::ChannelParameter)?;
+    let frequency_suppression = FromPrimitive::from_u16(data[0]).ok_or(Error::ChannelParameter)?;
 
     let module_parameters = ModuleParameters {
         frequency_suppression,
@@ -123,9 +122,9 @@ fn parameters_from_raw_data(data: &[u16]) -> Result<(ModuleParameters, Vec<Chann
             let mut p = ChannelParameters::default();
             let idx = i * 2;
             p.data_format =
-                FromPrimitive::from_u16(data[idx + 1]).ok_or_else(|| Error::ChannelParameter)?;
+                FromPrimitive::from_u16(data[idx + 1]).ok_or(Error::ChannelParameter)?;
             p.measurement_range =
-                FromPrimitive::from_u16(data[idx + 2]).ok_or_else(|| Error::ChannelParameter)?;
+                FromPrimitive::from_u16(data[idx + 2]).ok_or(Error::ChannelParameter)?;
             Ok(p)
         })
         .collect();
@@ -141,14 +140,14 @@ mod tests {
     #[test]
     fn test_process_input_data_with_empty_buffer() {
         let m = Mod::default();
-        assert!(m.process_input_data(&vec![]).is_err());
+        assert!(m.process_input_data(&[]).is_err());
     }
 
     #[test]
     fn test_process_input_data_with_missing_channel_parameters() {
         let mut m = Mod::default();
         m.ch_params = vec![];
-        assert!(m.process_input_data(&vec![0; 4]).is_err());
+        assert!(m.process_input_data(&[0; 4]).is_err());
     }
 
     #[test]
@@ -159,7 +158,7 @@ mod tests {
         assert_eq!(m.ch_params[2].measurement_range, AnalogUIRange::Disabled);
         assert_eq!(m.ch_params[3].measurement_range, AnalogUIRange::Disabled);
         assert_eq!(
-            m.process_input_data(&vec![5, 0, 7, 8]).unwrap(),
+            m.process_input_data(&[5, 0, 7, 8]).unwrap(),
             vec![Disabled; 4]
         );
 
@@ -171,7 +170,7 @@ mod tests {
         m.ch_params[2].data_format = DataFormat::S5;
 
         assert_eq!(
-            m.process_input_data(&vec![0x6C00, 0x3600, 0x4000, 0x6C00])
+            m.process_input_data(&[0x6C00, 0x3600, 0x4000, 0x6C00])
                 .unwrap(),
             vec![
                 Decimal32(20.0),
@@ -192,7 +191,7 @@ mod tests {
         m.ch_params[1].measurement_range = AnalogUIRange::mA4To20;
         m.ch_params[1].data_format = DataFormat::S5;
 
-        let input = m.process_input_data(&vec![0xED00, 0x0F333, 0, 0]).unwrap();
+        let input = m.process_input_data(&[0xED00, 0x0F333, 0, 0]).unwrap();
 
         if let ChannelValue::Decimal32(v) = input[0] {
             assert!((v - 1.19).abs() < 0.01);
@@ -209,7 +208,7 @@ mod tests {
     #[test]
     fn test_process_output_data() {
         let m = Mod::default();
-        assert!(m.process_output_data(&vec![0; 4]).is_err());
+        assert!(m.process_output_data(&[0; 4]).is_err());
         assert_eq!(
             m.process_output_data(&[]).unwrap(),
             vec![ChannelValue::None; 4]
