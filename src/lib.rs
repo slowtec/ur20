@@ -639,11 +639,11 @@ impl FromStr for ModuleCategory {
 }
 
 #[rustfmt::skip]
-impl Into<ModuleCategory> for ModuleType {
-    fn into(self) -> ModuleCategory {
+impl From<ModuleType> for ModuleCategory {
+    fn from(val: ModuleType) -> Self {
         use crate::ModuleType::*;
         use crate::ModuleCategory::*;
-        match self {
+        match val {
             UR20_4DI_P              |
             UR20_4DI_P_3W           |
             UR20_8DI_P_2W           |
