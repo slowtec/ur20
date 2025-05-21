@@ -76,7 +76,7 @@ mod tests {
 
     #[test]
     fn test_process_output_values_with_invalid_channel_len() {
-        let m = Mod::default();
+        let m = Mod;
         assert!(m.process_output_values(&[]).is_err());
         assert!(m.process_output_values(&vec![Bit(true); 15]).is_err());
         assert!(m.process_output_values(&vec![Bit(true); 16]).is_ok());
@@ -84,14 +84,12 @@ mod tests {
 
     #[test]
     fn test_process_output_data() {
-        let m = Mod::default();
+        let m = Mod;
         assert_eq!(
-            m.process_output_data(&vec![0xFFFF]).unwrap(),
+            m.process_output_data(&[0xFFFF]).unwrap(),
             vec![ChannelValue::Bit(true); 16]
         );
-        let res = m
-            .process_output_data(&vec![0b_0010_0001_0010_0101])
-            .unwrap();
+        let res = m.process_output_data(&[0b_0010_0001_0010_0101]).unwrap();
         assert_eq!(res[0], ChannelValue::Bit(true));
         assert_eq!(res[1], ChannelValue::Bit(false));
         assert_eq!(res[5], ChannelValue::Bit(true));
@@ -101,19 +99,19 @@ mod tests {
 
     #[test]
     fn test_process_output_data_with_invalid_buffer_size() {
-        let m = Mod::default();
-        assert!(m.process_output_data(&vec![0; 2]).is_err());
+        let m = Mod;
+        assert!(m.process_output_data(&[0; 2]).is_err());
     }
 
     #[test]
     fn test_process_output_values_with_invalid_channel_values() {
-        let m = Mod::default();
+        let m = Mod;
         assert!(m.process_output_values(&vec![Decimal32(0.0); 16]).is_err());
     }
 
     #[test]
     fn test_process_output_values() {
-        let m = Mod::default();
+        let m = Mod;
         let mut vals = vec![Bit(false); 16];
         vals[0] = Bit(true);
         vals[2] = Bit(true);
@@ -136,7 +134,7 @@ mod tests {
 
     #[test]
     fn module_type() {
-        let m = Mod::default();
+        let m = Mod;
         assert_eq!(m.module_type(), ModuleType::UR20_16DO_P);
     }
 

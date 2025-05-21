@@ -31,15 +31,10 @@ pub struct ProcessInput {
 impl ProcessInput {
     /// Calculate the frequency in Hz.
     pub fn hertz(&self) -> Option<f32> {
-        if let Some(d) = self.duration {
-            //TODO: check overflow!
-            Some(
-                self.count as f32
-                    / (d.as_secs() as f32 + d.subsec_nanos() as f32 / NANOS_PER_SEC as f32),
-            )
-        } else {
-            None
-        }
+        self.duration.map(|d| {
+            self.count as f32
+                / (d.as_secs() as f32 + d.subsec_nanos() as f32 / NANOS_PER_SEC as f32)
+        })
     }
 }
 
@@ -244,19 +239,19 @@ fn parameters_from_raw_data(data: &[u16]) -> Result<Vec<ChannelParameters>> {
 
     let channel_parameters: Result<Vec<_>> = (0..2)
         .map(|idx| {
-            let mut p = ChannelParameters::default();
-
-            p.input_filter = match FromPrimitive::from_u16(data[idx]) {
-                Some(x) => x,
-                _ => {
-                    return Err(Error::ChannelParameter);
-                }
+            let p = ChannelParameters {
+                input_filter: match FromPrimitive::from_u16(data[idx]) {
+                    Some(x) => x,
+                    _ => {
+                        return Err(Error::ChannelParameter);
+                    }
+                },
             };
 
             Ok(p)
         })
         .collect();
-    Ok(channel_parameters?)
+    channel_parameters
 }
 
 #[cfg(test)]
@@ -303,17 +298,16 @@ mod tests {
     #[test]
     fn test_process_input_data_with_invalid_buffer_size() {
         let m = Mod::default();
-        assert!(m.process_input_data(&vec![]).is_err());
-        assert!(m.process_input_data(&vec![0; 2]).is_err());
-        assert!(m.process_input_data(&vec![0; 9]).is_err());
-        assert!(m.process_input_data(&vec![0; 10]).is_ok());
+        assert!(m.process_input_data(&[]).is_err());
+        assert!(m.process_input_data(&[0; 2]).is_err());
+        assert!(m.process_input_data(&[0; 9]).is_err());
+        assert!(m.process_input_data(&[0; 10]).is_ok());
     }
 
     #[test]
     fn test_process_input_data_with_missing_channel_parameters() {
-        let mut m = Mod::default();
-        m.ch_params = vec![];
-        assert!(m.process_input_data(&vec![0; 10]).is_err());
+        let m = Mod { ch_params: vec![] };
+        assert!(m.process_input_data(&[0; 10]).is_err());
     }
 
     #[test]
@@ -460,8 +454,7 @@ mod tests {
 
     #[test]
     fn test_process_output_values_with_missing_channel_parameters() {
-        let mut m = Mod::default();
-        m.ch_params = vec![];
+        let m = Mod { ch_params: vec![] };
         let out = ProcessOutput::default();
         assert!(m.process_output_values(&vec![out.into(); 2]).is_err());
     }
@@ -538,7 +531,7 @@ mod tests {
         };
         assert_eq!(input.hertz().unwrap(), 25000.0);
         let input = ProcessInput {
-            count: ::std::u32::MAX,
+            count: u32::MAX,
             active: true,
             duration: Some(Duration::new(0, 1_000)),
         };

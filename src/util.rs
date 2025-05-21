@@ -20,7 +20,7 @@ pub fn test_bit_16(val: u16, bit_nr: usize) -> bool {
 }
 
 fn bit_mask(bit: usize) -> usize {
-    (1 << bit)
+    1 << bit
 }
 
 pub fn u16_to_u8(words: &[u16]) -> Vec<u8> {
@@ -56,19 +56,16 @@ pub fn analog_ui_value_to_u16(v: f32, range: &AnalogUIRange, format: &DataFormat
     let factor = format.factor();
     use crate::AnalogUIRange::*;
 
-    #[rustfmt::skip]
     let v = match *range {
-        mA0To20       => (factor * v / 20.0),
-        mA4To20       => (factor * (v - 4.0) / 16.0),
-        V0To10        |
-        VMinus10To10  => (factor * v / 10.0),
-        V0To5         |
-        VMinus5To5    => (factor * v / 5.0),
-        V1To5         => (factor * (v - 1.0) / 4.0),
-        V2To10        => (factor * (v - 2.0) / 8.0),
-        Disabled      => 0.0,
+        mA0To20 => factor * v / 20.0,
+        mA4To20 => factor * (v - 4.0) / 16.0,
+        V0To10 | VMinus10To10 => factor * v / 10.0,
+        V0To5 | VMinus5To5 => factor * v / 5.0,
+        V1To5 => factor * (v - 1.0) / 4.0,
+        V2To10 => factor * (v - 2.0) / 8.0,
+        Disabled => 0.0,
     };
-    v as u16
+    v as i16 as u16
 }
 
 pub fn u16_to_analog_ui_value(
@@ -80,51 +77,31 @@ pub fn u16_to_analog_ui_value(
     use crate::AnalogUIRange::*;
     let data = f32::from(data as i16);
 
-    #[cfg_attr(rustfmt, rustfmt_skip)]
     match *range {
-        mA0To20         => Some(data * 20.0 / factor),
-        mA4To20         => Some(data * 16.0 / factor + 4.0),
-        V0To10          |
-        VMinus10To10    => Some(data * 10.0 / factor),
-        V0To5           |
-        VMinus5To5      => Some(data * 5.0 / factor),
-        V1To5           => Some(data * 4.0 / factor + 1.0),
-        V2To10          => Some(data * 8.0 / factor + 2.0),
-        Disabled        => None,
+        mA0To20 => Some(data * 20.0 / factor),
+        mA4To20 => Some(data * 16.0 / factor + 4.0),
+        V0To10 | VMinus10To10 => Some(data * 10.0 / factor),
+        V0To5 | VMinus5To5 => Some(data * 5.0 / factor),
+        V1To5 => Some(data * 4.0 / factor + 1.0),
+        V2To10 => Some(data * 8.0 / factor + 2.0),
+        Disabled => None,
     }
 }
 
 pub fn u16_to_rtd_value(data: u16, range: &RtdRange) -> Option<f32> {
     use crate::RtdRange::*;
 
-    #[cfg_attr(rustfmt, rustfmt_skip)]
     match *range {
-        PT100  |
-        PT200  |
-        PT500  |
-        PT1000 |
-        NI100  |
-        NI120  |
-        NI200  |
-        NI500  |
-        NI1000 |
-        Cu10   => {
+        PT100 | PT200 | PT500 | PT1000 | NI100 | NI120 | NI200 | NI500 | NI1000 | Cu10 => {
             Some(f32::from(data as i16) / 10.0)
         }
-        R40   |
-        R80   |
-        R150  |
-        R300  |
-        R500  |
-        R1000 |
-        R2000 |
-        R4000 => {
+        R40 | R80 | R150 | R300 | R500 | R1000 | R2000 | R4000 => {
             let n = match *range {
-                R40   => 40.0,
-                R80   => 80.0,
-                R150  => 150.0,
-                R300  => 300.0,
-                R500  => 500.0,
+                R40 => 40.0,
+                R80 => 80.0,
+                R150 => 150.0,
+                R300 => 300.0,
+                R500 => 500.0,
                 R1000 => 1000.0,
                 R2000 => 2000.0,
                 R4000 => 4000.0,
@@ -135,7 +112,7 @@ pub fn u16_to_rtd_value(data: u16, range: &RtdRange) -> Option<f32> {
             let d = n * u32::from(data) as f32 / 0x6C00 as f32;
             Some(d)
         }
-        Disabled => None
+        Disabled => None,
     }
 }
 
@@ -144,8 +121,8 @@ mod tests {
 
     #[test]
     fn test_bit() {
-        assert_eq!(super::test_bit(0b10, 0), false);
-        assert_eq!(super::test_bit(0b10, 1), true);
+        assert!(!super::test_bit(0b10, 0));
+        assert!(super::test_bit(0b10, 1));
     }
 
     #[test]
@@ -174,7 +151,7 @@ mod tests {
 
     #[test]
     fn shift_data() {
-        assert_eq!(super::shift_data(&vec![0xABCD]), vec![0x00AB]);
+        assert_eq!(super::shift_data(&[0xABCD]), vec![0x00AB]);
     }
 
     #[test]
@@ -210,6 +187,10 @@ mod tests {
         assert_eq!(
             u16_to_analog_ui_value(0x3600, &AnalogUIRange::VMinus10To10, &DataFormat::S7),
             Some(5.0)
+        );
+        assert_eq!(
+            u16_to_analog_ui_value(0x9400, &AnalogUIRange::VMinus10To10, &DataFormat::S7),
+            Some(-10.0)
         );
         assert_eq!(
             u16_to_analog_ui_value(0x2000, &AnalogUIRange::VMinus10To10, &DataFormat::S5),
@@ -271,6 +252,10 @@ mod tests {
         assert_eq!(
             analog_ui_value_to_u16(10.0, &AnalogUIRange::mA0To20, &DataFormat::S7),
             0x3600
+        );
+        assert_eq!(
+            analog_ui_value_to_u16(-10.0, &AnalogUIRange::VMinus10To10, &DataFormat::S7),
+            0x9400
         );
     }
 }

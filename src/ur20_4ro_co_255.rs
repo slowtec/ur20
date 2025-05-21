@@ -9,7 +9,7 @@ pub struct Mod {
     pub ch_params: Vec<ChannelParameters>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct ChannelParameters {
     pub substitute_value: bool,
 }
@@ -18,14 +18,6 @@ impl FromModbusParameterData for Mod {
     fn from_modbus_parameter_data(data: &[u16]) -> Result<Mod> {
         let ch_params = parameters_from_raw_data(data)?;
         Ok(Mod { ch_params })
-    }
-}
-
-impl Default for ChannelParameters {
-    fn default() -> Self {
-        ChannelParameters {
-            substitute_value: false,
-        }
     }
 }
 
@@ -89,18 +81,19 @@ fn parameters_from_raw_data(data: &[u16]) -> Result<Vec<ChannelParameters>> {
 
     let channel_parameters: Result<Vec<_>> = (0..4)
         .map(|i| {
-            let mut p = ChannelParameters::default();
-            p.substitute_value = match data[i] {
-                0 => false,
-                1 => true,
-                _ => {
-                    return Err(Error::ChannelParameter);
-                }
+            let p = ChannelParameters {
+                substitute_value: match data[i] {
+                    0 => false,
+                    1 => true,
+                    _ => {
+                        return Err(Error::ChannelParameter);
+                    }
+                },
             };
             Ok(p)
         })
         .collect();
-    Ok(channel_parameters?)
+    channel_parameters
 }
 
 #[cfg(test)]
@@ -125,7 +118,7 @@ mod tests {
     fn test_process_output_data() {
         let m = Mod::default();
         assert_eq!(
-            m.process_output_data(&vec![0x0F]).unwrap(),
+            m.process_output_data(&[0x0F]).unwrap(),
             &[
                 ChannelValue::Bit(true),
                 ChannelValue::Bit(true),
@@ -134,7 +127,7 @@ mod tests {
             ]
         );
         assert_eq!(
-            m.process_output_data(&vec![0b000_0101]).unwrap(),
+            m.process_output_data(&[0b000_0101]).unwrap(),
             &[
                 ChannelValue::Bit(true),
                 ChannelValue::Bit(false),
@@ -147,7 +140,7 @@ mod tests {
     #[test]
     fn test_process_output_data_with_invalid_buffer_size() {
         let m = Mod::default();
-        assert!(m.process_output_data(&vec![0; 2]).is_err());
+        assert!(m.process_output_data(&[0; 2]).is_err());
     }
 
     #[test]
@@ -196,20 +189,11 @@ mod tests {
             ChannelParameters::default()
         );
 
-        assert_eq!(
-            parameters_from_raw_data(&data).unwrap()[1].substitute_value,
-            true
-        );
+        assert!(parameters_from_raw_data(&data).unwrap()[1].substitute_value);
 
-        assert_eq!(
-            parameters_from_raw_data(&data).unwrap()[2].substitute_value,
-            false
-        );
+        assert!(!parameters_from_raw_data(&data).unwrap()[2].substitute_value);
 
-        assert_eq!(
-            parameters_from_raw_data(&data).unwrap()[3].substitute_value,
-            true
-        );
+        assert!(parameters_from_raw_data(&data).unwrap()[3].substitute_value);
     }
 
     #[test]
@@ -243,7 +227,7 @@ mod tests {
             0, // CH 3
         ];
         let module = Mod::from_modbus_parameter_data(&data).unwrap();
-        assert_eq!(module.ch_params[0].substitute_value, true);
-        assert_eq!(module.ch_params[3].substitute_value, false);
+        assert!(module.ch_params[0].substitute_value);
+        assert!(!module.ch_params[3].substitute_value);
     }
 }
