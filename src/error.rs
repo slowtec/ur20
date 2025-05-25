@@ -30,7 +30,7 @@ impl fmt::Display for Error {
             Error::ChannelValue     => write!(f, "invalid channel value(s)"),
             Error::ModuleOffset     => write!(f, "invalid module offset"),
             Error::Address          => write!(f, "invalid module address"),
-            Error::Io(ref err)      => write!(f, "I/O error: {}", err),
+            Error::Io(ref err)      => write!(f, "I/O error: {err}"),
         }
     }
 }
@@ -56,6 +56,6 @@ impl ::std::error::Error for Error {
 
 impl From<io::Error> for Error {
     fn from(e: io::Error) -> Self {
-        Error::Io(format!("{}", e))
+        Error::Io(format!("{e}"))
     }
 }

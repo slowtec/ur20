@@ -171,7 +171,7 @@ impl Coupler {
                     Box::new(m)
                 }
                 _ => {
-                    panic!("{:?} is not supported", m);
+                    panic!("{m:?} is not supported");
                 }
             };
             modules.push(x);
@@ -193,11 +193,13 @@ impl Coupler {
     }
 
     /// Returns current coupler input state.
+    #[must_use]
     pub fn inputs(&self) -> &Vec<Vec<ChannelValue>> {
         &self.in_values
     }
 
     /// Returns current coupler output state.
+    #[must_use]
     pub fn outputs(&self) -> &Vec<Vec<ChannelValue>> {
         &self.out_values
     }
@@ -299,6 +301,7 @@ impl CouplerConfig {
 }
 
 /// Converts the register data into a list of module offsets.
+#[must_use]
 pub fn offsets_of_process_data(data: &[Word]) -> Vec<ModuleOffset> {
     let mut offsets = vec![];
     for i in 0..data.len() / 2 {
@@ -366,11 +369,7 @@ fn prepare_raw_data_to_process(
     let start = (start - addr) as usize;
     let word_count = {
         let cnt = byte_count / 2;
-        if cnt == 0 {
-            1
-        } else {
-            cnt
-        }
+        if cnt == 0 { 1 } else { cnt }
     };
     let end = start + word_count;
     if end > data.len() {
@@ -433,14 +432,11 @@ pub fn process_output_values(
 }
 
 fn word_to_offset(word: Word) -> Option<BitAddress> {
-    if word == 0xFFFF {
-        None
-    } else {
-        Some(word)
-    }
+    if word == 0xFFFF { None } else { Some(word) }
 }
 
 /// Splits a bit address into a register address and a bit number.
+#[must_use]
 pub fn to_register_address(addr: BitAddress) -> (RegisterAddress, BitNr) {
     let register = (addr & 0xFFF0) >> 4;
     let bit = (addr & 0x000F) as usize;
@@ -448,6 +444,7 @@ pub fn to_register_address(addr: BitAddress) -> (RegisterAddress, BitNr) {
 }
 
 /// Merges a register address and a bit number into a bit address.
+#[must_use]
 pub fn to_bit_address(addr: RegisterAddress, bit: usize) -> BitAddress {
     (addr << 4) | (bit as u16)
 }
@@ -490,13 +487,14 @@ impl ModbusParameterRegisterCount for ModuleType {
 
             // Not yet supported
             _ => {
-                panic!("{:?} is not supported", self);
+                panic!("{self:?} is not supported");
             }
         }
     }
 }
 
 /// Calculate the parameter addresses and the number of registers by a given list of modules.
+#[must_use]
 pub fn param_addresses_and_register_counts(modules: &[ModuleType]) -> Vec<(u16, u16)> {
     modules
         .iter()
@@ -967,41 +965,51 @@ mod tests {
 
     #[test]
     fn validate_coupler_config_data() {
-        assert!(CouplerConfig {
-            modules: vec![],
-            offsets: vec![],
-            params: vec![],
-        }
-        .validate()
-        .is_ok());
-        assert!(CouplerConfig {
-            modules: vec![ModuleType::UR20_4DI_P],
-            offsets: vec![0xFFFF, 0x0000],
-            params: vec![vec![0; 4]],
-        }
-        .validate()
-        .is_ok());
-        assert!(CouplerConfig {
-            modules: vec![ModuleType::UR20_4DI_P],
-            offsets: vec![0xFFFF, 0x0000],
-            params: vec![],
-        }
-        .validate()
-        .is_err());
-        assert!(CouplerConfig {
-            modules: vec![ModuleType::UR20_4DI_P],
-            offsets: vec![],
-            params: vec![vec![0; 4]],
-        }
-        .validate()
-        .is_err());
-        assert!(CouplerConfig {
-            modules: vec![ModuleType::UR20_4DI_P],
-            offsets: vec![0xFFFF],
-            params: vec![],
-        }
-        .validate()
-        .is_err());
+        assert!(
+            CouplerConfig {
+                modules: vec![],
+                offsets: vec![],
+                params: vec![],
+            }
+            .validate()
+            .is_ok()
+        );
+        assert!(
+            CouplerConfig {
+                modules: vec![ModuleType::UR20_4DI_P],
+                offsets: vec![0xFFFF, 0x0000],
+                params: vec![vec![0; 4]],
+            }
+            .validate()
+            .is_ok()
+        );
+        assert!(
+            CouplerConfig {
+                modules: vec![ModuleType::UR20_4DI_P],
+                offsets: vec![0xFFFF, 0x0000],
+                params: vec![],
+            }
+            .validate()
+            .is_err()
+        );
+        assert!(
+            CouplerConfig {
+                modules: vec![ModuleType::UR20_4DI_P],
+                offsets: vec![],
+                params: vec![vec![0; 4]],
+            }
+            .validate()
+            .is_err()
+        );
+        assert!(
+            CouplerConfig {
+                modules: vec![ModuleType::UR20_4DI_P],
+                offsets: vec![0xFFFF],
+                params: vec![],
+            }
+            .validate()
+            .is_err()
+        );
     }
 
     #[test]
@@ -1114,24 +1122,26 @@ mod tests {
             ChannelValue::Bit(true),
         )
         .unwrap();
-        assert!(c
-            .set_output(
+        assert!(
+            c.set_output(
                 &Address {
                     module: 3,
                     channel: 0,
                 },
                 ChannelValue::Bit(true)
             )
-            .is_err());
-        assert!(c
-            .set_output(
+            .is_err()
+        );
+        assert!(
+            c.set_output(
                 &Address {
                     module: 2,
                     channel: 1,
                 },
                 ChannelValue::Bit(true)
             )
-            .is_err());
+            .is_err()
+        );
 
         assert_eq!(c.write.len(), 2);
 

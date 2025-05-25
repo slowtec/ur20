@@ -253,9 +253,10 @@ mod tests {
     #[test]
     fn test_process_output_values() {
         let m = Mod::default();
-        assert!(m
-            .process_output_values(&[ChannelValue::Decimal32(0.0)])
-            .is_err());
+        assert!(
+            m.process_output_values(&[ChannelValue::Decimal32(0.0)])
+                .is_err()
+        );
         assert_eq!(m.process_output_values(&[]).unwrap(), &[]);
         assert_eq!(
             m.process_output_values(&vec![ChannelValue::None; 4])

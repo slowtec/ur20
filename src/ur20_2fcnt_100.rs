@@ -30,6 +30,7 @@ pub struct ProcessInput {
 
 impl ProcessInput {
     /// Calculate the frequency in Hz.
+    #[must_use]
     pub fn hertz(&self) -> Option<f32> {
         self.duration.map(|d| {
             self.count as f32
@@ -134,14 +135,14 @@ impl ProcessModbusTcpData for Mod {
             .map(|(duration, cnt, active)| {
                 (
                     {
-                        let d = ((duration[0] as u32) << 16 | duration[1] as u32) as u64;
+                        let d = u64::from(u32::from(duration[0]) << 16 | u32::from(duration[1]));
                         if d >= MAX_MEASUREMENT_PERIOD {
                             None
                         } else {
                             Some(Duration::from_nanos(d * 125))
                         }
                     },
-                    ((cnt[0] as u32) << 16 | cnt[1] as u32),
+                    (u32::from(cnt[0]) << 16 | u32::from(cnt[1])),
                     util::test_bit_16(*active, 8),
                 )
             })
@@ -174,7 +175,7 @@ impl ProcessModbusTcpData for Mod {
                     None
                 };
                 (
-                    ((duration[0] as u32) << 16 | duration[1] as u32) as u64,
+                    u64::from(u32::from(duration[0]) << 16 | u32::from(duration[1])),
                     cmd,
                 )
             })
@@ -462,9 +463,10 @@ mod tests {
     #[test]
     fn test_process_output_values_with_invalid_channel_values() {
         let m = Mod::default();
-        assert!(m
-            .process_output_values(&[ChannelValue::Bit(false), ChannelValue::Decimal32(0.0),])
-            .is_err());
+        assert!(
+            m.process_output_values(&[ChannelValue::Bit(false), ChannelValue::Decimal32(0.0),])
+                .is_err()
+        );
     }
 
     #[test]
@@ -511,9 +513,10 @@ mod tests {
         let mut ch_1 = ProcessOutput::default();
         ch_0.duration = Duration::new(0, 1_000);
         ch_1.duration = Duration::new(8, 388_608_000);
-        assert!(m
-            .process_output_values(&[ch_0.into(), ch_1.into()])
-            .is_err());
+        assert!(
+            m.process_output_values(&[ch_0.into(), ch_1.into()])
+                .is_err()
+        );
     }
 
     #[test]

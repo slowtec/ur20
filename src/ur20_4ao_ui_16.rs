@@ -202,33 +202,37 @@ mod tests {
     fn test_process_output_values_with_invalid_channel_len() {
         let m = Mod::default();
         assert!(m.process_output_values(&[]).is_err());
-        assert!(m
-            .process_output_values(&[Decimal32(0.0), Decimal32(0.0), Decimal32(0.0)])
-            .is_err());
-        assert!(m
-            .process_output_values(&[Decimal32(0.0), Decimal32(0.0), Decimal32(0.0), Disabled,])
-            .is_ok());
+        assert!(
+            m.process_output_values(&[Decimal32(0.0), Decimal32(0.0), Decimal32(0.0)])
+                .is_err()
+        );
+        assert!(
+            m.process_output_values(&[Decimal32(0.0), Decimal32(0.0), Decimal32(0.0), Disabled,])
+                .is_ok()
+        );
     }
 
     #[test]
     fn test_process_output_values_with_invalid_channel_values() {
         let m = Mod::default();
-        assert!(m
-            .process_output_values(&[Bit(false), Decimal32(0.0), Decimal32(0.0), Decimal32(0.0),])
-            .is_err());
+        assert!(
+            m.process_output_values(&[Bit(false), Decimal32(0.0), Decimal32(0.0), Decimal32(0.0),])
+                .is_err()
+        );
     }
 
     #[test]
     fn test_process_output_values_with_missing_channel_parameters() {
         let m = Mod { ch_params: vec![] };
-        assert!(m
-            .process_output_values(&[
+        assert!(
+            m.process_output_values(&[
                 Decimal32(0.0),
                 Decimal32(0.0),
                 Decimal32(0.0),
                 Decimal32(0.0),
             ])
-            .is_err());
+            .is_err()
+        );
     }
 
     #[test]

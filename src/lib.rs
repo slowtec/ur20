@@ -449,6 +449,7 @@ impl ModuleType {
 
     /// Returns the number of channels for a specific module type.
     #[rustfmt::skip]
+    #[must_use]
     pub const fn channel_count(&self) -> usize {
         use crate::ModuleType::*;
 
@@ -530,7 +531,7 @@ impl FromStr for ModuleType {
     type Err = Error;
     fn from_str(s: &str) -> result::Result<Self, Self::Err> {
         use crate::ModuleType::*;
-        let t = match &*s.to_uppercase().replace("-","_") {
+        let t = match &*s.to_uppercase().replace('-',"_") {
             "UR20_4DI_P"               => UR20_4DI_P,
             "UR20_4DI_P_3W"            => UR20_4DI_P_3W,
             "UR20_8DI_P_2W"            => UR20_8DI_P_2W,

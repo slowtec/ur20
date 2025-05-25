@@ -190,6 +190,7 @@ impl ProcessInput {
 }
 
 impl ProcessDataLength {
+    #[must_use]
     pub fn user_data_len(&self) -> usize {
         use self::ProcessDataLength::*;
         match *self {
@@ -400,7 +401,8 @@ enum InitState {
 }
 
 impl MessageProcessor {
-    /// Create a new MessageProcessor.
+    /// Create a new `MessageProcessor`.
+    #[must_use]
     pub fn new(process_data_len: ProcessDataLength) -> MessageProcessor {
         MessageProcessor {
             init_state: InitState::ClearBuffers,
@@ -415,7 +417,16 @@ impl MessageProcessor {
     /// Returns a `ProcessOutput` object if something needs to be written.
     pub fn next(&mut self, input: &ProcessInput, output: &ProcessOutput) -> ProcessOutput {
         let mut out_msg = output.clone();
-        if self.init_state != InitState::Done {
+        if self.init_state == InitState::Done {
+            if !self.out_data.is_empty() && Self::inc_cnt(input.tx_cnt_ack) != output.tx_cnt {
+                out_msg.tx_cnt = Self::inc_cnt(input.tx_cnt_ack);
+                out_msg.data = self.out_data.remove(0);
+            }
+            if input.data_available && self.last_rx_cnt != input.rx_cnt {
+                self.in_data.extend_from_slice(&input.data);
+                self.last_rx_cnt = input.rx_cnt;
+            }
+        } else {
             out_msg.data.clear();
             match self.init_state {
                 InitState::ClearBuffers => {
@@ -433,15 +444,6 @@ impl MessageProcessor {
                 }
                 _ => unreachable!(),
             }
-        } else {
-            if !self.out_data.is_empty() && Self::inc_cnt(input.tx_cnt_ack) != output.tx_cnt {
-                out_msg.tx_cnt = Self::inc_cnt(input.tx_cnt_ack);
-                out_msg.data = self.out_data.remove(0);
-            }
-            if input.data_available && self.last_rx_cnt != input.rx_cnt {
-                self.in_data.extend_from_slice(&input.data);
-                self.last_rx_cnt = input.rx_cnt;
-            }
         }
         out_msg.rx_cnt_ack = input.rx_cnt;
         out_msg
@@ -458,15 +460,15 @@ impl MessageProcessor {
 
 impl Read for MessageProcessor {
     fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
-        if !self.in_data.is_empty() {
+        if self.in_data.is_empty() {
+            Ok(0)
+        } else {
             let len = cmp::min(buf.len(), self.in_data.len());
 
             for x in buf.iter_mut().take(len) {
                 *x = self.in_data.remove(0);
             }
             Ok(len)
-        } else {
-            Ok(0)
         }
     }
 }
@@ -744,7 +746,7 @@ mod tests {
         if let ChannelValue::ComRsIn(ref msg) = result[0] {
             assert_eq!(msg.data, vec![0, 0, 0xCD, 0xAB, 0, 0]);
         } else {
-            panic!("unexpected result: {:?}", result);
+            panic!("unexpected result: {result:?}");
         }
     }
 
@@ -752,20 +754,22 @@ mod tests {
     fn test_process_output_values_with_invalid_input_len() {
         let m = Mod::default();
         assert!(m.process_output_values(&[]).is_err());
-        assert!(m
-            .process_output_values(&[
+        assert!(
+            m.process_output_values(&[
                 ChannelValue::ComRsIn(ProcessInput::default()),
                 ChannelValue::ComRsIn(ProcessInput::default())
             ])
-            .is_err());
+            .is_err()
+        );
     }
 
     #[test]
     fn test_process_output_values_with_invalid_channel_data() {
         let m = Mod::default();
-        assert!(m
-            .process_output_values(&[ChannelValue::Decimal32(0.0)])
-            .is_err());
+        assert!(
+            m.process_output_values(&[ChannelValue::Decimal32(0.0)])
+                .is_err()
+        );
     }
 
     #[allow(clippy::field_reassign_with_default)]
@@ -787,30 +791,36 @@ mod tests {
         let mut five = ProcessOutput::default();
         five.data = vec![0, 5];
 
-        assert!(m
-            .process_output_values(&[ChannelValue::ComRsOut(five)])
-            .is_ok());
+        assert!(
+            m.process_output_values(&[ChannelValue::ComRsOut(five)])
+                .is_ok()
+        );
 
-        assert!(m
-            .process_output_values(&[ChannelValue::ComRsOut(fourteen.clone())])
-            .is_ok());
+        assert!(
+            m.process_output_values(&[ChannelValue::ComRsOut(fourteen.clone())])
+                .is_ok()
+        );
 
-        assert!(m
-            .process_output_values(&[ChannelValue::ComRsOut(fifteen.clone())])
-            .is_err());
+        assert!(
+            m.process_output_values(&[ChannelValue::ComRsOut(fifteen.clone())])
+                .is_err()
+        );
 
         m.mod_params.process_data_len = ProcessDataLength::EightBytes;
-        assert!(m
-            .process_output_values(&[ChannelValue::ComRsOut(fourteen)])
-            .is_err());
+        assert!(
+            m.process_output_values(&[ChannelValue::ComRsOut(fourteen)])
+                .is_err()
+        );
 
-        assert!(m
-            .process_output_values(&[ChannelValue::ComRsOut(seven.clone())])
-            .is_err());
+        assert!(
+            m.process_output_values(&[ChannelValue::ComRsOut(seven.clone())])
+                .is_err()
+        );
 
-        assert!(m
-            .process_output_values(&[ChannelValue::ComRsOut(six.clone())])
-            .is_ok());
+        assert!(
+            m.process_output_values(&[ChannelValue::ComRsOut(six.clone())])
+                .is_ok()
+        );
     }
 
     #[allow(clippy::field_reassign_with_default)]

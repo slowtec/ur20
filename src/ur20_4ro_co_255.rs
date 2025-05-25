@@ -106,12 +106,14 @@ mod tests {
     fn test_process_output_values_with_invalid_channel_len() {
         let m = Mod::default();
         assert!(m.process_output_values(&[]).is_err());
-        assert!(m
-            .process_output_values(&[Bit(true), Bit(false), Bit(true)])
-            .is_err());
-        assert!(m
-            .process_output_values(&[Bit(true), Bit(false), Bit(true), Bit(true)])
-            .is_ok());
+        assert!(
+            m.process_output_values(&[Bit(true), Bit(false), Bit(true)])
+                .is_err()
+        );
+        assert!(
+            m.process_output_values(&[Bit(true), Bit(false), Bit(true), Bit(true)])
+                .is_ok()
+        );
     }
 
     #[test]
@@ -146,9 +148,10 @@ mod tests {
     #[test]
     fn test_process_output_values_with_invalid_channel_values() {
         let m = Mod::default();
-        assert!(m
-            .process_output_values(&[Bit(false), Bit(true), Bit(false), Decimal32(0.0)])
-            .is_err());
+        assert!(
+            m.process_output_values(&[Bit(false), Bit(true), Bit(false), Decimal32(0.0)])
+                .is_err()
+        );
     }
 
     #[test]
