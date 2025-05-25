@@ -18,6 +18,4 @@ num-traits = "0.2"
 num-derive = "0.4"
 
 [badges]
-travis-ci = { repository = "slowtec/ur20" }
-appveyor = { repository = "slowtec/ur20" }
 maintenance = { status = "actively-developed" }

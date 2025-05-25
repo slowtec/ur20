@@ -5,8 +5,6 @@
 
 [![Crates.io version](https://img.shields.io/crates/v/ur20.svg)](https://crates.io/crates/ur20)
 [![Docs](https://docs.rs/ur20/badge.svg)](https://docs.rs/ur20/)
-[![Build Status](https://travis-ci.org/slowtec/ur20.svg?branch=master)](https://travis-ci.org/slowtec/ur20)
-[![Build status](https://ci.appveyor.com/api/projects/status/4nfx0u3imxub950b/branch/master?svg=true)](https://ci.appveyor.com/project/flosse/ur20/branch/master)
 
 ## License
 
