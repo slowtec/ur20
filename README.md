@@ -8,7 +8,7 @@
 
 ## License
 
-Copyright (c) 2017 - 2020, slowtec GmbH
+Copyright (c) 2017 - 2025, slowtec GmbH
 
 Licensed under either of
 

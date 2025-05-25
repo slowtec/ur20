@@ -1,4 +1,4 @@
-// Copyright (c) 2017 - 2018 slowtec GmbH <markus.kohlhase@slowtec.de>
+// Copyright (c) 2017 - 2025 slowtec GmbH <markus.kohlhase@slowtec.de>
 
 extern crate byteorder;
 #[macro_use]
