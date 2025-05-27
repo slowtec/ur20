@@ -1,13 +1,37 @@
 //! Digital input module UR20-4DI-P
 
+use std::marker::PhantomData;
+
 use super::util::test_bit_16;
 use super::*;
 use crate::ur20_fbc_mod_tcp::{FromModbusParameterData, ProcessModbusTcpData};
 use num_traits::cast::FromPrimitive;
 
+trait DIVariant: Debug + Send {
+    const MODULE_TYPE: ModuleType;
+}
+
+macro_rules! make_variants {
+    ($(struct $name:ident,)*) => {
+        $(
+            #[allow(non_camel_case_types)]
+            #[derive(Debug)]
+            pub struct $name;
+            impl DIVariant for $name {
+                const MODULE_TYPE: ModuleType = ModuleType::$name;
+            }
+        )*
+    };
+}
+
+make_variants! {
+    struct UR20_4DI_P,
+}
+
 #[derive(Debug)]
-pub struct Mod {
+pub struct Mod<Variant> {
     pub ch_params: Vec<ChannelParameters>,
+    _phantom: PhantomData<Variant>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -15,10 +39,13 @@ pub struct ChannelParameters {
     pub input_delay: InputDelay,
 }
 
-impl FromModbusParameterData for Mod {
-    fn from_modbus_parameter_data(data: &[u16]) -> Result<Mod> {
-        let ch_params = parameters_from_raw_data(data)?;
-        Ok(Mod { ch_params })
+impl<Variant: DIVariant> FromModbusParameterData for Mod<Variant> {
+    fn from_modbus_parameter_data(data: &[u16]) -> Result<Self> {
+        let ch_params = parameters_from_raw_data::<Variant>(data)?;
+        Ok(Mod {
+            ch_params,
+            _phantom: PhantomData,
+        })
     }
 }
 
@@ -30,22 +57,27 @@ impl Default for ChannelParameters {
     }
 }
 
-impl Default for Mod {
+impl<Variant: DIVariant> Default for Mod<Variant> {
     fn default() -> Self {
-        let ch_params = (0..4).map(|_| ChannelParameters::default()).collect();
-        Mod { ch_params }
+        let ch_params = (0..Variant::MODULE_TYPE.channel_count())
+            .map(|_| ChannelParameters::default())
+            .collect();
+        Mod {
+            ch_params,
+            _phantom: PhantomData,
+        }
     }
 }
 
-impl Module for Mod {
+impl<Variant: DIVariant> Module for Mod<Variant> {
     fn module_type(&self) -> ModuleType {
-        ModuleType::UR20_4DI_P
+        Variant::MODULE_TYPE
     }
 }
 
-impl ProcessModbusTcpData for Mod {
+impl<Variant: DIVariant> ProcessModbusTcpData for Mod<Variant> {
     fn process_input_byte_count(&self) -> usize {
-        1
+        Variant::MODULE_TYPE.channel_count().div_ceil(8)
     }
     fn process_output_byte_count(&self) -> usize {
         0
@@ -55,19 +87,19 @@ impl ProcessModbusTcpData for Mod {
             return Err(Error::BufferLength);
         }
         let bits = data[0];
-        let res = (0..4)
+        let res = (0..Variant::MODULE_TYPE.channel_count())
             .map(|i| ChannelValue::Bit(test_bit_16(bits, i)))
             .collect();
         Ok(res)
     }
 }
 
-fn parameters_from_raw_data(data: &[u16]) -> Result<Vec<ChannelParameters>> {
-    if data.len() < 4 {
+fn parameters_from_raw_data<Variant: DIVariant>(data: &[u16]) -> Result<Vec<ChannelParameters>> {
+    if data.len() < Variant::MODULE_TYPE.channel_count() {
         return Err(Error::BufferLength);
     }
 
-    let channel_parameters: Result<Vec<_>> = (0..4)
+    let channel_parameters: Result<Vec<_>> = (0..Variant::MODULE_TYPE.channel_count())
         .map(|i| {
             let p = ChannelParameters {
                 input_delay: match FromPrimitive::from_u16(data[i]) {
@@ -91,7 +123,7 @@ mod tests {
 
     #[test]
     fn test_process_input_data() {
-        let m = Mod::default();
+        let m = Mod::<UR20_4DI_P>::default();
         assert!(m.process_input_data(&[]).is_err());
         let data = vec![0b0100];
         assert_eq!(
@@ -102,7 +134,7 @@ mod tests {
 
     #[test]
     fn test_process_output_data() {
-        let m = Mod::default();
+        let m = Mod::<UR20_4DI_P>::default();
         assert!(m.process_output_data(&[0; 4]).is_err());
         assert_eq!(
             m.process_output_data(&[]).unwrap(),
@@ -112,7 +144,7 @@ mod tests {
 
     #[test]
     fn test_process_output_values() {
-        let m = Mod::default();
+        let m = Mod::<UR20_4DI_P>::default();
         assert!(m.process_output_values(&[ChannelValue::Bit(true)]).is_err());
         assert_eq!(m.process_output_values(&[]).unwrap(), &[]);
         assert_eq!(
@@ -131,25 +163,28 @@ mod tests {
             0, // CH 3
         ];
 
-        assert_eq!(parameters_from_raw_data(&data).unwrap().len(), 4);
+        assert_eq!(
+            parameters_from_raw_data::<UR20_4DI_P>(&data).unwrap().len(),
+            4
+        );
 
         assert_eq!(
-            parameters_from_raw_data(&data).unwrap()[0],
+            parameters_from_raw_data::<UR20_4DI_P>(&data).unwrap()[0],
             ChannelParameters::default()
         );
 
         assert_eq!(
-            parameters_from_raw_data(&data).unwrap()[1].input_delay,
+            parameters_from_raw_data::<UR20_4DI_P>(&data).unwrap()[1].input_delay,
             InputDelay::ms10
         );
 
         assert_eq!(
-            parameters_from_raw_data(&data).unwrap()[2].input_delay,
+            parameters_from_raw_data::<UR20_4DI_P>(&data).unwrap()[2].input_delay,
             InputDelay::ms20
         );
 
         assert_eq!(
-            parameters_from_raw_data(&data).unwrap()[3].input_delay,
+            parameters_from_raw_data::<UR20_4DI_P>(&data).unwrap()[3].input_delay,
             InputDelay::no
         );
     }
@@ -163,17 +198,17 @@ mod tests {
             0, // CH 3
         ];
         data[0] = 6; // should be max '5'
-        assert!(parameters_from_raw_data(&data).is_err());
+        assert!(parameters_from_raw_data::<UR20_4DI_P>(&data).is_err());
     }
 
     #[test]
     fn test_parameters_from_invalid_data_buffer_size() {
         let data = [0; 0];
-        assert!(parameters_from_raw_data(&data).is_err());
+        assert!(parameters_from_raw_data::<UR20_4DI_P>(&data).is_err());
         let data = [0; 3];
-        assert!(parameters_from_raw_data(&data).is_err());
+        assert!(parameters_from_raw_data::<UR20_4DI_P>(&data).is_err());
         let data = [0; 4];
-        assert!(parameters_from_raw_data(&data).is_ok());
+        assert!(parameters_from_raw_data::<UR20_4DI_P>(&data).is_ok());
     }
 
     #[test]
@@ -184,7 +219,7 @@ mod tests {
             4, // CH 2
             5, // CH 3
         ];
-        let module = Mod::from_modbus_parameter_data(&data).unwrap();
+        let module = Mod::<UR20_4DI_P>::from_modbus_parameter_data(&data).unwrap();
         assert_eq!(module.ch_params[0].input_delay, InputDelay::no);
         assert_eq!(module.ch_params[3].input_delay, InputDelay::ms40);
     }
