@@ -112,7 +112,7 @@ impl Coupler {
             let x: Box<dyn ProcessModbusTcpData> = match *m {
                 ModuleType::UR20_4DI_P => {
                     let m =
-                        ur20_di_generic::Mod::<super::ur20_di_generic::UR20_4DI_P>::from_modbus_parameter_data(
+                        ur20_di_generic::Mod::<ur20_di_generic::UR20_4DI_P>::from_modbus_parameter_data(
                             param_data,
                         )?;
                     Box::new(m)
@@ -569,8 +569,8 @@ mod tests {
     fn test_process_input_data() {
         let m0 = super::ur20_4ao_ui_16::Mod::default();
         let mut m1 = super::ur20_4ai_rtd_diag::Mod::default();
-        let m2 = super::ur20_di_generic::Mod::<super::ur20_di_generic::UR20_4DI_P>::default();
-        let m3 = super::ur20_di_generic::Mod::<super::ur20_di_generic::UR20_4DI_P>::default();
+        let m2 = super::ur20_di_generic::Mod::<ur20_di_generic::UR20_4DI_P>::default();
+        let m3 = super::ur20_di_generic::Mod::<ur20_di_generic::UR20_4DI_P>::default();
 
         #[rustfmt::skip]
         let data = &[
