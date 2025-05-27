@@ -11,7 +11,7 @@ trait DOVariant: Debug + Send {
 }
 
 macro_rules! make_variants {
-    ($(struct $name:ident),*) => {
+    ($(struct $name:ident,)*) => {
         $(
             #[allow(non_camel_case_types)]
             #[derive(Debug)]
@@ -26,7 +26,7 @@ macro_rules! make_variants {
 make_variants! {
     struct UR20_4DO_P,
     struct UR20_4DO_P_2A,
-    struct UR20_8DO_P
+    struct UR20_8DO_P,
 }
 
 #[derive(Debug)]

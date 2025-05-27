@@ -463,7 +463,8 @@ impl ModbusParameterRegisterCount for ModuleType {
             UR20_8DI_P_2W | UR20_8DI_P_3W => 8,
 
             // Digital output modules
-            UR20_4DO_P => 4,
+            UR20_4DO_P | UR20_4DO_P_2A => 4,
+            UR20_8DO_P => 8,
             UR20_16DO_P => 0,
             UR20_4RO_CO_255 => 4,
 
