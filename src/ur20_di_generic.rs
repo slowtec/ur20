@@ -1,4 +1,4 @@
-//! Digital input module UR20-4DI-P
+//! Digital input module UR20-4DI-P and UR20_8DI_P_2W
 
 use std::marker::PhantomData;
 
@@ -26,6 +26,7 @@ macro_rules! make_variants {
 
 make_variants! {
     struct UR20_4DI_P,
+    struct UR20_8DI_P_2W,
 }
 
 #[derive(Debug)]
@@ -133,6 +134,26 @@ mod tests {
     }
 
     #[test]
+    fn test_process_input_data_8() {
+        let m = Mod::<UR20_8DI_P_2W>::default();
+        assert!(m.process_input_data(&[]).is_err());
+        let data = vec![0b11010100];
+        assert_eq!(
+            m.process_input_data(&data).unwrap(),
+            vec![
+                Bit(false),
+                Bit(false),
+                Bit(true),
+                Bit(false),
+                Bit(true),
+                Bit(false),
+                Bit(true),
+                Bit(true)
+            ]
+        );
+    }
+
+    #[test]
     fn test_process_output_data() {
         let m = Mod::<UR20_4DI_P>::default();
         assert!(m.process_output_data(&[0; 4]).is_err());
@@ -222,5 +243,29 @@ mod tests {
         let module = Mod::<UR20_4DI_P>::from_modbus_parameter_data(&data).unwrap();
         assert_eq!(module.ch_params[0].input_delay, InputDelay::no);
         assert_eq!(module.ch_params[3].input_delay, InputDelay::ms40);
+    }
+
+    #[test]
+    fn create_module_from_modbus_parameter_data_8() {
+        let data = vec![0, 1, 2, 3, 4, 5, 2, 2];
+        let module = Mod::<UR20_8DI_P_2W>::from_modbus_parameter_data(&data).unwrap();
+        let input_delays = module
+            .ch_params
+            .into_iter()
+            .map(|p| p.input_delay)
+            .collect::<Vec<_>>();
+        assert_eq!(
+            input_delays,
+            [
+                InputDelay::no,
+                InputDelay::us300,
+                InputDelay::ms3,
+                InputDelay::ms10,
+                InputDelay::ms20,
+                InputDelay::ms40,
+                InputDelay::ms3,
+                ChannelParameters::default().input_delay
+            ]
+        );
     }
 }
