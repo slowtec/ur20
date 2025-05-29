@@ -117,6 +117,13 @@ impl Coupler {
                         )?;
                     Box::new(m)
                 }
+                ModuleType::UR20_8DI_P_2W => {
+                    let m =
+                        ur20_di_generic::Mod::<ur20_di_generic::UR20_8DI_P_2W>::from_modbus_parameter_data(
+                            param_data,
+                        )?;
+                    Box::new(m)
+                }
                 ModuleType::UR20_4DO_P => {
                     let m = ur20_do_generic::Mod::<ur20_do_generic::UR20_4DO_P>::from_modbus_parameter_data(param_data)?;
                     Box::new(m)
