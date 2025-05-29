@@ -180,6 +180,10 @@ impl Coupler {
                     processors.insert(i, processor);
                     Box::new(m)
                 }
+                ModuleType::UR20_PF_O_1DI_SIL => {
+                    let m = ur20_pf_o_1di_sil::Mod::from_modbus_parameter_data(param_data)?;
+                    Box::new(m)
+                }
                 _ => {
                     panic!("{m:?} is not supported");
                 }
@@ -495,6 +499,9 @@ impl ModbusParameterRegisterCount for ModuleType {
 
             // Communication modules
             UR20_1COM_232_485_422 => 10,
+
+            // Safe Powerfeed modules
+            UR20_PF_O_1DI_SIL => 0,
 
             // Not yet supported
             _ => {

@@ -24,6 +24,7 @@ pub mod ur20_8ai_i_16_diag_hd;
 pub mod ur20_di_generic;
 pub mod ur20_do_generic;
 pub mod ur20_fbc_mod_tcp;
+pub mod ur20_pf_o_1di_sil;
 pub(crate) mod util;
 
 pub use crate::error::*;
@@ -36,6 +37,7 @@ use crate::ur20_2fcnt_100::{ProcessInput as FcntIn, ProcessOutput as FcntOut};
 
 /// Data type used by the module channels.
 #[derive(Debug, Clone, PartialEq)]
+#[non_exhaustive]
 pub enum ChannelValue {
     /// A single bit (0 == false)
     Bit(bool),
@@ -49,6 +51,8 @@ pub enum ChannelValue {
     FcntIn(FcntIn),
     /// Special output data used by 2FCNT-100
     FcntOut(FcntOut),
+    /// Special input data used by PF-O-1DI-SIL
+    SilPFIn(ur20_pf_o_1di_sil::ProcessInput),
     /// Raw binary data.
     Bytes(Vec<u8>),
     /// The channel is currently disabled.
