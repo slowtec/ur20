@@ -15,6 +15,7 @@ pub mod ur20_16do_p;
 pub mod ur20_1com_232_485_422;
 pub mod ur20_2fcnt_100;
 pub mod ur20_4ai_rtd_diag;
+pub mod ur20_4ai_tc_diag;
 pub mod ur20_4ai_ui_12;
 pub mod ur20_4ai_ui_16_diag;
 pub mod ur20_4ao_ui_16;
@@ -291,6 +292,7 @@ pub enum RtdRange {
 }
 
 /// The unit a temperature value is represented in.
+/// For UR20-8AI-RTD-DIAG-2W, UR20-4AI-TC-DIAG, UR20-4AI-RTD-HP-DIAG and UR20-4AI-RTD-DIAG.
 #[rustfmt::skip]
 #[derive(Debug, Clone, PartialEq, Eq, FromPrimitive, ToPrimitive)]
 pub enum TemperatureUnit {
