@@ -254,7 +254,7 @@ mod tests {
             _ => assert_eq!(a, b),
         }
     }
-    
+
     #[test]
     fn test_process_input_data() {
         let mut m = Mod::default();
@@ -266,34 +266,34 @@ mod tests {
             m.process_input_data(&[0, 0, 0, 0]).unwrap(),
             vec![ChannelValue::Disabled; 4]
         );
-    
+
         // Set up channels with different measurement ranges
-        m.ch_params[0].measurement_range = MeasurementRange::TC_Type_K;  // Temperature
-        m.ch_params[1].measurement_range = MeasurementRange::VPlusMinus2;  // Voltage ±2V
-        m.ch_params[2].measurement_range = MeasurementRange::mVPlusMinus500;  // Voltage ±500mV
-        m.ch_params[3].measurement_range = MeasurementRange::uVPlusMinus15625;  // Voltage ±15.625µV
-    
+        m.ch_params[0].measurement_range = MeasurementRange::TC_Type_K; // Temperature
+        m.ch_params[1].measurement_range = MeasurementRange::VPlusMinus2; // Voltage ±2V
+        m.ch_params[2].measurement_range = MeasurementRange::mVPlusMinus500; // Voltage ±500mV
+        m.ch_params[3].measurement_range = MeasurementRange::uVPlusMinus15625; // Voltage ±15.625µV
+
         // Test temperature conversion (K-type thermocouple)
         let results = m.process_input_data(&[-2000_i16 as u16, 0, 0, 0]).unwrap();
         assert_approx_equal(&results[0], &ChannelValue::Decimal32(-200.0));
         assert_approx_equal(&results[1], &ChannelValue::Decimal32(0.0));
         assert_approx_equal(&results[2], &ChannelValue::Decimal32(0.0));
         assert_approx_equal(&results[3], &ChannelValue::Decimal32(0.0));
-    
+
         // Test voltage conversions
         let results = m.process_input_data(&[0, 16384, 16384, 16384]).unwrap();
         assert_approx_equal(&results[0], &ChannelValue::Decimal32(0.0));
         assert_approx_equal(&results[1], &ChannelValue::Decimal32(1.0));
         assert_approx_equal(&results[2], &ChannelValue::Decimal32(0.25));
         assert_approx_equal(&results[3], &ChannelValue::Decimal32(0.0078125));
-    
+
         // Test line break detection (32767 for thermocouples)
         let results = m.process_input_data(&[32767, 32767, 32767, 32767]).unwrap();
         assert_eq!(results[0], ChannelValue::None);
         assert_approx_equal(&results[1], &ChannelValue::Decimal32(2.0));
         assert_approx_equal(&results[2], &ChannelValue::Decimal32(0.5));
         assert_approx_equal(&results[3], &ChannelValue::Decimal32(0.015625));
-    
+
         // Test single disabled channel
         m.ch_params[0].measurement_range = MeasurementRange::Disabled;
         let results = m.process_input_data(&[1000, 0, 0, 0]).unwrap();
@@ -310,7 +310,9 @@ mod tests {
         m.ch_params[0].measurement_range = MeasurementRange::TC_Type_B; // 50 - 1820°C
         m.ch_params[1].measurement_range = MeasurementRange::TC_Type_J; // -210 - 1200°C
 
-        let inputs = m.process_input_data(&[460, -2140_i16 as u16, 0, 0]).unwrap();
+        let inputs = m
+            .process_input_data(&[460, -2140_i16 as u16, 0, 0])
+            .unwrap();
 
         assert_approx_equal(&inputs[0], &ChannelValue::Decimal32(46.0));
         assert_approx_equal(&inputs[1], &ChannelValue::Decimal32(-214.0));
@@ -347,18 +349,12 @@ mod tests {
     fn test_module_parameters_from_raw_data() {
         let mut data = vec![0; 1 + 4 * 7]; // 1 module param + 4 channels * 7 params each
         assert_eq!(
-            parameters_from_raw_data(&data)
-                .unwrap()
-                .0
-                .temperature_unit,
+            parameters_from_raw_data(&data).unwrap().0.temperature_unit,
             TemperatureUnit::Celsius
         );
         data[0] = 1;
         assert_eq!(
-            parameters_from_raw_data(&data)
-                .unwrap()
-                .0
-                .temperature_unit,
+            parameters_from_raw_data(&data).unwrap().0.temperature_unit,
             TemperatureUnit::Fahrenheit
         );
     }
@@ -367,11 +363,12 @@ mod tests {
     fn test_channel_parameters_from_raw_data() {
         #[rustfmt::skip]
         let data = vec![
-            0,             // Module temperature unit (Celsius)
+            // Module temperature unit (Celsius)
+            0,
             // CH 0 (7 params)
-            19, 0, 2, 0, 0, 32767, -32768_i16 as u16, 
+            19, 0, 2, 0, 0, 32767, -32768_i16 as u16,
             // CH 1 (7 params)
-            1, 1, 1, 1, 1, 1000, -1000_i16 as u16, 
+            1, 1, 1, 1, 1, 1000, -1000_i16 as u16,
             // CH 2 (7 params)
             19, 0, 0, 0, 0, 0, 0,
             // CH 3 (7 params)
@@ -381,32 +378,20 @@ mod tests {
         let (_, ch_params) = parameters_from_raw_data(&data).unwrap();
         assert_eq!(ch_params.len(), 4);
 
-        assert_eq!(
-            ch_params[0],
-            ChannelParameters::default()
-        );
+        assert_eq!(ch_params[0], ChannelParameters::default());
 
         assert!(ch_params[1].channel_diagnostics);
         assert!(ch_params[1].limit_value_monitoring);
         assert_eq!(ch_params[1].high_limit_value, 1000);
         assert_eq!(ch_params[1].low_limit_value, -1000);
-        assert_eq!(
-            ch_params[1].measurement_range,
-            MeasurementRange::TC_Type_K
-        );
+        assert_eq!(ch_params[1].measurement_range, MeasurementRange::TC_Type_K);
         assert_eq!(
             ch_params[1].cold_junction_compensation,
             ColdJunctionCompensation::ExternalChannel0
         );
-        assert_eq!(
-            ch_params[1].conversion_time,
-            ConversionTime::ms130
-        );
+        assert_eq!(ch_params[1].conversion_time, ConversionTime::ms130);
 
-        assert_eq!(
-            ch_params[2].measurement_range,
-            MeasurementRange::Disabled
-        );
+        assert_eq!(ch_params[2].measurement_range, MeasurementRange::Disabled);
 
         assert_eq!(
             ch_params[3].measurement_range,
@@ -427,27 +412,27 @@ mod tests {
         assert!(parameters_from_raw_data(&data).is_err());
         // Reset to valid
         data[0] = 0;
-        
+
         // Invalid measurement range
         data[1] = 20;
         assert!(parameters_from_raw_data(&data).is_err());
         data[1] = 0;
-        
+
         // Invalid cold junction compensation
         data[2] = 5;
         assert!(parameters_from_raw_data(&data).is_err());
         data[2] = 0;
-        
+
         // Invalid conversion time
         data[3] = 6;
         assert!(parameters_from_raw_data(&data).is_err());
         data[3] = 0;
-        
+
         // Invalid channel diagnostics (must be 0 or 1)
         data[4] = 2;
         assert!(parameters_from_raw_data(&data).is_err());
         data[4] = 0;
-        
+
         // Invalid limit value monitoring (must be 0 or 1)
         data[5] = 2;
         assert!(parameters_from_raw_data(&data).is_err());
@@ -467,7 +452,8 @@ mod tests {
     fn create_module_from_modbus_parameter_data() {
         #[rustfmt::skip]
         let data = vec![
-            1,             // Module (Fahrenheit)
+            // Module (Fahrenheit)
+            1,
             // CH 0 (7 params)
             0, 0, 0, 0, 0, 32767, -32768_i16 as u16,
             // CH 1 (7 params)
@@ -478,7 +464,10 @@ mod tests {
             0, 0, 0, 0, 0, 0, 0,
         ];
         let module = Mod::from_modbus_parameter_data(&data).unwrap();
-        assert_eq!(module.mod_params.temperature_unit, TemperatureUnit::Fahrenheit);
+        assert_eq!(
+            module.mod_params.temperature_unit,
+            TemperatureUnit::Fahrenheit
+        );
         assert_eq!(
             module.ch_params[0].measurement_range,
             MeasurementRange::TC_Type_J
