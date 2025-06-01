@@ -161,7 +161,7 @@ impl Coupler {
                     Box::new(m)
                 }
                 ModuleType::UR20_4AI_UI_12 => {
-                    let m = ur20_4ai_ui_12::Mod::from_modbus_parameter_data(param_data)?;
+                    let m = ur20_ai_ui_generic::Mod::<ur20_ai_ui_generic::UR20_4AI_UI_12>::from_modbus_parameter_data(param_data)?;
                     Box::new(m)
                 }
                 ModuleType::UR20_8AI_I_16_DIAG_HD => {
