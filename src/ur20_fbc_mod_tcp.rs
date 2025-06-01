@@ -164,6 +164,10 @@ impl Coupler {
                     let m = ur20_ai_ui_generic::Mod::<ur20_ai_ui_generic::UR20_4AI_UI_12>::from_modbus_parameter_data(param_data)?;
                     Box::new(m)
                 }
+                ModuleType::UR20_4AI_UI_16 => {
+                    let m = ur20_ai_ui_generic::Mod::<ur20_ai_ui_generic::UR20_4AI_UI_16>::from_modbus_parameter_data(param_data)?;
+                    Box::new(m)
+                }
                 ModuleType::UR20_8AI_I_16_DIAG_HD => {
                     let m = ur20_8ai_i_16_diag_hd::Mod::from_modbus_parameter_data(param_data)?;
                     Box::new(m)
@@ -489,7 +493,7 @@ impl ModbusParameterRegisterCount for ModuleType {
             // Analogue input modules
             UR20_8AI_I_16_DIAG_HD => 1 + 8 * 4,
             UR20_4AI_UI_16_DIAG => 1 + 4 * 5,
-            UR20_4AI_UI_12 => 1 + 4 * 2,
+            UR20_4AI_UI_12 | UR20_4AI_UI_16 => 1 + 4 * 2,
             UR20_4AI_TC_DIAG => 1 + 4 * 7,
 
             // Analogue output modul

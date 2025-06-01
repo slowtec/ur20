@@ -29,6 +29,7 @@ macro_rules! make_variants {
 
 make_variants! {
     struct UR20_4AI_UI_12,
+    struct UR20_4AI_UI_16,
 }
 
 #[derive(Debug)]
