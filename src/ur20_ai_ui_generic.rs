@@ -2,7 +2,7 @@
 //!
 //! This could also be extended for UR20-2AI-UI-16, but currently the crate lacks support.
 //!
-//! This module provides 4 floating point output channels in Ampere.
+//! This module provides 4 floating point output channels in the configured unit. Be careful about the unit configuration.
 
 use std::marker::PhantomData;
 
