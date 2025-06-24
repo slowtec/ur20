@@ -135,14 +135,14 @@ impl ProcessModbusTcpData for Mod {
             .map(|(duration, cnt, active)| {
                 (
                     {
-                        let d = u64::from(u32::from(duration[0]) << 16 | u32::from(duration[1]));
+                        let d = u64::from((u32::from(duration[0]) << 16) | u32::from(duration[1]));
                         if d >= MAX_MEASUREMENT_PERIOD {
                             None
                         } else {
                             Some(Duration::from_nanos(d * 125))
                         }
                     },
-                    (u32::from(cnt[0]) << 16 | u32::from(cnt[1])),
+                    ((u32::from(cnt[0]) << 16) | u32::from(cnt[1])),
                     util::test_bit_16(*active, 8),
                 )
             })
@@ -175,7 +175,7 @@ impl ProcessModbusTcpData for Mod {
                     None
                 };
                 (
-                    u64::from(u32::from(duration[0]) << 16 | u32::from(duration[1])),
+                    u64::from((u32::from(duration[0]) << 16) | u32::from(duration[1])),
                     cmd,
                 )
             })
